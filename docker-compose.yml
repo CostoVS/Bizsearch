@@ -21,7 +21,8 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     # Run migrations/push before starting
-    command: sh -c "npx prisma db push && npm start"
+    # Use node server.js for standalone build output
+    command: sh -c "./node_modules/.bin/prisma db push --accept-data-loss && node server.js"
 
   studio-builder:
     image: node:20-alpine
