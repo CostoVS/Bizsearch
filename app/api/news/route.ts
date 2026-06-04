@@ -1,29 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { readDb, saveDb } from '@/lib/serverDb';
 import { verifyAdminSession } from '@/lib/auth';
-import { GoogleGenAI, Type } from '@google/genai';
 import { NewsArticle } from '@/lib/types';
+import Parser from 'rss-parser';
+import { generateOllama } from '@/lib/ollama';
 
-// Lazy-initialize Gemini client
-let aiClient: GoogleGenAI | null = null;
-
-function getAiClient(): GoogleGenAI {
-  if (!aiClient) {
-    const key = process.env.GEMINI_API_KEY;
-    if (!key) {
-      throw new Error('GEMINI_API_KEY environment variable is required');
-    }
-    aiClient = new GoogleGenAI({
-      apiKey: key,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
-    });
-  }
-  return aiClient;
-}
+const parser = new Parser();
 
 export async function GET(req: NextRequest) {
   try {
@@ -57,80 +39,80 @@ export async function GET(req: NextRequest) {
 
     // Trigger crawler update if expired or forced, or if cached list is empty
     if (isExpiredByHour || isForced || cachedArticles.length === 0) {
-      console.log('[NEWS ENGINE] Article cache is stale or missing. Initiating Gemini live news grounding fetch...');
+      console.log('[NEWS ENGINE] Article cache is stale or missing. Fetching RSS and summarizing with local Ollama...');
       
       try {
-        const ai = getAiClient();
+        // Step 1: Fetch RSS feed (SABC News is reliable for SA)
+        const feed = await parser.parseURL('https://www.sabcnews.com/sabcnews/feed/');
         
-        const prompt = `Search for the 10 most recent and major South African news articles or stories today from Google News channels.
-Provide a clean JSON list containing exactly the top 10 unique, highly detailed news items.
-For each news article, compile:
-- 'title': The catchy, original headline based on today's events in South Africa.
-- 'summary': A beautifully written 3-paragraph summary of the news story explaining the background, current occurrence, and public reactions or state declarations, formulated in clear, informative journalistic style. Avoid formatting tags (like bold stars '**') within the text.
-- 'sourceName': The name of the original news publisher providing this coverage on Google News (e.g. News24, Daily Maverick, TimesLIVE, Mail & Guardian, Eyewitness News, BusinessTech, Fin24, etc.).
-- 'sourceUrl': The exact source link URL of the coverage retrieved from search grounding results metadata. If no specific URL is linked, provide a valid generic URL from the news publisher web portal.`;
+        const topArticles = feed.items.slice(0, 5); // Process top 5 to keep it fast for local LLM
+        
+        const summarizedArticles: NewsArticle[] = [];
 
-        const response = await ai.models.generateContent({
-          model: 'gemini-3.5-flash',
-          contents: prompt,
-          config: {
-            tools: [{ googleSearch: {} }],
-            responseMimeType: 'application/json',
-            responseSchema: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  title: { type: Type.STRING },
-                  summary: { type: Type.STRING },
-                  sourceName: { type: Type.STRING },
-                  sourceUrl: { type: Type.STRING }
-                },
-                required: ['title', 'summary', 'sourceName', 'sourceUrl']
-              }
-            }
-          }
-        });
+        for (let i = 0; i < topArticles.length; i++) {
+          const item = topArticles[i];
+          const title = item.title || 'South Africa News';
+          const contentSnippet = item.contentSnippet || item.content || '';
+          const sourceUrl = item.link || 'https://www.sabcnews.com';
+          const pubDate = item.pubDate ? new Date(item.pubDate).toISOString() : now.toISOString();
 
-        const responseText = response.text;
-        if (responseText) {
-          const parsedArticles = JSON.parse(responseText.trim());
-          if (Array.isArray(parsedArticles) && parsedArticles.length > 0) {
+          try {
+            // Step 2: Use Ollama to summarize
+            const prompt = `Summarize this South African news article in 3 short, professional journalistic paragraphs. 
+            Do not use markdown formatting like bold stars.
             
-            // Transform parsed inputs into NewsArticle structures with visual details
-            const newsList: NewsArticle[] = parsedArticles.map((art: any, index: number) => {
-              const newsId = `news_${Date.now()}_${index}`;
-              return {
-                id: newsId,
-                title: art.title || 'South Africa Local News Updates',
-                summary: art.summary || 'Summary details are loaded dynamically.',
-                sourceName: art.sourceName || 'Google News SA',
-                sourceUrl: art.sourceUrl || 'https://news.google.co.za',
-                // Vivid fallback news seed image using Picsum
-                imageUrl: `https://picsum.photos/seed/sanews_${index + 1}/800/600`,
-                publishedAt: now.toISOString()
-              };
+            Title: ${title}
+            Content: ${contentSnippet}
+            
+            Return ONLY a valid JSON object in this format:
+            {
+              "summary": "your summary text here"
+            }`;
+
+            const model = process.env.OLLAMA_MODEL || 'llama3';
+            const ollamaResponse = await generateOllama(prompt, model);
+            const parsed = JSON.parse(ollamaResponse);
+            
+            summarizedArticles.push({
+              id: `news_${Date.now()}_${i}`,
+              title,
+              summary: parsed.summary || contentSnippet,
+              sourceName: 'SABC News',
+              sourceUrl,
+              imageUrl: `https://picsum.photos/seed/sanews_${i + 1}/800/600`,
+              publishedAt: pubDate
             });
-
-            // Update database newsCache
-            dbData.newsCache = {
-              articles: newsList,
-              lastFetchedAt: now.toISOString()
-            };
-            saveDb(dbData);
-            
-            cachedArticles = newsList;
-            lastFetchedAt = now.toISOString();
-            console.log(`[NEWS ENGINE] Successfully fetched and summarized ${newsList.length} articles!`);
-          } else {
-            console.warn('[NEWS ENGINE] API returned blank or empty array structure. Using previous cash.');
+          } catch (ollamaErr) {
+            console.error(`[NEWS ENGINE] Ollama failed for article ${i}:`, ollamaErr);
+            // Fallback to snippet if LLM fails
+            summarizedArticles.push({
+              id: `news_${Date.now()}_${i}`,
+              title,
+              summary: contentSnippet.slice(0, 500) + '...',
+              sourceName: 'SABC News',
+              sourceUrl,
+              imageUrl: `https://picsum.photos/seed/sanews_${i + 1}/800/600`,
+              publishedAt: pubDate
+            });
           }
         }
+
+        if (summarizedArticles.length > 0) {
+          // Update database newsCache
+          dbData.newsCache = {
+            articles: summarizedArticles,
+            lastFetchedAt: now.toISOString()
+          };
+          saveDb(dbData);
+          
+          cachedArticles = summarizedArticles;
+          lastFetchedAt = now.toISOString();
+          console.log(`[NEWS ENGINE] Successfully fetched and summarized ${summarizedArticles.length} articles!`);
+        }
       } catch (apiError: any) {
-        console.error('[NEWS ENGINE] Failed to fetch live news from Gemini API:', apiError.message || apiError);
+        console.error('[NEWS ENGINE] Failed to fetch or summarize news:', apiError.message || apiError);
         // Fail gracefully and use cache if we have one
         if (cachedArticles.length === 0) {
-          // If totally empty and API fails, inject high quality seed items
           cachedArticles = getLocalSeedNews();
           dbData.newsCache = {
             articles: cachedArticles,
