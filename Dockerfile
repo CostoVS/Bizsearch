@@ -56,6 +56,12 @@ COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modul
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.bin ./node_modules/.bin
 
+# Create global system symlinks and set the appropriate execution permissions for all Prisma CLI options
+RUN chmod +x /app/node_modules/prisma/build/index.js && \
+    chmod +x /app/node_modules/.bin/prisma && \
+    ln -sf /app/node_modules/prisma/build/index.js /usr/local/bin/prisma && \
+    ln -sf /app/node_modules/prisma/build/index.js /usr/bin/prisma
+
 USER nextjs
 
 EXPOSE 3000
