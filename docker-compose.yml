@@ -24,12 +24,4 @@ services:
     # Use node server.js for standalone build output
     command: sh -c "prisma db push --accept-data-loss && node server.js"
 
-  studio-builder:
-    image: node:20-alpine
-    container_name: studio-builder
-    restart: always
-    ports:
-      - "3003:3000"
-    environment:
-      - NODE_ENV=production
-    command: sh -c "echo 'Studio Builder Active on 3003'; sleep infinity"
+

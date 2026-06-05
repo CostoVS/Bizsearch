@@ -2138,23 +2138,37 @@ export default function Bizsearch24Home() {
                             className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
                           />
                         </div>
-
-                        <button
-                          id="login-submit-action-btn"
-                          type="submit"
-                          disabled={isAuthenticating}
-                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/10 disabled:opacity-50 flex items-center justify-center space-x-2"
-                        >
-                          {isAuthenticating ? (
-                            <>
-                              <RefreshCw className="w-4 h-4 animate-spin text-white" id="login-spin" />
-                              <span>Processing...</span>
-                            </>
-                          ) : (
-                            <span>{show2FA ? 'Verify 2FA' : (isRegistering ? 'Create Account' : 'Sign In')}</span>
-                          )}
-                        </button>
                       </>
+                    )}
+
+                    <button
+                      id="login-submit-action-btn"
+                      type="submit"
+                      disabled={isAuthenticating}
+                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/10 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer"
+                    >
+                      {isAuthenticating ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin text-white" id="login-spin" />
+                          <span>Processing...</span>
+                        </>
+                      ) : (
+                        <span>{show2FA ? 'Verify 2FA' : (isRegistering ? 'Create Account' : 'Sign In')}</span>
+                      )}
+                    </button>
+
+                    {show2FA && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShow2FA(false);
+                          setRequires2FASetup(false);
+                          setMfaToken('');
+                        }}
+                        className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-semibold hover:underline mt-2 text-center block cursor-pointer"
+                      >
+                        Cancel Verification
+                      </button>
                     )}
                   </form>
                   {!show2FA && (
