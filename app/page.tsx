@@ -40,7 +40,26 @@ import {
   UploadCloud,
   AlertTriangle,
   TrendingUp,
-  CheckSquare
+  CheckSquare,
+  Home,
+  GraduationCap,
+  Scissors,
+  Laptop,
+  PenTool,
+  Music,
+  Flower2,
+  Truck,
+  PawPrint,
+  Factory,
+  Scale,
+  Coins,
+  Dumbbell,
+  Baby,
+  Heart,
+  Building,
+  Layers,
+  Camera,
+  Lock
 } from 'lucide-react';
 
 import { PROVINCES, CITIES_AND_TOWNS, CATEGORIES } from '@/lib/saData';
@@ -227,6 +246,8 @@ export default function Bizsearch24Home() {
   const [submittingUser, setSubmittingUser] = React.useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = React.useState<string>('');
   const [submissionError, setSubmissionError] = React.useState<string>('');
+  const [subTier, setSubTier] = React.useState<'free' | 'premium'>('free');
+  const [subImage, setSubImage] = React.useState<string>('');
 
   // Quick stats computed on verified listings
   const totalListingsCount = listings.length;
@@ -539,7 +560,10 @@ export default function Bizsearch24Home() {
       const tagArray = subTags ? subTags.split(',').map(t => t.trim()).filter(Boolean) : [];
       const res = await fetch('/api/listings', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken || ''}`
+        },
         body: JSON.stringify({
           name: subName,
           description: subDesc,
@@ -552,6 +576,7 @@ export default function Bizsearch24Home() {
           email: subEmail,
           website: subWebsite,
           tags: tagArray,
+          image: subTier === 'premium' ? subImage : '',
         }),
       });
 
@@ -570,6 +595,8 @@ export default function Bizsearch24Home() {
         setSubEmail('');
         setSubWebsite('');
         setSubTags('');
+        setSubImage('');
+        setSubTier('free');
         fetchListings(); // reload directory
       } else {
         setSubmissionError(data.message || 'Error occurred during listing submission.');
@@ -1065,15 +1092,36 @@ export default function Bizsearch24Home() {
   // Category Icon Lookup
   const getCategoryIcon = (catId: string) => {
     switch (catId) {
-      case 'emergency': return <ShieldAlert className="w-5 h-5 text-red-600" id="cat-icon-emergency" />;
+      case 'emergency': return <ShieldAlert className="w-5 h-5 text-red-650" id="cat-icon-emergency" />;
       case 'health': return <HeartPulse className="w-5 h-5 text-emerald-600" id="cat-icon-health" />;
       case 'services': return <Briefcase className="w-5 h-5 text-blue-600" id="cat-icon-services" />;
       case 'food': return <Utensils className="w-5 h-5 text-amber-600" id="cat-icon-food" />;
       case 'automotive': return <Car className="w-5 h-5 text-indigo-600" id="cat-icon-automotive" />;
       case 'trades': return <Wrench className="w-5 h-5 text-orange-600" id="cat-icon-trades" />;
-      case 'tourism': return <Palmtree className="w-5 h-5 text-cyan-600" id="cat-icon-tourism" />;
+      case 'tourism': return <Palmtree className="w-5 h-5 text-cyan-500" id="cat-icon-tourism" />;
       case 'retail': return <ShoppingBag className="w-5 h-5 text-pink-600" id="cat-icon-retail" />;
-      case 'construction': return <Hammer className="w-5 h-5 text-slate-600" id="cat-icon-construction" />;
+      case 'construction': return <Hammer className="w-5 h-5 text-slate-500" id="cat-icon-construction" />;
+      case 'home-improvement': return <Home className="w-5 h-5 text-yellow-500" id="cat-icon-home" />;
+      case 'cleaning': return <Sparkles className="w-5 h-5 text-teal-500" id="cat-icon-cleaning" />;
+      case 'education': return <GraduationCap className="w-5 h-5 text-indigo-700" id="cat-icon-education" />;
+      case 'beauty-wellness': return <Scissors className="w-5 h-5 text-fuchsia-500" id="cat-icon-beauty" />;
+      case 'tech-it': return <Laptop className="w-5 h-5 text-purple-600" id="cat-icon-tech" />;
+      case 'creative-marketing': return <PenTool className="w-5 h-5 text-rose-500" id="cat-icon-creative" />;
+      case 'events': return <Music className="w-5 h-5 text-red-400" id="cat-icon-events" />;
+      case 'agriculture-garden': return <Flower2 className="w-5 h-5 text-green-600" id="cat-icon-garden" />;
+      case 'logistics': return <Truck className="w-5 h-5 text-sky-500" id="cat-icon-logistics" />;
+      case 'security': return <ShieldCheck className="w-5 h-5 text-emerald-650" id="cat-icon-security" />;
+      case 'pets': return <PawPrint className="w-5 h-5 text-amber-700" id="cat-icon-pets" />;
+      case 'industrial': return <Factory className="w-5 h-5 text-stone-605" id="cat-icon-industrial" />;
+      case 'legal': return <Scale className="w-5 h-5 text-slate-700" id="cat-icon-legal" />;
+      case 'finance': return <Coins className="w-5 h-5 text-emerald-500" id="cat-icon-finance" />;
+      case 'fitness-recreation': return <Dumbbell className="w-5 h-5 text-orange-700" id="cat-icon-fitness" />;
+      case 'childcare': return <Baby className="w-5 h-5 text-pink-400" id="cat-icon-childcare" />;
+      case 'funeral': return <Heart className="w-5 h-5 text-neutral-500" id="cat-icon-funeral" />;
+      case 'waste': return <Trash2 className="w-5 h-5 text-lime-600" id="cat-icon-waste" />;
+      case 'real-estate': return <Building className="w-5 h-5 text-cyan-600" id="cat-icon-realestate" />;
+      case 'machinery-hire': return <Layers className="w-5 h-5 text-violet-500" id="cat-icon-machinery" />;
+      case 'digital-media': return <Camera className="w-5 h-5 text-pink-500" id="cat-icon-media" />;
       default: return <Briefcase className="w-5 h-5 text-gray-500" id="cat-icon-default" />;
     }
   };
@@ -1939,6 +1987,160 @@ export default function Bizsearch24Home() {
                       onChange={(e) => setSubWebsite(e.target.value)}
                       className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
                     />
+                  </div>
+                </div>
+
+                {/* Subscription Tier & Conditional Image Upload Component */}
+                <div className="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-xl" id="pub-subscription-and-image-section">
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-xs font-bold text-slate-800 flex items-center">
+                      <Coins className="w-4 h-4 mr-1 text-emerald-600" />
+                      Listing Subscription Level
+                    </span>
+                    <span className="text-[10px] text-slate-500">
+                      Choose if this is a standard free entry or a Verified Premium Business spotlight entry.
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" id="pub-tier-grid shadow-sm">
+                    {/* Free Card */}
+                    <div
+                      id="tier-card-free"
+                      onClick={() => {
+                        setSubTier('free');
+                        setSubImage('');
+                      }}
+                      className={`cursor-pointer border rounded-lg p-3 flex flex-col justify-between transition-all ${
+                        subTier === 'free'
+                          ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-100/30'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-xs font-bold text-slate-700">Standard Entry</p>
+                          <p className="text-[10px] text-slate-500">Unverified Directory index</p>
+                        </div>
+                        <span className="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-mono font-bold">Free</span>
+                      </div>
+                      <p className="text-[9px] text-slate-400 mt-2">❌ Customized media & logos locked</p>
+                    </div>
+
+                    {/* Premium Card */}
+                    <div
+                      id="tier-card-premium"
+                      onClick={() => setSubTier('premium')}
+                      className={`cursor-pointer border rounded-lg p-3 flex flex-col justify-between transition-all ${
+                        subTier === 'premium'
+                          ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500'
+                          : 'border-slate-200 bg-white hover:bg-slate-100/30'
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <div className="flex items-center space-x-1">
+                            <span className="text-xs font-bold text-slate-800">Premium Spotlight</span>
+                            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                          </div>
+                          <p className="text-[10px] text-emerald-600 font-medium">Instant Verified Badge</p>
+                        </div>
+                        <span className="text-[10px] bg-emerald-600 text-white px-1.5 py-0.5 rounded font-mono font-bold">R199/pm</span>
+                      </div>
+                      <p className="text-[9px] text-emerald-700/80 mt-2 font-medium">✨ Upload custom images & branding active</p>
+                    </div>
+                  </div>
+
+                  {/* Image input conditional view */}
+                  <div className="mt-3 pt-3 border-t border-slate-200/50" id="pub-image-upload-wrapper">
+                    <label className="text-[11px] font-bold text-slate-700 flex items-center justify-between mb-1">
+                      <span>Listing Icon / Showcase Image</span>
+                      <span className="text-[9px] font-medium text-slate-404 flex items-center">
+                        <Lock className="w-2.5 h-2.5 mr-0.5" /> Paying Clients Only
+                      </span>
+                    </label>
+
+                    {subTier === 'premium' ? (
+                      <div className="space-y-3" id="premium-uploader-active">
+                        <div
+                          id="dropzone-sub-image"
+                          onDragOver={(e) => e.preventDefault()}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            const file = e.dataTransfer.files?.[0];
+                            if (file && file.type.startsWith('image/')) {
+                              const reader = new FileReader();
+                              reader.onload = () => {
+                                if (typeof reader.result === 'string') {
+                                  setSubImage(reader.result);
+                                }
+                              };
+                              reader.readAsDataURL(file);
+                            }
+                          }}
+                          className="border-2 border-dashed border-slate-300 hover:border-emerald-400 bg-white rounded-lg p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-1 relative"
+                        >
+                          {subImage ? (
+                            <div className="w-full flex flex-col items-center space-y-2">
+                              <img src={subImage} alt="Preview Logo" className="h-24 w-auto rounded-md shadow object-contain" />
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSubImage('');
+                                }}
+                                className="text-[10px] text-red-650 underline font-mono cursor-pointer"
+                              >
+                                Revoke Image
+                              </button>
+                            </div>
+                          ) : (
+                            <>
+                              <Plus className="w-6 h-6 text-slate-400 animate-pulse" />
+                              <p className="text-[10.5px] font-medium text-slate-600">Drag & Drop Logo Image here</p>
+                              <span className="text-[9px] text-slate-404">or click below to seek filesystem</span>
+                            </>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col space-y-1">
+                          <input
+                            id="file-input-pub-sub"
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                const reader = new FileReader();
+                                reader.onload = () => {
+                                  if (typeof reader.result === 'string') {
+                                    setSubImage(reader.result);
+                                  }
+                                };
+                                reader.readAsDataURL(file);
+                              }
+                            }}
+                            className="text-[10px] text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200"
+                          />
+                          <span className="text-[9px] text-slate-400">Or copy-paste an absolute HTTPS URL containing the business artwork/photo:</span>
+                          <input
+                            id="url-input-pub-sub"
+                            type="text"
+                            placeholder="e.g., https://mysite.com/images/logo.png"
+                            value={subImage.startsWith('data:') ? '' : subImage}
+                            onChange={(e) => setSubImage(e.target.value)}
+                            className="w-full bg-white border border-slate-200 rounded-md px-2 py-1 text-[11px] outline-none"
+                          />
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="p-3.5 bg-slate-100 border border-slate-200 rounded-lg text-center flex flex-col items-center justify-center space-y-1" id="free-uploader-locked">
+                        <Lock className="w-4 h-4 text-slate-400" />
+                        <span className="text-[10.5px] font-semibold text-slate-500">Image & Logo upload is locked</span>
+                        <p className="text-[9px] text-slate-400 max-w-sm">
+                          Only premium paying clients can add logos or showcase custom listings images! Choose the Premium card above to unlock branding and verified status inside the directory indices.
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -3856,14 +4058,92 @@ export default function Bizsearch24Home() {
                             </div>
 
                             <div className="space-y-1">
-                              <label className="font-bold text-slate-700">Custom Listing Image (Any size)</label>
-                              <input
-                                type="text"
-                                placeholder="e.g. HTTPS URL to logo or shop picture"
-                                value={editImage}
-                                onChange={(e) => setEditImage(e.target.value)}
-                                className="w-full bg-slate-50 border rounded-lg px-3 py-2 text-xs focus:bg-white outline-none"
-                              />
+                              <label className="font-bold text-slate-700 flex items-center justify-between">
+                                <span>Custom Listing Image</span>
+                                {(userRole === 'ADMIN' || (editingListing && 'verified' in editingListing && editingListing.verified)) ? (
+                                  <span className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1 py-0.5 rounded font-mono">Premium Active</span>
+                                ) : (
+                                  <span className="text-[9px] text-slate-400 font-bold bg-slate-100 px-1 py-0.5 rounded font-mono">🔒 Locked</span>
+                                )}
+                              </label>
+
+                              {(userRole === 'ADMIN' || (editingListing && 'verified' in editingListing && editingListing.verified)) ? (
+                                <div className="space-y-2 mt-1" id="edit-img-unlocked">
+                                  <div
+                                    id="dropzone-edit-image"
+                                    onDragOver={(e) => e.preventDefault()}
+                                    onDrop={(e) => {
+                                      e.preventDefault();
+                                      const file = e.dataTransfer.files?.[0];
+                                      if (file && file.type.startsWith('image/')) {
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                          if (typeof reader.result === 'string') {
+                                            setEditImage(reader.result);
+                                          }
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                    className="border border-dashed border-slate-300 hover:border-emerald-500 bg-white rounded-lg p-3 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-1"
+                                  >
+                                    {editImage ? (
+                                      <div className="w-full flex flex-col items-center space-y-1">
+                                        <img src={editImage} alt="Edit preview" className="h-14 w-auto rounded shadow-sm object-contain" />
+                                        <button
+                                          type="button"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditImage('');
+                                          }}
+                                          className="text-[9px] text-red-600 underline font-mono"
+                                        >
+                                          Revoke
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <>
+                                        <Plus className="w-4 h-4 text-slate-400" id="plus-icn" />
+                                        <span className="text-[10px] text-slate-600 font-medium">Drag-and-Drop or click browse</span>
+                                      </>
+                                    )}
+                                  </div>
+
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) {
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                          if (typeof reader.result === 'string') {
+                                            setEditImage(reader.result);
+                                          }
+                                        };
+                                        reader.readAsDataURL(file);
+                                      }
+                                    }}
+                                    className="text-[9px] text-slate-505 block"
+                                  />
+
+                                  <input
+                                    type="text"
+                                    placeholder="Or paste direct image URL"
+                                    value={editImage.startsWith('data:') ? '' : editImage}
+                                    onChange={(e) => setEditImage(e.target.value)}
+                                    className="w-full bg-slate-50 border rounded-lg px-2 py-1 text-[10px] focus:bg-white outline-none"
+                                  />
+                                </div>
+                              ) : (
+                                <div className="p-2.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 text-[10px] flex flex-col items-center justify-center text-center space-y-1" id="edit-img-locked">
+                                  <Lock className="w-3.5 h-3.5 text-slate-400" />
+                                  <span className="font-bold text-slate-600">Locked for Standard Listings</span>
+                                  <p className="text-[9px] text-slate-404 leading-tight">
+                                    Brand photos and logos require a Verified Premium Spotlight subscription tier. Contact system support or buy premium slots to upgrade!
+                                  </p>
+                                </div>
+                              )}
                             </div>
                           </div>
 

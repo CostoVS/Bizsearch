@@ -7,6 +7,37 @@ import { readDb } from '@/lib/serverDb';
 import { PROVINCES, CITIES_AND_TOWNS } from '@/lib/saData';
 import { MapPin, Phone, Mail, Globe, Calendar, Eye, ShieldCheck, ChevronLeft, CalendarDays } from 'lucide-react';
 
+function toSlug(name: string): string {
+  return name.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
+}
+
+// Find matched location
+function findLocationBySlug(slug: string) {
+  // 1. Check if slug matches a Province
+  const matchedProvince = PROVINCES.find(p => toSlug(p.name) === slug);
+  if (matchedProvince) {
+    return { type: 'province', data: matchedProvince, name: matchedProvince.name, province: matchedProvince, city: null };
+  }
+
+  // 2. Check if slug matches a City
+  const matchedCity = CITIES_AND_TOWNS.find(c => toSlug(c.name) === slug);
+  if (matchedCity) {
+    const province = PROVINCES.find(p => p.id === matchedCity.provinceId);
+    return { type: 'city', data: matchedCity, name: matchedCity.name, province, city: null };
+  }
+
+  // 3. Check if slug matches a Suburb
+  for (const city of CITIES_AND_TOWNS) {
+    const matchedSuburb = city.suburbs.find(s => toSlug(s) === slug);
+    if (matchedSuburb) {
+      const province = PROVINCES.find(p => p.id === city.provinceId);
+      return { type: 'suburb', data: matchedSuburb, name: matchedSuburb, city, province };
+    }
+  }
+
+  return null;
+}
+
 // Standard simple Markdown renderer to avoid third-party hydration layout shifts
 function renderSimpleMarkdown(md: string) {
   if (!md) return null;
@@ -113,6 +144,33 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     console.error('Error generating listing metadata:', err);
   }
 
+  // 3. Check Location Names (Provinces, Cities, Suburbs)
+  const loc = findLocationBySlug(decodedSlug);
+  if (loc) {
+    if (loc.type === 'province') {
+      return {
+        title: `Business Directory in ${loc.name} | Bizsearch24 South Africa`,
+        description: `Browse verified business directory listings, contact details, and local services in the ${loc.name} province, South Africa.`,
+        keywords: `${loc.name}, business directory, South Africa, services`,
+      };
+    } else if (loc.type === 'city') {
+      const provName = loc.province ? `, ${loc.province.name}` : '';
+      return {
+        title: `Verified Local Businesses in ${loc.name}${provName} | Bizsearch24`,
+        description: `Explore top-rated local companies, professional trades, and retail services in ${loc.name}${provName}. Find addresses, contact info, and map directions.`,
+        keywords: `${loc.name}, business directory, local trades, services`,
+      };
+    } else if (loc.type === 'suburb') {
+      const parentCity = loc.city ? ` in ${loc.city.name}` : '';
+      const provName = loc.province ? `, ${loc.province.name}` : '';
+      return {
+        title: `Best Businesses & Services in ${loc.name}${parentCity}${provName} | Bizsearch24`,
+        description: `Find top-certified local trades, medical services, and popular restaurants in ${loc.name}${parentCity}${provName}. Verified contact details and location maps.`,
+        keywords: `${loc.name}, directory, local services, ${loc.city?.name || ''}`,
+      };
+    }
+  }
+
   return {
     title: 'Bizsearch24 | Verified Business Directories',
     description: 'Bizsearch24 directory of verified regional business providers, trades, and medical specialists across South Africa.'
@@ -126,6 +184,7 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
   // 1. Load data
   let matchedPage = null;
   let matchedListing = null;
+  const matchedLocation = findLocationBySlug(decodedSlug);
 
   try {
     const dbData = readDb();
@@ -148,7 +207,7 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
   }
 
   // If nothing matched, throw NextJS notFound
-  if (!matchedPage && !matchedListing) {
+  if (!matchedPage && !matchedListing && !matchedLocation) {
     notFound();
   }
 
@@ -232,6 +291,298 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
               Biz<span className="text-emerald-400 font-black">s</span>earch24
             </span>
             <p className="text-slate-500 text-[10.5px]">© 2026 Bizsearch24. Fully indexed for Chrome, Safari, Firefox, Google Search, and AI crawlers.</p>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // VIEW RENDER FOR DYNAMIC LOCATION DIRECTORY
+  // ==========================================
+  if (matchedLocation) {
+    let localListings: any[] = [];
+    try {
+      const dbListings = await prisma.listing.findMany({
+        include: { images: true }
+      });
+      
+      if (matchedLocation.type === 'province') {
+        localListings = dbListings.filter(l => l.province === (matchedLocation.data as any).id);
+      } else if (matchedLocation.type === 'city') {
+        localListings = dbListings.filter(l => l.city === (matchedLocation.data as any).id);
+      } else if (matchedLocation.type === 'suburb') {
+        localListings = dbListings.filter(
+          l => l.suburb && l.suburb.toLowerCase() === matchedLocation.name.toLowerCase()
+        );
+      }
+    } catch (err) {
+      console.error('Error fetching dynamic location listings:', err);
+    }
+
+    const titlePrefix = matchedLocation.type === 'province' 
+      ? `${matchedLocation.name} Province` 
+      : matchedLocation.type === 'city'
+      ? `${matchedLocation.name}`
+      : `${matchedLocation.name}`;
+
+    const subTitleText = matchedLocation.type === 'province'
+      ? `Explore companies, trades, and medical professionals operating across ${matchedLocation.name}.`
+      : matchedLocation.type === 'city'
+      ? `Verified local business listings in ${matchedLocation.name}, ${matchedLocation.province?.name || 'South Africa'}.`
+      : `Complete list of certified services and shops located in ${matchedLocation.name}, ${matchedLocation.city?.name || 'South Africa'}.`;
+
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col font-sans" id="dynamic-location-root">
+        {/* Header Navigation */}
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-40" id="location-header">
+          <div className="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between" id="location-header-inner">
+            <Link href="/" className="inline-flex items-center space-x-1.5 py-1.5 text-slate-600 hover:text-slate-900 transition-colors" id="location-back-nav">
+              <ChevronLeft className="w-5 h-5 text-emerald-600" />
+              <span className="text-xs font-bold font-mono">BACK TO FINDER</span>
+            </Link>
+            <Link href="/" className="font-extrabold text-lg text-slate-950" id="location-logo">
+              Biz<span className="text-emerald-500 font-black">s</span>earch24
+            </Link>
+          </div>
+        </header>
+
+        {/* Main Content Pane */}
+        <main className="flex-grow max-w-6xl w-full mx-auto px-4 py-8 sm:py-12 space-y-8" id="location-main">
+          {/* Location Hero Banner */}
+          <section className="bg-slate-900 text-white rounded-3xl p-6 sm:p-10 relative overflow-hidden shadow-xl" id="location-hero">
+            <div className="relative z-10 space-y-3 max-w-2xl" id="location-hero-content">
+              <span className="inline-flex bg-emerald-500/20 text-emerald-400 px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider">
+                {matchedLocation.type.toUpperCase()} DIRECTORY
+              </span>
+              <h1 className="text-3xl sm:text-4.5xl font-black tracking-tight text-white leading-tight" id="location-title">
+                {titlePrefix} Local Index
+              </h1>
+              <p className="text-slate-300 text-sm leading-relaxed" id="location-subtitle">
+                {subTitleText} Fully indexed index with contact phone numbers, emails, active website links, and location maps.
+              </p>
+              
+              <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-xs text-slate-400 font-mono pt-2" id="location-meta-stats">
+                <span className="flex items-center">
+                  <span className="h-2 w-2 rounded-full bg-emerald-500 mr-1.5 animate-pulse"></span>
+                  Active Listings: <strong className="text-emerald-400 ml-1 font-bold">{localListings.length}</strong>
+                </span>
+                {matchedLocation.province && (
+                  <span>Region: <strong className="text-white ml-0.5 font-bold">{matchedLocation.province.name}</strong></span>
+                )}
+                {matchedLocation.city && (
+                  <span>City: <strong className="text-white ml-0.5 font-bold">{matchedLocation.city.name}</strong></span>
+                )}
+              </div>
+            </div>
+
+            {/* Backdrop graphic decor */}
+            <div className="absolute right-0 top-0 h-full w-1/3 opacity-5 pointer-events-none hidden md:block" id="location-hero-decor">
+              <MapPin className="w-full h-full text-emerald-400 transform translate-x-12 translate-y-6 scale-110" />
+            </div>
+          </section>
+
+          {/* Directory Listings Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8" id="location-directory-layout">
+            
+            {/* Main Listings Column */}
+            <div className="lg:col-span-2 space-y-6" id="location-listings-pane">
+              <div className="flex items-center justify-between border-b pb-3" id="listings-pane-header">
+                <h2 className="text-sm font-bold text-slate-900 tracking-wide uppercase font-mono">
+                  Registered Businesses ({localListings.length})
+                </h2>
+                <span className="text-xs text-slate-400 font-mono font-semibold">Sorted alphabetically</span>
+              </div>
+
+              {localListings.length === 0 ? (
+                /* Empty state */
+                <div className="bg-white border rounded-2xl p-8 sm:p-12 text-center flex flex-col items-center justify-center space-y-4" id="location-empty-state">
+                  <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center border border-slate-100" id="empty-ico-wrap">
+                    <MapPin className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <div className="space-y-1" id="empty-titles">
+                    <h3 className="text-base font-extrabold text-slate-800">No Listings Found Yet</h3>
+                    <p className="text-slate-500 text-xs sm:text-sm max-w-md mx-auto">
+                      There are currently no registered or verified company records indexed under {matchedLocation.name} yet.
+                    </p>
+                  </div>
+                  <Link 
+                    href="/?open_submission=true" 
+                    className="inline-flex items-center justify-center px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+                    id="btn-register-empty"
+                  >
+                    Add Business to {matchedLocation.name} for Free
+                  </Link>
+                </div>
+              ) : (
+                /* Listings container */
+                <div className="space-y-4" id="location-listings-stack">
+                  {localListings.map((listing) => {
+                    const listingSlug = listing.businessName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
+                    const hasImage = listing.images?.[0];
+                    const listingImg = hasImage 
+                      ? `data:${listing.images[0].mimeType};base64,${Buffer.from(listing.images[0].imageData).toString('base64')}`
+                      : 'https://picsum.photos/seed/company/200/200';
+
+                    return (
+                      <Link 
+                        key={listing.id}
+                        href={`/${listingSlug}`}
+                        className="block bg-white border border-slate-200 hover:border-emerald-500/80 rounded-2xl p-4 sm:p-5 transition-all hover:shadow-md hover:-translate-y-0.5 duration-200"
+                        id={`location-listing-link-${listing.id}`}
+                      >
+                        <div className="flex gap-4 items-start" id={`listing-card-layout-${listing.id}`}>
+                          {/* Left Image aspect */}
+                          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-slate-100 border border-slate-100 rounded-xl overflow-hidden shrink-0 relative" id={`listing-card-img-wrap-${listing.id}`}>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img 
+                              src={listingImg} 
+                              alt={listing.businessName}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+
+                          {/* Detail text */}
+                          <div className="flex-grow space-y-1.5 min-w-0" id={`listing-card-text-${listing.id}`}>
+                            <div className="flex items-start justify-between gap-2" id={`listing-card-headings-${listing.id}`}>
+                              <h3 className="font-extrabold text-slate-900 group-hover:text-emerald-700 text-xs sm:text-sm tracking-tight truncate" id={`listing-card-title-${listing.id}`}>
+                                {listing.businessName}
+                              </h3>
+                              <span className="shrink-0 inline-flex bg-emerald-50 text-emerald-800 border border-emerald-100 font-mono text-[8px] sm:text-[9px] uppercase font-black px-1.5 py-0.5 rounded-sm" id={`listing-card-badge-${listing.id}`}>
+                                VERIFIED
+                              </span>
+                            </div>
+
+                            <p className="text-slate-500 text-[11px] sm:text-xs line-clamp-2" id={`listing-card-desc-${listing.id}`}>
+                              {listing.description || 'No detailed company description submitted yet.'}
+                            </p>
+
+                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-slate-450 font-mono" id={`listing-card-meta-${listing.id}`}>
+                              <span className="flex items-center">
+                                <MapPin className="w-3.5 h-3.5 text-emerald-600 mr-0.5 shrink-0" />
+                                <span className="truncate max-w-[150px]">{listing.suburb ? `${listing.suburb}, ` : ''}{matchedLocation.type === 'city' ? '' : matchedLocation.name}</span>
+                              </span>
+                              {listing.contactPhone && (
+                                <span className="flex items-center">
+                                  <Phone className="w-3 h-3 text-slate-400 mr-0.5 shrink-0" />
+                                  <span>{listing.contactPhone}</span>
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar Columns - Local exploration metadata */}
+            <div className="lg:col-span-1 space-y-6" id="location-sidebar-pane">
+              
+              {/* Parent/Child lists */}
+              <div className="bg-white border rounded-2xl p-5 shadow-xs space-y-4" id="location-explore-box">
+                <h3 className="font-extrabold text-slate-800 text-xs tracking-wider uppercase font-mono border-b pb-2">
+                  Explore Neighboring Areas
+                </h3>
+
+                {matchedLocation.type === 'province' ? (
+                  /* Province -> List Cities in Province */
+                  <div className="space-y-2" id="explore-cities-stack">
+                    <p className="text-[10.5px] text-slate-500">Major verified business municipalities in {matchedLocation.name}:</p>
+                    <div className="flex flex-col gap-1.5 animate-fade-in" id="explore-cities-list">
+                      {CITIES_AND_TOWNS.filter(c => c.provinceId === (matchedLocation.data as any).id).slice(0, 15).map(city => {
+                        const citySlug = city.name.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
+                        return (
+                          <Link 
+                            key={city.id}
+                            href={`/${citySlug}`}
+                            className="text-xs text-slate-600 hover:text-emerald-700 font-medium inline-flex items-center justify-between py-1 px-2 hover:bg-slate-50 rounded"
+                            id={`explore-city-${city.id}`}
+                          >
+                            <span>{city.name}</span>
+                            <span className="text-[10px] font-mono text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-sm">
+                              {city.suburbs.length} suburbs
+                            </span>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : matchedLocation.type === 'city' ? (
+                  /* City -> List Suburbs in City */
+                  <div className="space-y-2" id="explore-suburbs-stack">
+                    <p className="text-[10.5px] text-slate-500">Suburbs & towns located around {matchedLocation.name}:</p>
+                    <div className="flex flex-wrap gap-1.5" id="explore-suburbs-grid">
+                      {(matchedLocation.data as any).suburbs.map((sub: string, i: number) => {
+                        const subSlug = sub.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
+                        return (
+                          <Link 
+                            key={i}
+                            href={`/${subSlug}`}
+                            className="bg-slate-50 hover:bg-emerald-50 border hover:border-emerald-300 text-slate-600 hover:text-emerald-800 rounded-lg px-2.5 py-1 text-[10.5px] font-mono transition-all"
+                            id={`explore-sub-${i}`}
+                          >
+                            {sub}
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  /* Suburb -> List neighboring Suburbs */
+                  <div className="space-y-2" id="neighboring-suburbs-stack">
+                    {matchedLocation.city && (
+                      <>
+                        <p className="text-[10.5px] text-slate-500">Other suburbs in {matchedLocation.city.name} to view:</p>
+                        <div className="flex flex-wrap gap-1.5" id="neighbor-sub-grid">
+                          {matchedLocation.city.suburbs.filter(s => s !== matchedLocation.name).slice(0, 15).map((sub, i) => {
+                            const subSlug = sub.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
+                            return (
+                              <Link 
+                                key={i}
+                                href={`/${subSlug}`}
+                                className="bg-slate-50 hover:bg-emerald-50 border hover:border-emerald-300 text-slate-600 hover:text-emerald-800 rounded-lg px-2.5 py-1 text-[10.5px] font-mono transition-all"
+                                id={`neighbor-sub-${i}`}
+                              >
+                                {sub}
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Instant registration Promo */}
+              <div className="bg-slate-900 text-white rounded-2xl p-5 space-y-3 shadow-md" id="sidebar-promo">
+                <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase tracking-wider block">Spotlight Premium</span>
+                <span className="text-sm font-bold block" id="promo-headline">Feature Business in {matchedLocation.name}</span>
+                <p className="text-slate-350 text-[10.5px] leading-relaxed" id="promo-subtitle">
+                  Lock down premium exposure. Place a highlight banner at the very crown of the {matchedLocation.name} directory indexes. Instantly receive your verified client credentials.
+                </p>
+                <Link 
+                  href="/?open_submission=true"
+                  className="w-full text-center block py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold rounded-xl shadow-sm transition-colors cursor-pointer"
+                  id="btn-promo-register"
+                >
+                  Buy Premium Spot
+                </Link>
+              </div>
+
+            </div>
+          </div>
+        </main>
+
+        <footer className="bg-slate-900 border-t border-slate-800 py-8 text-slate-400 text-xs" id="location-footer">
+          <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4" id="location-footer-inner">
+            <span className="font-extrabold text-white text-md">
+              Biz<span className="text-emerald-400 font-black">s</span>earch24
+            </span>
+            <p className="text-slate-500 text-[10.5px]">© 2026 Bizsearch24 South Africa Directory. All rights reserved.</p>
           </div>
         </footer>
       </div>

@@ -9,7 +9,7 @@ generator client {
 // NOTE: Currently configured for SQLite for local sandbox.
 // When deploying to VPS with PostgreSQL, change provider to "postgresql"
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

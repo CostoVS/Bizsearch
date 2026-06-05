@@ -8,7 +8,10 @@ import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient }
 
-const dbUrl = process.env.DATABASE_URL || "file:./dev.db";
+let dbUrl = process.env.DATABASE_URL;
+if (!dbUrl || dbUrl.startsWith("file:")) {
+  dbUrl = "postgresql://postgres:postgres@localhost:5432/bizsearch?schema=public";
+}
 
 export const prisma =
   globalForPrisma.prisma ||

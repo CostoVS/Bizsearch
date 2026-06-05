@@ -23,7 +23,7 @@ RUN mkdir -p public
 # Set environment variables for the build phase
 ENV NEXT_TELEMETRY_DISABLED 1
 ENV NODE_ENV production
-ENV DATABASE_URL "file:/app/prisma/dev.db"
+ENV DATABASE_URL "postgresql://postgres:postgres@localhost:5432/bizsearch?schema=public"
 
 # Generate prisma client before building
 RUN npx prisma generate

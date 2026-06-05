@@ -256,25 +256,30 @@ export default function SitemapPage() {
                             <div className="flex items-center justify-between" id={`city-node-hdr-${city.id}`}>
                               <div className="flex items-center space-x-2" id={`city-title-row-${city.id}`}>
                                 <MapPin className="w-4 h-4 text-emerald-600" id={`city-pin-ico-${city.id}`} />
-                                <h4 className="text-xs sm:text-sm font-extrabold text-slate-850" id={`city-node-title-${city.id}`}>
+                                <Link 
+                                  href={`/${city.name.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '')}`}
+                                  className="text-xs sm:text-sm font-extrabold text-slate-850 hover:text-emerald-700 hover:underline transition-all"
+                                  id={`city-node-title-${city.id}`}
+                                >
                                   {city.name}
-                                </h4>
+                                </Link>
                               </div>
                               <span className="text-[10px] font-mono text-slate-400" id={`city-node-count-${city.id}`}>
                                 {cityListings.length} verified corporations
                               </span>
                             </div>
-
+ 
                             {/* Suburbs inline flow wrapper */}
                             <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-200/50" id={`city-suburbs-grid-${city.id}`}>
                               {city.suburbs.map(suburb => {
                                 const subListingsCount = cityListings.filter(l => l.suburb && l.suburb.toLowerCase() === suburb.toLowerCase()).length;
+                                const subSlug = suburb.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
                                 
                                 return (
                                   <Link
                                     id={`sitemap-suburb-tag-${city.id}-${suburb.replace(/[^a-zA-Z0-9]/g, '-')}`}
                                     key={suburb}
-                                    href={`/?province=${prov.id}&city=${city.id}&suburb=${encodeURIComponent(suburb)}`}
+                                    href={`/${subSlug}`}
                                     className="inline-flex items-center space-x-1 px-2.5 py-1.5 bg-white border border-slate-200/60 rounded-lg hover:border-emerald-500 hover:text-emerald-800 transition-all text-[10.5px] font-mono cursor-pointer"
                                     title={`Explore verified listings in ${suburb}, ${city.name}`}
                                   >
