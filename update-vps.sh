@@ -48,7 +48,19 @@ fi
 
 # Stop any currently matching Docker container instances to prevent locked states
 echo -e "\n${BLUE}[2/8] Halting docker services to perform clean rebuild...${NC}"
-docker-compose down || true
+
+# Autodetect docker compose command style
+if docker compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+elif docker-compose version >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose"
+else
+    echo -e "${RED}ERROR: Docker Compose is not installed or available in PATH.${NC}"
+    exit 1
+fi
+echo -e "Detected Docker Compose CLI syntax: ${GREEN}$COMPOSE_CMD${NC}"
+
+$COMPOSE_CMD down || true
 
 # Pre-setup data directories
 echo -e "\n${BLUE}[3/8] Creating and securing Docker data volumes...${NC}"
@@ -71,7 +83,7 @@ fi
 # Bring up Docker services on correct mapped host ports
 echo -e "\n${BLUE}[5/8] Booting Docker stack (PostgreSQL + production Next.js Standalone)...${NC}"
 # Note: In docker-compose.yml, PostgreSQL host port is mapped to 5435 to avoid any衝突 with host's native local database server.
-docker-compose up -d --build
+$COMPOSE_CMD up -d --build
 
 # Wait for PostgreSQL to complete initializations inside internal bridge network
 echo -e "\n${BLUE}[6/8] Awaiting database responsiveness inside container...${NC}"
@@ -87,22 +99,22 @@ done
 
 # Perform migrations
 echo -e "\n${BLUE}[7/8] Synchronizing PostgreSQL db schemas directly in Prisma...${NC}"
-docker-compose exec -T bizsearch npx prisma db push --accept-data-loss
+$COMPOSE_CMD exec -T bizsearch npx prisma db push --accept-data-loss
 
 # Generate client
 echo -e "Generating Prisma Client binaries inside workspace container..."
-docker-compose exec -T bizsearch npx prisma generate
+$COMPOSE_CMD exec -T bizsearch npx prisma generate
 
 # Seed database
 echo -e "\n${BLUE}[8/8] Seeding default administrator profile and parsing listings from dataset...${NC}"
-docker-compose exec -T bizsearch npx prisma db seed
+$COMPOSE_CMD exec -T bizsearch npx prisma db seed
 
 # Complete deployment validation checks
 echo -e "\n${GREEN}======================================================================${NC}"
 echo -e "${GREEN}✅ DEPLOYMENT & DATABASE SEED COMPLETE!${NC}"
 echo -e "======================================================================"
 echo -e "Docker Container Statuses:"
-docker-compose ps
+$COMPOSE_CMD ps
 echo -e "\n- Mapped Web Application Endpoint (Public Host): ${GREEN}http://localhost:3004 (Routed via Nginx to co.za domain)${NC}"
 echo -e "- Private Database Connection Endpoint: ${BLUE}postgresql://postgres:postgres@localhost:5435/bizsearch?schema=public${NC}"
 echo -e "- Default Administrator Email: ${GREEN}admin@bizsearch24.co.za${NC}"
