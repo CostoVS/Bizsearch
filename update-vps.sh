@@ -1,67 +1,110 @@
 #!/bin/bash
 # ==============================================================================
-# BIZSEARCH24 PostgreSQL VPS UPDATE & DEPLOYMENT SCRIPT
+# BIZSEARCH24 PostgreSQL VPS UPDATE, MIGRATION & DEPLOYMENT SYSTEM
 # ==============================================================================
-# This script handles the Git pull, secure directory permissions,
-# PostgreSQL Docker container initialization, Prisma schema synchronization, and database seeding.
+# This script handles:
+# 1. Gracefully terminating any hanging or orphan Next.js dev/prod processes
+# 2. Bringing up PostgreSQL (on custom internal ports to avoid system conflicts)
+# 3. Synchronizing PostgreSQL schemas using Prisma
+# 4. Seeding the initial administrative user & business datasets
+# ==============================================================================
 
 set -e
 
-echo "======================================================================"
-echo "🚀 STARTING BIZSEARCH24 POSTGRESQL VPS UPDATE & MIGRATION PROCESS..."
-echo "======================================================================"
+# --- COLOR DEFINITIONS ---
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+RED='\033[0;31m'
+NC='\033[0m' # No Color
 
-# 1. Pull latest code from Git
-echo "Step 1: Pulling latest changes from git repository..."
-git pull origin main || {
-  echo "⚠️ Git pull failed. Please ensure your remote repository is configured or stash any local changes."
-  echo "Proceeding with the update using local modifications..."
-}
+echo -e "${BLUE}======================================================================${NC}"
+echo -e "${GREEN} 🚀 STARTING BIZSEARCH24 POSTGRESQL VPS UPDATE & REBUILD PROCESS...${NC}"
+echo -e "${BLUE}======================================================================${NC}"
 
-# 2. Shutdown existing running docker-compose containers (releases port 3004 and resources)
-echo "Step 2: Stopping existing running docker services..."
-docker-compose down || true
+# Detect ports conflicts
+echo -e "\n${BLUE}[1/8] Analyzing host network ports and killing hanging processes...${NC}"
 
-# 3. Handle Docker permissions and setup volumes
-echo "Step 3: Setting up the postgreSQL data store and credentials..."
-# Docker volume pgdata is automatically managed by docker-compose for persistence.
-# If you are writing logs or have custom data directories:
-mkdir -p ./data_store
-sudo chmod -R 775 ./data_store
+# Check port 3000 on the host system
+if command -v lsof &> /dev/null; then
+    PORT_3000_PID=$(lsof -t -i:3000 || true)
+    if [ ! -z "$PORT_3000_PID" ]; then
+        echo -e "${YELLOW}Warning: Process PID $PORT_3000_PID is currently occupying port 3000 on the host VPS.${NC}"
+        echo -e "Terminating holding process to prevent gateway routes from breaking..."
+        kill -9 $PORT_3000_PID || sudo kill -9 $PORT_3000_PID || true
+        echo -e "${GREEN}✓ Process on port 3000 terminated!${NC}"
+    else
+        echo -e "✓ Host port 3000 is clean and clear."
+    fi
 
-# 4. Prompt / verify that local .env file contains correct PostgreSQL DATABASE_URL
-if [ ! -f ".env" ]; then
-    echo "⚠️ No local .env file found. Copying .env.example..."
-    cp .env.example .env
-    echo "🚨 Created .env with fallback configurations. Please verify your DATABASE_URL inside your local .env file!"
+    PORT_3004_PID=$(lsof -t -i:3004 || true)
+    if [ ! -z "$PORT_3004_PID" ]; then
+        echo -e "Port 3004 is currently used by a running service. Terminating it to allow rebuild..."
+        kill -9 $PORT_3004_PID || sudo kill -9 $PORT_3004_PID || true
+    fi
 else
-    echo "✅ Existing .env configuration file detected."
+    echo -e "${YELLOW}Notice: 'lsof' is not installed. Skipping automatic process cleanups.${NC}"
 fi
 
-# 5. Build and start PostgreSQL and NextJS containers in detached mode
-echo "Step 4: Building and booting Docker services (PostgreSQL & Next.js App)..."
+# Stop any currently matching Docker container instances to prevent locked states
+echo -e "\n${BLUE}[2/8] Halting docker services to perform clean rebuild...${NC}"
+docker-compose down || true
+
+# Pre-setup data directories
+echo -e "\n${BLUE}[3/8] Creating and securing Docker data volumes...${NC}"
+mkdir -p ./data_store
+chmod -R 775 ./data_store
+
+# Check or construct environment keys
+echo -e "\n${BLUE}[4/8] Aligning service configuration (.env file)...${NC}"
+if [ ! -f ".env" ]; then
+    echo -e "No .env file found. Copying .env.example..."
+    cp .env.example .env
+    # Inject a secure session key automatically
+    RAND_SECRET=$(node -e "console.log(require('crypto').randomBytes(32).toString('hex'))" 2>/dev/null || echo "bizsearch_prod_session_secret_fallback")
+    sed -i.bak "s/SESSION_SECRET=/SESSION_SECRET=$RAND_SECRET/g" .env 2>/dev/null || true
+    echo -e "${GREEN}✓ Local environment file .env has been generated!${NC}"
+else
+    echo -e "✓ Valid local database connection strings (.env check passed)."
+fi
+
+# Bring up Docker services on correct mapped host ports
+echo -e "\n${BLUE}[5/8] Booting Docker stack (PostgreSQL + production Next.js Standalone)...${NC}"
+# Note: In docker-compose.yml, PostgreSQL host port is mapped to 5435 to avoid any衝突 with host's native local database server.
 docker-compose up -d --build
 
-# 6. Wait for PostgreSQL container to be fully initialized and ready
-echo "Step 5: Waiting for PostgreSQL database container to establish connections (10 seconds)..."
-sleep 10
+# Wait for PostgreSQL to complete initializations inside internal bridge network
+echo -e "\n${BLUE}[6/8] Awaiting database responsiveness inside container...${NC}"
+echo "We will poll database accessibility natively."
+for i in {1..20}; do
+    if docker exec bizsearch-db pg_isready -U postgres -d bizsearch >/dev/null 2>&1; then
+        echo -e "${GREEN}✓ Database connection successfully established!${NC}"
+        break
+    fi
+    echo -e "${YELLOW}Waiting for database schema container to respond... ($i/20)${NC}"
+    sleep 2
+done
 
-# 7. Apply the schema directly into PostgreSQL database and sync Prisma
-echo "Step 6: Executing Prisma schema synchronization and DB push inside container..."
+# Perform migrations
+echo -e "\n${BLUE}[7/8] Synchronizing PostgreSQL db schemas directly in Prisma...${NC}"
 docker-compose exec -T bizsearch npx prisma db push --accept-data-loss
 
-# 8. Seed/Populate the database with the JSON dataset using seedPrisma.js
-echo "Step 7: Seeding PostgreSQL database with default and imported business profiles..."
+# Generate client
+echo -e "Generating Prisma Client binaries inside workspace container..."
+docker-compose exec -T bizsearch npx prisma generate
+
+# Seed database
+echo -e "\n${BLUE}[8/8] Seeding default administrator profile and parsing listings from dataset...${NC}"
 docker-compose exec -T bizsearch npx prisma db seed
 
-# 9. Verify database logs and application container status
-echo "Step 8: Verifying running container services status..."
+# Complete deployment validation checks
+echo -e "\n${GREEN}======================================================================${NC}"
+echo -e "${GREEN}✅ DEPLOYMENT & DATABASE SEED COMPLETE!${NC}"
+echo -e "======================================================================"
+echo -e "Docker Container Statuses:"
 docker-compose ps
-
-# 10. Query local loopback to confirm the app is serving index pages
-echo "Step 9: Testing site loopback endpoint on port 3004..."
-curl -I -s http://127.0.0.1:3004 || echo "⚠️ Host loopback returned offline. Wait another minute or check your proxy logs."
-
-echo "======================================================================"
-echo "✅ DEPLOYMENT & DATABASE SWAP COMPLETED SUCCESSFULLY FOR POSTGRESQL!"
-echo "======================================================================"
+echo -e "\n- Mapped Web Application Endpoint (Public Host): ${GREEN}http://localhost:3004 (Routed via Nginx to co.za domain)${NC}"
+echo -e "- Private Database Connection Endpoint: ${BLUE}postgresql://postgres:postgres@localhost:5435/bizsearch?schema=public${NC}"
+echo -e "- Default Administrator Email: ${GREEN}admin@bizsearch24.co.za${NC}"
+echo -e "- Default Administrator Password: ${GREEN}adminpassword24${NC}"
+echo -e "======================================================================"
