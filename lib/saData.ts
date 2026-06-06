@@ -1590,34 +1590,129 @@ export const CITIES_AND_TOWNS: CityTown[] = [
 ];
 
 export const CATEGORIES = [
-  { id: 'emergency', name: 'Emergency Services', icon: 'ShieldAlert', color: 'text-red-500 bg-red-50' },
-  { id: 'health', name: 'Medical & Health', icon: 'HeartPulse', color: 'text-emerald-500 bg-emerald-50' },
-  { id: 'services', name: 'Professional Services', icon: 'Briefcase', color: 'text-blue-500 bg-blue-50' },
-  { id: 'food', name: 'Restaurants & Food', icon: 'Utensils', color: 'text-amber-500 bg-amber-50' },
-  { id: 'automotive', name: 'Automotive & Vehicles', icon: 'Car', color: 'text-indigo-500 bg-indigo-50' },
-  { id: 'trades', name: 'Plumbing, Electrical & Trades', icon: 'Wrench', color: 'text-orange-500 bg-orange-50' },
-  { id: 'tourism', name: 'Tourism, Travel & Accommodation', icon: 'Palmtree', color: 'text-cyan-500 bg-cyan-50' },
-  { id: 'retail', name: 'Retail & Shopping', icon: 'ShoppingBag', color: 'text-pink-500 bg-pink-50' },
-  { id: 'construction', name: 'Construction & Building', icon: 'Hammer', color: 'text-slate-500 bg-slate-50' },
-  { id: 'home-improvement', name: 'Home Renovation & Maintenance', icon: 'Home', color: 'text-yellow-500 bg-yellow-50' },
-  { id: 'cleaning', name: 'Cleaning & Janitorial', icon: 'Sparkles', color: 'text-teal-500 bg-teal-50' },
-  { id: 'education', name: 'Education, Academies & Training', icon: 'GraduationCap', color: 'text-indigo-600 bg-indigo-50' },
-  { id: 'beauty-wellness', name: 'Beauty, Barber & Wellness', icon: 'Scissors', color: 'text-fuchsia-500 bg-fuchsia-50' },
-  { id: 'tech-it', name: 'IT Support & Software Devel', icon: 'Laptop', color: 'text-purple-600 bg-purple-50' },
-  { id: 'creative-marketing', name: 'Marketing, Publishing & Design', icon: 'PenTool', color: 'text-rose-500 bg-rose-50' },
-  { id: 'events', name: 'Event Coordination & Rentals', icon: 'Music', color: 'text-red-400 bg-red-50' },
-  { id: 'agriculture-garden', name: 'Farming, Nursery & Landscaping', icon: 'Flower2', color: 'text-green-600 bg-green-50' },
-  { id: 'logistics', name: 'Logistics, Transport & Storage', icon: 'Truck', color: 'text-sky-500 bg-sky-50' },
-  { id: 'security', name: 'Guarding & Security Systems', icon: 'ShieldCheck', color: 'text-emerald-600 bg-emerald-50' },
-  { id: 'pets', name: 'Pets, Veterinary & Grooming', icon: 'PawPrint', color: 'text-amber-700 bg-amber-50' },
-  { id: 'industrial', name: 'Industrial, Plant & Machinery', icon: 'Factory', color: 'text-stone-600 bg-stone-100' },
+  // --- MEDICAL & HEALTH ---
+  { id: 'health', name: 'Medical & Health (General)', icon: 'HeartPulse', color: 'text-emerald-500 bg-emerald-50' },
+  { id: 'dental', name: 'Dental Care & Orthodontics', icon: 'Smile', color: 'text-emerald-600 bg-emerald-50' },
+  { id: 'pharmacy', name: 'Pharmacies & Dispensaries', icon: 'Pill', color: 'text-teal-500 bg-teal-50' },
+  { id: 'therapy-mental', name: 'Therapy, Counseling & Psychiatry', icon: 'Brain', color: 'text-violet-500 bg-violet-50' },
+  { id: 'holistic-wellness', name: 'Holistic & Alternative Medicine', icon: 'Leaf', color: 'text-emerald-700 bg-emerald-50' },
+  { id: 'elder-care', name: 'Elder Care & Frail Care Facilities', icon: 'Users', color: 'text-stone-600 bg-stone-50' },
+
+  // --- PROFESSIONAL & SPECIALIZED SERVICES ---
+  { id: 'services', name: 'Professional Consulting', icon: 'Briefcase', color: 'text-blue-500 bg-blue-50' },
   { id: 'legal', name: 'Legal Services & Notaries', icon: 'Scale', color: 'text-slate-700 bg-slate-50' },
-  { id: 'finance', name: 'Financial, Wealth & Insurance', icon: 'Coins', color: 'text-green-500 bg-green-50' },
-  { id: 'fitness-recreation', name: 'Sports, Gym & Fitness Training', icon: 'Dumbbell', color: 'text-orange-600 bg-orange-50' },
-  { id: 'childcare', name: 'Childcare, Pre-schools & Family', icon: 'Baby', color: 'text-pink-400 bg-pink-50' },
-  { id: 'funeral', name: 'Funeral, Mortuary & Memorials', icon: 'Heart', color: 'text-neutral-500 bg-neutral-100' },
-  { id: 'waste', name: 'Waste Management & Recycling', icon: 'Trash2', color: 'text-lime-500 bg-lime-50' },
-  { id: 'real-estate', name: 'Real Estate & Properties', icon: 'Building', color: 'text-cyan-600 bg-cyan-50' },
-  { id: 'machinery-hire', name: 'Equipment & Tool Plant Hire', icon: 'Layers', color: 'text-violet-500 bg-violet-50' },
-  { id: 'digital-media', name: 'Photography, Media & Creative', icon: 'Camera', color: 'text-violet-600 bg-violet-50' },
+  { id: 'accounting-tax', name: 'Accounting, Bookkeeping & Tax', icon: 'Calculator', color: 'text-indigo-600 bg-indigo-50' },
+  { id: 'finance-insurance', name: 'Finance, Banking & Insurance', icon: 'Coins', color: 'text-green-500 bg-green-50' },
+  { id: 'security-services', name: 'Guarding & Security Systems', icon: 'ShieldCheck', color: 'text-teal-600 bg-teal-50' },
+  { id: 'pest-control', name: 'Pest Control & Fumigation', icon: 'Bug', color: 'text-amber-700 bg-amber-50' },
+  { id: 'locksmith', name: 'Locksmiths & Key Cutting', icon: 'Key', color: 'text-orange-500 bg-orange-50' },
+  { id: 'debt-collection', name: 'Debt Collection & Recoveries', icon: 'TrendingDown', color: 'text-rose-600 bg-rose-50' },
+  { id: 'translation-writing', name: 'Translation, Editing & Copywriting', icon: 'PenTool', color: 'text-rose-500 bg-rose-50' },
+  { id: 'printing-signage', name: 'Printers, Signage & Copiers', icon: 'Printer', color: 'text-violet-600 bg-violet-50' },
+
+  // --- MECHANICAL, AUTOMOTIVE & VEHICLES ---
+  { id: 'automotive', name: 'Auto Repair & Mechanical', icon: 'Car', color: 'text-indigo-500 bg-indigo-50' },
+  { id: 'panel-beating', name: 'Panel Beating & Spray Painting', icon: 'Hammer', color: 'text-blue-600 bg-blue-50' },
+  { id: 'car-dealerships', name: 'Car Dealerships & Sales', icon: 'Tag', color: 'text-cyan-500 bg-cyan-50' },
+  { id: 'trucking-logistics', name: 'Logistics, Transport & Storage', icon: 'Truck', color: 'text-sky-500 bg-sky-50' },
+  { id: 'maritime-marine', name: 'Maritime & Marine Services', icon: 'Anchor', color: 'text-blue-700 bg-blue-50' },
+  { id: 'aviation-drones', name: 'Aviation, Flight Schools & Drones', icon: 'Plane', color: 'text-indigo-700 bg-indigo-50' },
+
+  // --- TRADES, CONSTRUCTION & INDUSTRIAL ---
+  { id: 'trades', name: 'Plumbing & Drain Cleaning', icon: 'Wrench', color: 'text-orange-500 bg-orange-50' },
+  { id: 'electrical', name: 'Electrical Wiring & Power', icon: 'Zap', color: 'text-yellow-500 bg-yellow-50' },
+  { id: 'hvac', name: 'Airco, HVAC & Refrigeration', icon: 'Snowflake', color: 'text-cyan-400 bg-cyan-50' },
+  { id: 'carpentry', name: 'Carpentry & Cabinet Making', icon: 'Hammer', color: 'text-amber-600 bg-amber-50' },
+  { id: 'solar-energy', name: 'Solar Energy & Backup Power', icon: 'Sun', color: 'text-yellow-600 bg-yellow-50' },
+  { id: 'construction', name: 'Construction & Civil Contracting', icon: 'Hammer', color: 'text-slate-500 bg-slate-50' },
+  { id: 'architecture', name: 'Architecture & Spatial Design', icon: 'Compass', color: 'text-indigo-500 bg-indigo-50' },
+  { id: 'roofing', name: 'Roofing, Waterproofing & Gutters', icon: 'Home', color: 'text-neutral-600 bg-neutral-50' },
+  { id: 'machinery-hire', name: 'Plant Hire & Heavy Equipment', icon: 'Layers', color: 'text-violet-500 bg-violet-50' },
+  { id: 'boreholes-water', name: 'Boreholes & Water Treatment', icon: 'Droplet', color: 'text-blue-400 bg-blue-50' },
+  { id: 'mining-extractives', name: 'Mining, Extractives & Quarrying', icon: 'HardHat', color: 'text-stone-700 bg-stone-150' },
+  { id: 'industrial-mfg', name: 'Factories & Industrial Manufacturing', icon: 'Factory', color: 'text-stone-600 bg-stone-100' },
+  { id: 'waste-recycling', name: 'Waste Management & Recycling', icon: 'Trash2', color: 'text-lime-500 bg-lime-50' },
+
+  // --- FOOD, DRINK & CATERING ---
+  { id: 'food', name: 'Restaurants, Cafes & Bistros', icon: 'Utensils', color: 'text-amber-500 bg-amber-50' },
+  { id: 'fast-food', name: 'Fast Food & Takeaways', icon: 'Coffee', color: 'text-orange-600 bg-orange-50' },
+  { id: 'catering-events', name: 'Catering Services', icon: 'Pizza', color: 'text-pink-500 bg-pink-50' },
+  { id: 'liquor-breweries', name: 'Breweries, Wineries & Distilleries', icon: 'Wine', color: 'text-red-700 bg-red-50' },
+
+  // --- PROPERTY & REAL ESTATE ---
+  { id: 'real-estate', name: 'Real Estate Sales & Letting', icon: 'Building', color: 'text-cyan-600 bg-cyan-50' },
+  { id: 'valutations', name: 'Property Valuations', icon: 'ClipboardList', color: 'text-teal-600 bg-teal-50' },
+  { id: 'interior-decor', name: 'Interior Decor & Curtains', icon: 'Palette', color: 'text-purple-500 bg-purple-50' },
+
+  // --- EDUCATION, INFORMATION TECH & DIGITAL ---
+  { id: 'education', name: 'Schools, Academies & Training', icon: 'GraduationCap', color: 'text-indigo-600 bg-indigo-50' },
+  { id: 'tutoring', name: 'Private Tutoring & Exam Prep', icon: 'BookOpen', color: 'text-sky-600 bg-sky-50' },
+  { id: 'tech-it', name: 'IT Support, Software & Cloud', icon: 'Laptop', color: 'text-purple-600 bg-purple-50' },
+  { id: 'telecoms', name: 'Telecommunications & Fiber', icon: 'Wifi', color: 'text-teal-600 bg-teal-50' },
+  { id: 'digital-marketing', name: 'Marketing & Digital Advertising', icon: 'Megaphone', color: 'text-rose-500 bg-rose-50' },
+  { id: 'digital-media', name: 'Photography & Videography', icon: 'Camera', color: 'text-violet-600 bg-violet-50' },
+  { id: 'coworking', name: 'Coworking Spaces & Boardrooms', icon: 'Users', color: 'text-blue-500 bg-blue-50' },
+
+  // --- COMMUNITY & PUBLIC SECTOR ---
+  { id: 'emergency', name: 'Emergency & Fire Services', icon: 'ShieldAlert', color: 'text-red-500 bg-red-50' },
+  { id: 'ngos-charities', name: 'NGOs, Charities & Non-Profits', icon: 'Heart', color: 'text-rose-500 bg-rose-50' },
+  { id: 'religious', name: 'Religious Centers & Churches', icon: 'Globe', color: 'text-slate-600 bg-slate-50' },
+  { id: 'municipality', name: 'Municipal & Public Services', icon: 'Building2', color: 'text-emerald-700 bg-emerald-50' },
+
+  // --- TOURISM, LEISURE & RECREATION ---
+  { id: 'tourism', name: 'Hotels, Lodges & Accommodation', icon: 'Palmtree', color: 'text-cyan-500 bg-cyan-50' },
+  { id: 'travel-agency', name: 'Travel Agencies & Tour Guides', icon: 'Compass', color: 'text-blue-600 bg-blue-50' },
+  { id: 'fitness-gym', name: 'Sports, Gyms & Fitness Trainers', icon: 'Dumbbell', color: 'text-orange-600 bg-orange-50' },
+  { id: 'sports-clubs', name: 'Sports Clubs & Recreation Fields', icon: 'Activity', color: 'text-emerald-600 bg-emerald-50' },
+
+  // --- BEAUTY, WELLNESS & PERSONAL CARE ---
+  { id: 'beauty-wellness', name: 'Beauty Salons & Hairdressers', icon: 'Scissors', color: 'text-fuchsia-500 bg-fuchsia-50' },
+  { id: 'massage-spa', name: 'Spas & Massage Therapy', icon: 'Sparkles', color: 'text-teal-500 bg-teal-50' },
+  { id: 'tailoring', name: 'Tailoring & Alterations', icon: 'Scissors', color: 'text-pink-600 bg-pink-50' },
+
+  // --- RETAIL & SHOPPING ---
+  { id: 'retail', name: 'Retail Shops & Supermarkets', icon: 'ShoppingBag', color: 'text-pink-500 bg-pink-50' },
+  { id: 'fashion-apparel', name: 'Fashion Boutiques & Footwear', icon: 'Shirt', color: 'text-sky-500 bg-sky-50' },
+  { id: 'electronics', name: 'Electronics & Home Appliances', icon: 'Tv', color: 'text-purple-500 bg-purple-50' },
+  { id: 'hardware-store', name: 'Hardware & Building Supplies', icon: 'Hammer', color: 'text-stone-700 bg-stone-50' },
+  { id: 'toy-hobby', name: 'Toy Stores & Hobby Shops', icon: 'Gamepad2', color: 'text-red-500 bg-red-50' },
+  { id: 'bookshops', name: 'Bookshops & Stationers', icon: 'BookOpen', color: 'text-indigo-500 bg-indigo-50' },
+  { id: 'art-galleries', name: 'Art Galleries & Studios', icon: 'Palette', color: 'text-rose-400 bg-rose-50' },
+  { id: 'music-instruments', name: 'Music Recording & Instruments', icon: 'Music', color: 'text-amber-500 bg-amber-50' },
+  { id: 'florists', name: 'Florists & Nursery Plants', icon: 'Flower2', color: 'text-green-600 bg-green-50' },
+  { id: 'craft-markets', name: 'Craft & Flea Markets', icon: 'Store', color: 'text-orange-600 bg-orange-50' },
+
+  // --- CLEANING & HOME MAINTENANCE ---
+  { id: 'cleaning', name: 'Cleaning & Janitorial Services', icon: 'Sparkles', color: 'text-teal-500 bg-teal-50' },
+  { id: 'home-improvement', name: 'Home Renovations & Handyman', icon: 'Home', color: 'text-yellow-500 bg-yellow-50' },
+  { id: 'laundry-laundromat', name: 'Laundry & Dry Cleaning', icon: 'Wind', color: 'text-blue-400 bg-blue-50' },
+  { id: 'landscaping', name: 'Garden Maintenance & Landscaping', icon: 'Trees', color: 'text-emerald-600 bg-emerald-50' },
+  { id: 'swimming-pools', name: 'Swimming Pool Maintenance', icon: 'Waves', color: 'text-cyan-500 bg-cyan-50' },
+  { id: 'tree-felling', name: 'Tree Felling & Stump Removal', icon: 'Trees', color: 'text-amber-700 bg-amber-50' },
+  { id: 'movers-relocation', name: 'Moving & Relocation Services', icon: 'PackageOpen', color: 'text-sky-600 bg-sky-50' },
+
+  // --- ANIMAL, PETS & VET ---
+  { id: 'pets-veterinary', name: 'Veterinary Clinics & Surgeons', icon: 'HeartPulse', color: 'text-red-400 bg-red-50' },
+  { id: 'pet-grooming', name: 'Pet Grooming & Parlors', icon: 'Scissors', color: 'text-sky-500 bg-sky-50' },
+  { id: 'pet-boarding', name: 'Pet Boarding & Kennels', icon: 'Home', color: 'text-orange-600 bg-orange-50' },
+
+  // --- EVENTS, LEISURE & ENTERTAINMENT ---
+  { id: 'events', name: 'Event Organizers & Planners', icon: 'Calendar', color: 'text-red-400 bg-red-50' },
+  { id: 'equipment-rentals', name: 'Party Hire & Event Equipment', icon: 'Sparkles', color: 'text-pink-500 bg-pink-50' },
+  { id: 'stage-sound', name: 'Sound Systems & Stage Lighting', icon: 'Volume2', color: 'text-emerald-500 bg-emerald-50' },
+  { id: 'dance-theaters', name: 'Dance & Theater Academies', icon: 'Activity', color: 'text-purple-600 bg-purple-50' },
+  { id: 'model-casting', name: 'Model & Talent Agencies', icon: 'Users', color: 'text-rose-500 bg-rose-50' },
+
+  // --- AGRICULTURE & OUTDOORS ---
+  { id: 'agriculture-garden', name: 'Farming, Crops & Livestock', icon: 'Leaf', color: 'text-green-600 bg-green-50' },
+  { id: 'paving-decking', name: 'Paving, Decking & Fencing', icon: 'Grid', color: 'text-neutral-500 bg-neutral-100' },
+
+  // --- MISCELLANEOUS SPECIALIZED ---
+  { id: 'funeral', name: 'Funeral Homes & Memorials', icon: 'Heart', color: 'text-neutral-500 bg-neutral-100' },
+  { id: 'courier', name: 'Courier & Express Delivery', icon: 'Send', color: 'text-blue-500 bg-blue-50' },
+  { id: 'childcare', name: 'Daycare, Creches & Preschools', icon: 'Baby', color: 'text-pink-400 bg-pink-50' },
+  { id: 'fire-safety', name: 'Fire Auditing & Extinguishers', icon: 'ShieldAlert', color: 'text-red-600 bg-red-50' },
+  { id: 'office-furniture', name: 'Office Supplies & Corporate Decor', icon: 'Armchair', color: 'text-blue-600 bg-blue-50' },
+  { id: 'corporate-gifting', name: 'Corporate Gifting & Screenprint', icon: 'Gift', color: 'text-rose-500 bg-rose-50' },
+  { id: 'taxidermy', name: 'Taxidermy & Trophy Mounting', icon: 'Compass', color: 'text-yellow-700 bg-yellow-50' },
 ];

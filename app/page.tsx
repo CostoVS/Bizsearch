@@ -59,7 +59,50 @@ import {
   Building,
   Layers,
   Camera,
-  Lock
+  Lock,
+  Smile,
+  Pill,
+  Brain,
+  Bug,
+  Key,
+  Zap,
+  Snowflake,
+  Sun,
+  Compass,
+  Droplet,
+  HardHat,
+  Pizza,
+  Wine,
+  ClipboardList,
+  Palette,
+  BookOpen,
+  Wifi,
+  Megaphone,
+  Building2,
+  Shirt,
+  Tv,
+  Gamepad2,
+  Store,
+  Wind,
+  Trees,
+  Waves,
+  PackageOpen,
+  Volume2,
+  Send,
+  Gift,
+  Armchair,
+  Users,
+  Calculator,
+  Tag,
+  Anchor,
+  Plane,
+  Calendar,
+  Activity,
+  Grid,
+  Leaf,
+  TrendingDown,
+  Printer,
+  Coffee
 } from 'lucide-react';
 
 import { PROVINCES, CITIES_AND_TOWNS, CATEGORIES } from '@/lib/saData';
@@ -1092,36 +1135,100 @@ export default function Bizsearch24Home() {
   // Category Icon Lookup
   const getCategoryIcon = (catId: string) => {
     switch (catId) {
-      case 'emergency': return <ShieldAlert className="w-5 h-5 text-red-650" id="cat-icon-emergency" />;
+      case 'emergency': return <ShieldAlert className="w-5 h-5 text-red-600" id="cat-icon-emergency" />;
       case 'health': return <HeartPulse className="w-5 h-5 text-emerald-600" id="cat-icon-health" />;
+      case 'dental': return <Smile className="w-5 h-5 text-emerald-600" id="cat-icon-dental" />;
+      case 'pharmacy': return <Pill className="w-5 h-5 text-teal-600" id="cat-icon-pharmacy" />;
+      case 'therapy-mental': return <Brain className="w-5 h-5 text-violet-600" id="cat-icon-therapy-mental" />;
+      case 'holistic-wellness': return <Leaf className="w-5 h-5 text-emerald-750" id="cat-icon-holistic-wellness" />;
+      case 'elder-care': return <Users className="w-5 h-5 text-stone-600" id="cat-icon-elder-care" />;
       case 'services': return <Briefcase className="w-5 h-5 text-blue-600" id="cat-icon-services" />;
-      case 'food': return <Utensils className="w-5 h-5 text-amber-600" id="cat-icon-food" />;
-      case 'automotive': return <Car className="w-5 h-5 text-indigo-600" id="cat-icon-automotive" />;
-      case 'trades': return <Wrench className="w-5 h-5 text-orange-600" id="cat-icon-trades" />;
-      case 'tourism': return <Palmtree className="w-5 h-5 text-cyan-500" id="cat-icon-tourism" />;
-      case 'retail': return <ShoppingBag className="w-5 h-5 text-pink-600" id="cat-icon-retail" />;
-      case 'construction': return <Hammer className="w-5 h-5 text-slate-500" id="cat-icon-construction" />;
-      case 'home-improvement': return <Home className="w-5 h-5 text-yellow-500" id="cat-icon-home" />;
-      case 'cleaning': return <Sparkles className="w-5 h-5 text-teal-500" id="cat-icon-cleaning" />;
-      case 'education': return <GraduationCap className="w-5 h-5 text-indigo-700" id="cat-icon-education" />;
-      case 'beauty-wellness': return <Scissors className="w-5 h-5 text-fuchsia-500" id="cat-icon-beauty" />;
-      case 'tech-it': return <Laptop className="w-5 h-5 text-purple-600" id="cat-icon-tech" />;
-      case 'creative-marketing': return <PenTool className="w-5 h-5 text-rose-500" id="cat-icon-creative" />;
-      case 'events': return <Music className="w-5 h-5 text-red-400" id="cat-icon-events" />;
-      case 'agriculture-garden': return <Flower2 className="w-5 h-5 text-green-600" id="cat-icon-garden" />;
-      case 'logistics': return <Truck className="w-5 h-5 text-sky-500" id="cat-icon-logistics" />;
-      case 'security': return <ShieldCheck className="w-5 h-5 text-emerald-650" id="cat-icon-security" />;
-      case 'pets': return <PawPrint className="w-5 h-5 text-amber-700" id="cat-icon-pets" />;
-      case 'industrial': return <Factory className="w-5 h-5 text-stone-605" id="cat-icon-industrial" />;
       case 'legal': return <Scale className="w-5 h-5 text-slate-700" id="cat-icon-legal" />;
-      case 'finance': return <Coins className="w-5 h-5 text-emerald-500" id="cat-icon-finance" />;
-      case 'fitness-recreation': return <Dumbbell className="w-5 h-5 text-orange-700" id="cat-icon-fitness" />;
-      case 'childcare': return <Baby className="w-5 h-5 text-pink-400" id="cat-icon-childcare" />;
+      case 'accounting-tax': return <Calculator className="w-5 h-5 text-indigo-650" id="cat-icon-accounting-tax" />;
+      case 'finance-insurance': return <Coins className="w-5 h-5 text-green-600" id="cat-icon-finance-insurance" />;
+      case 'security-services': return <ShieldCheck className="w-5 h-5 text-teal-600" id="cat-icon-security-services" />;
+      case 'pest-control': return <Bug className="w-5 h-5 text-amber-700" id="cat-icon-pest-control" />;
+      case 'locksmith': return <Key className="w-5 h-5 text-orange-600" id="cat-icon-locksmith" />;
+      case 'debt-collection': return <TrendingDown className="w-5 h-5 text-rose-600" id="cat-icon-debt-collection" />;
+      case 'translation-writing': return <PenTool className="w-5 h-5 text-rose-500" id="cat-icon-translation-writing" />;
+      case 'printing-signage': return <Printer className="w-5 h-5 text-violet-600" id="cat-icon-printing-signage" />;
+      case 'automotive': return <Car className="w-5 h-5 text-indigo-600" id="cat-icon-automotive" />;
+      case 'panel-beating': return <Hammer className="w-5 h-5 text-blue-600" id="cat-icon-panel-beating" />;
+      case 'car-dealerships': return <Tag className="w-5 h-5 text-cyan-600" id="cat-icon-car-dealerships" />;
+      case 'trucking-logistics': return <Truck className="w-5 h-5 text-sky-600" id="cat-icon-trucking-logistics" />;
+      case 'maritime-marine': return <Anchor className="w-5 h-5 text-blue-700" id="cat-icon-maritime-marine" />;
+      case 'aviation-drones': return <Plane className="w-5 h-5 text-indigo-700" id="cat-icon-aviation-drones" />;
+      case 'trades': return <Wrench className="w-5 h-5 text-orange-600" id="cat-icon-trades" />;
+      case 'electrical': return <Zap className="w-5 h-5 text-yellow-500" id="cat-icon-electrical" />;
+      case 'hvac': return <Snowflake className="w-5 h-5 text-cyan-500" id="cat-icon-hvac" />;
+      case 'carpentry': return <Hammer className="w-5 h-5 text-amber-600" id="cat-icon-carpentry" />;
+      case 'solar-energy': return <Sun className="w-5 h-5 text-yellow-600" id="cat-icon-solar-energy" />;
+      case 'construction': return <Hammer className="w-5 h-5 text-slate-500" id="cat-icon-construction" />;
+      case 'architecture': return <Compass className="w-5 h-5 text-indigo-500" id="cat-icon-architecture" />;
+      case 'roofing': return <Home className="w-5 h-5 text-neutral-600" id="cat-icon-roofing" />;
+      case 'machinery-hire': return <Layers className="w-5 h-5 text-violet-500" id="cat-icon-machinery-hire" />;
+      case 'boreholes-water': return <Droplet className="w-5 h-5 text-blue-500" id="cat-icon-boreholes-water" />;
+      case 'mining-extractives': return <HardHat className="w-5 h-5 text-stone-700" id="cat-icon-mining-extractives" />;
+      case 'industrial-mfg': return <Factory className="w-5 h-5 text-stone-600" id="cat-icon-industrial-mfg" />;
+      case 'waste-recycling': return <Trash2 className="w-5 h-5 text-lime-600" id="cat-icon-waste-recycling" />;
+      case 'food': return <Utensils className="w-5 h-5 text-amber-600" id="cat-icon-food" />;
+      case 'fast-food': return <Coffee className="w-5 h-5 text-orange-600" id="cat-icon-fast-food" />;
+      case 'catering-events': return <Pizza className="w-5 h-5 text-pink-500" id="cat-icon-catering-events" />;
+      case 'liquor-breweries': return <Wine className="w-5 h-5 text-red-700" id="cat-icon-liquor-breweries" />;
+      case 'real-estate': return <Building className="w-5 h-5 text-cyan-600" id="cat-icon-real-estate" />;
+      case 'valutations': return <ClipboardList className="w-5 h-5 text-teal-600" id="cat-icon-valutations" />;
+      case 'interior-decor': return <Palette className="w-5 h-5 text-purple-600" id="cat-icon-interior-decor" />;
+      case 'education': return <GraduationCap className="w-5 h-5 text-indigo-700" id="cat-icon-education" />;
+      case 'tutoring': return <BookOpen className="w-5 h-5 text-sky-600" id="cat-icon-tutoring" />;
+      case 'tech-it': return <Laptop className="w-5 h-5 text-purple-600" id="cat-icon-tech-it" />;
+      case 'telecoms': return <Wifi className="w-5 h-5 text-teal-600" id="cat-icon-telecoms" />;
+      case 'digital-marketing': return <Megaphone className="w-5 h-5 text-rose-500" id="cat-icon-digital-marketing" />;
+      case 'digital-media': return <Camera className="w-5 h-5 text-violet-600" id="cat-icon-digital-media" />;
+      case 'coworking': return <Users className="w-5 h-5 text-blue-600" id="cat-icon-coworking" />;
+      case 'ngos-charities': return <Heart className="w-5 h-5 text-rose-500" id="cat-icon-ngos-charities" />;
+      case 'religious': return <Globe className="w-5 h-5 text-slate-600" id="cat-icon-religious" />;
+      case 'municipality': return <Building2 className="w-5 h-5 text-emerald-700" id="cat-icon-municipality" />;
+      case 'tourism': return <Palmtree className="w-5 h-5 text-cyan-500" id="cat-icon-tourism" />;
+      case 'travel-agency': return <Compass className="w-5 h-5 text-blue-600" id="cat-icon-travel-agency" />;
+      case 'fitness-gym': return <Dumbbell className="w-5 h-5 text-orange-600" id="cat-icon-fitness-gym" />;
+      case 'sports-clubs': return <Activity className="w-5 h-5 text-emerald-600" id="cat-icon-sports-clubs" />;
+      case 'beauty-wellness': return <Scissors className="w-5 h-5 text-fuchsia-500" id="cat-icon-beauty-wellness" />;
+      case 'massage-spa': return <Sparkles className="w-5 h-5 text-teal-500" id="cat-icon-massage-spa" />;
+      case 'tailoring': return <Scissors className="w-5 h-5 text-pink-600" id="cat-icon-tailoring" />;
+      case 'retail': return <ShoppingBag className="w-5 h-5 text-pink-600" id="cat-icon-retail" />;
+      case 'fashion-apparel': return <Shirt className="w-5 h-5 text-sky-600" id="cat-icon-fashion-apparel" />;
+      case 'electronics': return <Tv className="w-5 h-5 text-purple-600" id="cat-icon-electronics" />;
+      case 'hardware-store': return <Hammer className="w-5 h-5 text-stone-700" id="cat-icon-hardware-store" />;
+      case 'toy-hobby': return <Gamepad2 className="w-5 h-5 text-red-500" id="cat-icon-toy-hobby" />;
+      case 'bookshops': return <BookOpen className="w-5 h-5 text-indigo-500" id="cat-icon-bookshops" />;
+      case 'art-galleries': return <Palette className="w-5 h-5 text-rose-500" id="cat-icon-art-galleries" />;
+      case 'music-instruments': return <Music className="w-5 h-5 text-amber-500" id="cat-icon-music-instruments" />;
+      case 'florists': return <Flower2 className="w-5 h-5 text-green-600" id="cat-icon-florists" />;
+      case 'craft-markets': return <Store className="w-5 h-5 text-orange-600" id="cat-icon-craft-markets" />;
+      case 'cleaning': return <Sparkles className="w-5 h-5 text-teal-500" id="cat-icon-cleaning" />;
+      case 'home-improvement': return <Home className="w-5 h-5 text-yellow-500" id="cat-icon-home-improvement" />;
+      case 'laundry-laundromat': return <Wind className="w-5 h-5 text-blue-500" id="cat-icon-laundry-laundromat" />;
+      case 'landscaping': return <Trees className="w-5 h-5 text-emerald-600" id="cat-icon-landscaping" />;
+      case 'swimming-pools': return <Waves className="w-5 h-5 text-cyan-500" id="cat-icon-swimming-pools" />;
+      case 'tree-felling': return <Trees className="w-5 h-5 text-amber-700" id="cat-icon-tree-felling" />;
+      case 'movers-relocation': return <PackageOpen className="w-5 h-5 text-sky-600" id="cat-icon-movers-relocation" />;
+      case 'pets-veterinary': return <HeartPulse className="w-5 h-5 text-red-500" id="cat-icon-pets-veterinary" />;
+      case 'pet-grooming': return <Scissors className="w-5 h-5 text-sky-505" id="cat-icon-pet-grooming" />;
+      case 'pet-boarding': return <Home className="w-5 h-5 text-orange-600" id="cat-icon-pet-boarding" />;
+      case 'events': return <Calendar className="w-5 h-5 text-red-500" id="cat-icon-events" />;
+      case 'equipment-rentals': return <Sparkles className="w-5 h-5 text-pink-500" id="cat-icon-equipment-rentals" />;
+      case 'stage-sound': return <Volume2 className="w-5 h-5 text-emerald-500" id="cat-icon-stage-sound" />;
+      case 'dance-theaters': return <Activity className="w-5 h-5 text-purple-600" id="cat-icon-dance-theaters" />;
+      case 'model-casting': return <Users className="w-5 h-5 text-rose-500" id="cat-icon-model-casting" />;
+      case 'agriculture-garden': return <Leaf className="w-5 h-5 text-green-600" id="cat-icon-agriculture-garden" />;
+      case 'paving-decking': return <Grid className="w-5 h-5 text-neutral-500" id="cat-icon-paving-decking" />;
       case 'funeral': return <Heart className="w-5 h-5 text-neutral-500" id="cat-icon-funeral" />;
-      case 'waste': return <Trash2 className="w-5 h-5 text-lime-600" id="cat-icon-waste" />;
-      case 'real-estate': return <Building className="w-5 h-5 text-cyan-600" id="cat-icon-realestate" />;
-      case 'machinery-hire': return <Layers className="w-5 h-5 text-violet-500" id="cat-icon-machinery" />;
-      case 'digital-media': return <Camera className="w-5 h-5 text-pink-500" id="cat-icon-media" />;
+      case 'courier': return <Send className="w-5 h-5 text-blue-500" id="cat-icon-courier" />;
+      case 'childcare': return <Baby className="w-5 h-5 text-pink-400" id="cat-icon-childcare" />;
+      case 'fire-safety': return <ShieldAlert className="w-5 h-5 text-red-600" id="cat-icon-fire-safety" />;
+      case 'office-furniture': return <Armchair className="w-5 h-5 text-blue-600" id="cat-icon-office-furniture" />;
+      case 'corporate-gifting': return <Gift className="w-5 h-5 text-rose-500" id="cat-icon-corporate-gifting" />;
+      case 'taxidermy': return <Compass className="w-5 h-5 text-yellow-700" id="cat-icon-taxidermy" />;
       default: return <Briefcase className="w-5 h-5 text-gray-500" id="cat-icon-default" />;
     }
   };
