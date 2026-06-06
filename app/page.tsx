@@ -39,6 +39,7 @@ import {
   Download,
   UploadCloud,
   AlertTriangle,
+  AlertOctagon,
   TrendingUp,
   CheckSquare,
   Home,
@@ -265,13 +266,40 @@ export default function Bizsearch24Home() {
   const [analyticsLoading, setAnalyticsLoading] = React.useState<boolean>(false);
 
   // Admin section sub-tab switcher
-  const [adminActiveSubTab, setAdminActiveSubTab] = React.useState<'listings' | 'ads' | 'analytics'>('listings');
+  const [adminActiveSubTab, setAdminActiveSubTab] = React.useState<'listings' | 'ads' | 'analytics' | 'users'>('listings');
+
+  // Admin Users Manager states
+  const [adminUsers, setAdminUsers] = React.useState<any[]>([]);
+  const [adminUsersLoading, setAdminUsersLoading] = React.useState<boolean>(false);
+  const [editingUser, setEditingUser] = React.useState<any | null>(null);
+  const [isAddingUser, setIsAddingUser] = React.useState<boolean>(false);
+  
+  const [userFormEmail, setUserFormEmail] = React.useState<string>('');
+  const [userFormPassword, setUserFormPassword] = React.useState<string>('');
+  const [userFormRole, setUserFormRole] = React.useState<string>('USER');
+  const [userFormFirstName, setUserFormFirstName] = React.useState<string>('');
+  const [userFormLastName, setUserFormLastName] = React.useState<string>('');
+  const [userFormFullName, setUserFormFullName] = React.useState<string>('');
+  const [userFormPhone, setUserFormPhone] = React.useState<string>('');
+  const [userFormIdNumber, setUserFormIdNumber] = React.useState<string>('');
+  const [userFormCompanyRegNumber, setUserFormCompanyRegNumber] = React.useState<string>('');
+  const [userFormBillingAddress, setUserFormBillingAddress] = React.useState<string>('');
+  const [userFormShowProfileDetails, setUserFormShowProfileDetails] = React.useState<boolean>(false);
+  const [userFormProfileColor, setUserFormProfileColor] = React.useState<string>('slate');
+  const [userFormWebsite, setUserFormWebsite] = React.useState<string>('');
+  const [userFormBusinessName, setUserFormBusinessName] = React.useState<string>('');
+  const [userFormVatNumber, setUserFormVatNumber] = React.useState<string>('');
+  const [userFormMaxListings, setUserFormMaxListings] = React.useState<number>(1);
+  const [userFormIsBanned, setUserFormIsBanned] = React.useState<boolean>(false);
+  const [adminUserFormMsg, setAdminUserFormMsg] = React.useState<string>('');
 
   // User Profile
   const [userProfile, setUserProfile] = React.useState<any>(null);
   const [profileSaveMsg, setProfileSaveMsg] = React.useState('');
+  const [newProfilePassword, setNewProfilePassword] = React.useState('');
   const [isConfiguringProfile2FA, setIsConfiguringProfile2FA] = React.useState<boolean>(false);
   const [profileMfaToken, setProfileMfaToken] = React.useState<string>('');
+  const [wantDeleteAccount, setWantDeleteAccount] = React.useState<boolean>(false);
 
   // Custom slug mappings states (subdomains/redirects manager)
   const [slugMappings, setSlugMappings] = React.useState<any[]>([]);
@@ -306,6 +334,7 @@ export default function Bizsearch24Home() {
   const [submissionError, setSubmissionError] = React.useState<string>('');
   const [subTier, setSubTier] = React.useState<'free' | 'premium'>('free');
   const [subImage, setSubImage] = React.useState<string>('');
+  const [showUpgradePrompt, setShowUpgradePrompt] = React.useState<boolean>(false);
 
   // Quick stats computed on verified listings
   const totalListingsCount = listings.length;
@@ -422,6 +451,25 @@ export default function Bizsearch24Home() {
     }
   }, [adminToken]);
 
+  // Administrative users load helper
+  const fetchAdminUsers = React.useCallback(async () => {
+    if (!adminToken) return;
+    setAdminUsersLoading(true);
+    try {
+      const res = await fetch('/api/user/admin', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setAdminUsers(data.users || []);
+      }
+    } catch (err) {
+      console.error('Failed to load admin users:', err);
+    } finally {
+      setAdminUsersLoading(false);
+    }
+  }, [adminToken]);
+
   // Sync token from localStorage and trigger legal disclaimer on mount
   React.useEffect(() => {
     const timer = setTimeout(() => {
@@ -476,6 +524,7 @@ export default function Bizsearch24Home() {
         if (profData.profile.role === 'ADMIN') {
           fetchAdminAds();
           fetchAnalyticsLogs();
+          fetchAdminUsers();
         }
       }
 
@@ -499,7 +548,7 @@ export default function Bizsearch24Home() {
     } finally {
       setAdminLoading(false);
     }
-  }, [adminToken, userRole, handleLogout, fetchAdminAds, fetchAnalyticsLogs]);
+  }, [adminToken, userRole, handleLogout, fetchAdminAds, fetchAnalyticsLogs, fetchAdminUsers]);
 
   React.useEffect(() => {
     if (isAdminLoggedIn) {
@@ -602,6 +651,29 @@ export default function Bizsearch24Home() {
   };
 
   // Form Submission handles (Public)
+  const handlePublicFormSubmitGate = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmissionError('');
+    setSubmissionSuccess('');
+    if (!subName || !subCategory || !subAddress || !subProvince || !subCity) {
+      setSubmissionError('Please fill in all mandatory fields.');
+      return;
+    }
+    if (subTier === 'free') {
+      setShowUpgradePrompt(true);
+    } else {
+      handlePublicSubmit(e);
+    }
+  };
+
+  const handleConfirmFreeSubmit = async () => {
+    setShowUpgradePrompt(false);
+    const dummyEvent = {
+      preventDefault: () => {}
+    } as React.FormEvent;
+    await handlePublicSubmit(dummyEvent);
+  };
+
   const handlePublicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmittingUser(true);
@@ -1484,11 +1556,11 @@ export default function Bizsearch24Home() {
                     <span>South Africa Directory</span>
                   </div>
                   <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight" id="hero-heading">
-                    Find Verified Local Businesses <br className="hidden sm:inline" />
+                    Find Local Businesses <br className="hidden sm:inline" />
                     <span className="text-emerald-400">in South Africa</span>
                   </h1>
                   <p className="text-slate-300 text-sm md:text-base leading-relaxed font-normal" id="hero-para">
-                    Easily search for verified local services, shops, and professionals near you.
+                    Easily search for local services, shops, and professionals near you.
                   </p>
                   <div className="flex items-center space-x-6 text-xs text-slate-400 font-mono pt-2" id="hero-stat-bars">
                     <div>
@@ -1970,8 +2042,11 @@ export default function Bizsearch24Home() {
                                     <span>Verified</span>
                                   </div>
                                 ) : (
-                                  <div className="bg-slate-900/85 backdrop-blur-xs text-slate-200 border border-slate-700/50 px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center space-x-1" id={`card-unverified-badge-${l.id}`}>
-                                    <AlertTriangle className="w-3 h-3 text-amber-500 animate-pulse" id={`card-unverified-warn-${l.id}`} />
+                                  <div className="bg-red-950/90 text-red-200 border border-red-600/40 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase shadow-md flex items-center space-x-1.5" id={`card-unverified-badge-${l.id}`}>
+                                    <span className="relative flex h-1.5 w-1.5 shrink-0">
+                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-600"></span>
+                                    </span>
                                     <span>Not Verified</span>
                                   </div>
                                 )}
@@ -2083,7 +2158,7 @@ export default function Bizsearch24Home() {
                 </div>
               )}
 
-              <form onSubmit={handlePublicSubmit} className="space-y-4" id="pub-submission-form">
+              <form onSubmit={handlePublicFormSubmitGate} className="space-y-4" id="pub-submission-form">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" id="pub-names-grid">
                   <div className="space-y-1" id="sub-name-f">
                     <label id="lbl-sub-name" className="text-xs font-bold text-slate-705">Company Name <span className="text-red-500">*</span></label>
@@ -2843,6 +2918,24 @@ export default function Bizsearch24Home() {
                     >
                       {userRole === 'ADMIN' ? 'Traffic Telemetry Stats' : 'Profile & Settings'}
                     </button>
+                    {userRole === 'ADMIN' && (
+                      <button
+                        type="button"
+                        id="admin-subtab-users"
+                        onClick={() => {
+                          setAdminActiveSubTab('users');
+                          fetchAdminUsers();
+                        }}
+                        className={cn(
+                          "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                          adminActiveSubTab === 'users' 
+                            ? "border-emerald-600 text-emerald-700 font-extrabold" 
+                            : "border-transparent text-slate-400 hover:text-slate-650"
+                        )}
+                      >
+                        Users Manager
+                      </button>
+                    )}
                   </div>
 
                   {adminActiveSubTab === 'listings' && (
@@ -3933,83 +4026,203 @@ export default function Bizsearch24Home() {
                             </div>
                           )}
 
-                          <form className="space-y-4" onSubmit={async (e) => {
-                            e.preventDefault();
-                            setProfileSaveMsg('Saving details...');
-                            try {
-                              const res = await fetch('/api/user/profile', {
-                                method: 'PUT',
-                                headers: {
-                                  'Content-Type': 'application/json',
-                                  'Authorization': `Bearer ${adminToken}`
-                                },
-                                body: JSON.stringify({
-                                  firstName: userProfile?.firstName || '',
-                                  lastName: userProfile?.lastName || '',
-                                  idNumber: userProfile?.idNumber || '',
-                                  companyRegNumber: userProfile?.companyRegNumber || '',
-                                  billingAddress: userProfile?.billingAddress || '',
-                                  showProfileDetails: userProfile?.showProfileDetails || false,
-                                  profileColor: userProfile?.profileColor || 'slate'
-                                })
-                              });
-                              if (res.ok) setProfileSaveMsg('Profile saved securely.');
-                              else setProfileSaveMsg('Failed to save profile');
-                            } catch (e) {
-                              setProfileSaveMsg('Network error.');
-                            }
-                          }}>
-                            <div className="grid grid-cols-2 gap-4">
-                              <label className="block">
-                                <span className="font-bold text-slate-700 text-xs">First Name</span>
-                                <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none" value={userProfile?.firstName || ''} onChange={e => setUserProfile({...userProfile, firstName: e.target.value})} />
-                              </label>
-                              <label className="block">
-                                <span className="font-bold text-slate-700 text-xs">Last Name</span>
-                                <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none" value={userProfile?.lastName || ''} onChange={e => setUserProfile({...userProfile, lastName: e.target.value})} />
-                              </label>
-                            </div>
+                           <form className="space-y-4" onSubmit={async (e) => {
+                             e.preventDefault();
+                             setProfileSaveMsg('Saving details...');
+                             try {
+                               const res = await fetch('/api/user/profile', {
+                                 method: 'PUT',
+                                 headers: {
+                                   'Content-Type': 'application/json',
+                                   'Authorization': `Bearer ${adminToken}`
+                                 },
+                                 body: JSON.stringify({
+                                   firstName: userProfile?.firstName || '',
+                                   lastName: userProfile?.lastName || '',
+                                   fullName: userProfile?.fullName || '',
+                                   phone: userProfile?.phone || '',
+                                   email: userProfile?.email || '',
+                                   idNumber: userProfile?.idNumber || '',
+                                   companyRegNumber: userProfile?.companyRegNumber || '',
+                                   billingAddress: userProfile?.billingAddress || '',
+                                   socialFacebook: userProfile?.socialFacebook || '',
+                                   socialTwitter: userProfile?.socialTwitter || '',
+                                   socialInstagram: userProfile?.socialInstagram || '',
+                                   socialLinkedin: userProfile?.socialLinkedin || '',
+                                   socialYoutube: userProfile?.socialYoutube || '',
+                                   socialTiktok: userProfile?.socialTiktok || '',
+                                   website: userProfile?.website || '',
+                                   businessName: userProfile?.businessName || '',
+                                   vatNumber: userProfile?.vatNumber || '',
+                                   newPassword: newProfilePassword || '',
+                                   showProfileDetails: userProfile?.showProfileDetails || false,
+                                   profileColor: userProfile?.profileColor || 'slate'
+                                 })
+                               });
+                               if (res.ok) {
+                                 const data = await res.json();
+                                 if (data.success) {
+                                   setProfileSaveMsg('Profile saved securely.');
+                                   setNewProfilePassword(''); // Clear password field on success
+                                 } else {
+                                   setProfileSaveMsg(data.message || 'Failed to save profile');
+                                 }
+                               } else {
+                                 if (res.status === 450) {
+                                   setProfileSaveMsg('Email already in use by another account.');
+                                 } else {
+                                   setProfileSaveMsg('Failed to save profile');
+                                 }
+                               }
+                             } catch (e) {
+                               setProfileSaveMsg('Network error.');
+                             }
+                           }}>
+                             {/* Personal Details */}
+                             <div className="border-b pb-2">
+                               <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">1. Personal & Contact Details</h4>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block col-span-2">
+                                 <span className="font-bold text-slate-700 text-xs">Full Name</span>
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.fullName || ''} onChange={e => setUserProfile({...userProfile, fullName: e.target.value})} placeholder="e.g. John Doe" />
+                               </label>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">First Name</span>
+                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.firstName || ''} onChange={e => setUserProfile({...userProfile, firstName: e.target.value})} />
+                               </label>
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Last Name</span>
+                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.lastName || ''} onChange={e => setUserProfile({...userProfile, lastName: e.target.value})} />
+                               </label>
+                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
-                              <label className="block">
-                                <span className="font-bold text-slate-700 text-xs">Identity Number / Passport</span>
-                                <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none" value={userProfile?.idNumber || ''} onChange={e => setUserProfile({...userProfile, idNumber: e.target.value})} />
-                              </label>
-                              <label className="block">
-                                <span className="font-bold text-slate-700 text-xs">Company Reg / VAT</span>
-                                <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none" value={userProfile?.companyRegNumber || ''} onChange={e => setUserProfile({...userProfile, companyRegNumber: e.target.value})} />
-                              </label>
-                            </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Phone Number</span>
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.phone || ''} onChange={e => setUserProfile({...userProfile, phone: e.target.value})} placeholder="e.g. 082 123 4567" />
+                               </label>
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Email Address (Sign In & Admin)</span>
+                                 <input required type="email" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.email || ''} onChange={e => setUserProfile({...userProfile, email: e.target.value})} />
+                               </label>
+                             </div>
 
-                            <label className="block">
-                              <span className="font-bold text-slate-700 text-xs">Full Billing Address</span>
-                              <textarea required className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none min-h-[80px]" value={userProfile?.billingAddress || ''} onChange={e => setUserProfile({...userProfile, billingAddress: e.target.value})}></textarea>
-                            </label>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Identity Number / Passport</span>
+                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.idNumber || ''} onChange={e => setUserProfile({...userProfile, idNumber: e.target.value})} />
+                               </label>
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Full Billing Address</span>
+                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.billingAddress || ''} onChange={e => setUserProfile({...userProfile, billingAddress: e.target.value})} />
+                               </label>
+                             </div>
 
-                            <div className="bg-slate-50 p-4 rounded-xl border space-y-3">
-                              <label className="flex items-center space-x-2">
-                                <input type="checkbox" className="rounded text-indigo-600 focus:ring-indigo-500 h-4 w-4" checked={userProfile?.showProfileDetails || false} onChange={e => setUserProfile({...userProfile, showProfileDetails: e.target.checked})} />
-                                <span className="text-xs font-bold text-slate-800">Show Contact Details on Listings</span>
-                              </label>
-                              
-                              <label className="block">
-                                <span className="font-bold text-slate-700 text-xs">Public Profile Color Theme</span>
-                                <select className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none" value={userProfile?.profileColor || 'slate'} onChange={e => setUserProfile({...userProfile, profileColor: e.target.value})}>
-                                  <option value="slate">Slate (Default Business)</option>
-                                  <option value="indigo">Indigo (Professional)</option>
-                                  <option value="emerald">Emerald (Growth / Eco)</option>
-                                  <option value="amber">Amber (Creative)</option>
-                                  <option value="rose">Rose (Lifestyle)</option>
-                                </select>
-                              </label>
-                            </div>
+                             {/* Business Credentials */}
+                             <div className="border-t pt-2 border-b pb-2">
+                               <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">2. Correlate Business Credentials</h4>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block col-span-2">
+                                 <span className="font-bold text-slate-700 text-xs">Business Name</span>
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.businessName || ''} onChange={e => setUserProfile({...userProfile, businessName: e.target.value})} placeholder="Registered Business / Trading Name" />
+                               </label>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Company Registration Number</span>
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.companyRegNumber || ''} onChange={e => setUserProfile({...userProfile, companyRegNumber: e.target.value})} placeholder="e.g. 2024/123456/07" />
+                               </label>
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">VAT Number</span>
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.vatNumber || ''} onChange={e => setUserProfile({...userProfile, vatNumber: e.target.value})} placeholder="10-digit VAT Number" />
+                               </label>
+                             </div>
+                             <div className="grid grid-cols-1">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Business Website</span>
+                                 <input type="url" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.website || ''} onChange={e => setUserProfile({...userProfile, website: e.target.value})} placeholder="https://yourwebsite.co.za" />
+                               </label>
+                             </div>
 
-                            <div className="pt-4 flex justify-end">
-                              <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-lg shadow-md transition-colors flex gap-2 text-xs">
-                                <CheckSquare className="w-4 h-4"/> Save Profile Security Protocol
-                              </button>
-                            </div>
-                          </form>
+                             {/* Social Media Links */}
+                             <div className="border-t pt-2 border-b pb-2">
+                               <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">3. Social Media Connections</h4>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Facebook Profile / Page</span>
+                                 <input type="url" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.socialFacebook || ''} onChange={e => setUserProfile({...userProfile, socialFacebook: e.target.value})} placeholder="https://facebook.com/..." />
+                               </label>
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Twitter / X URL</span>
+                                 <input type="url" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.socialTwitter || ''} onChange={e => setUserProfile({...userProfile, socialTwitter: e.target.value})} placeholder="https://x.com/..." />
+                               </label>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Instagram Username / Link</span>
+                                 <input type="url" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.socialInstagram || ''} onChange={e => setUserProfile({...userProfile, socialInstagram: e.target.value})} placeholder="https://instagram.com/..." />
+                               </label>
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">LinkedIn Company / Profile Link</span>
+                                 <input type="url" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.socialLinkedin || ''} onChange={e => setUserProfile({...userProfile, socialLinkedin: e.target.value})} placeholder="https://linkedin.com/in/..." />
+                               </label>
+                             </div>
+                             <div className="grid grid-cols-2 gap-4">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">YouTube Channel</span>
+                                 <input type="url" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.socialYoutube || ''} onChange={e => setUserProfile({...userProfile, socialYoutube: e.target.value})} placeholder="https://youtube.com/@..." />
+                               </label>
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">TikTok URL</span>
+                                 <input type="url" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.socialTiktok || ''} onChange={e => setUserProfile({...userProfile, socialTiktok: e.target.value})} placeholder="https://tiktok.com/@..." />
+                               </label>
+                             </div>
+
+                             {/* Change Password */}
+                             <div className="border-t pt-2 border-b pb-2">
+                               <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">4. Security Settings</h4>
+                             </div>
+                             <div className="grid grid-cols-1">
+                               <label className="block">
+                                 <span className="font-bold text-slate-700 text-xs">Change Password (Leave blank to keep unchanged)</span>
+                                 <input type="password" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={newProfilePassword} onChange={e => setNewProfilePassword(e.target.value)} placeholder="Type new secure password" />
+                               </label>
+                             </div>
+
+                             {/* Privacy Controls & Display settings */}
+                             <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-xl space-y-3">
+                               <p className="text-[11px] text-emerald-800 leading-relaxed font-semibold">
+                                 🔒 <strong>Privacy Visibility Guarantee:</strong> You completely control your information on bizsearch24.co.za. You choose if your full name, phone number, physical address, business credentials, and socials are shown to public visitors on directory and search result pages, or fully hidden.
+                               </p>
+                               
+                               <label className="flex items-center space-x-2 border-t border-emerald-100 pt-3">
+                                 <input type="checkbox" className="rounded text-indigo-700 focus:ring-indigo-500 h-4 w-4" checked={userProfile?.showProfileDetails || false} onChange={e => setUserProfile({...userProfile, showProfileDetails: e.target.checked})} />
+                                 <span className="text-xs font-black text-slate-800">Show Contact & Social Details on Public Listings (Toggle on/off)</span>
+                               </label>
+                               
+                               <label className="block pt-2">
+                                 <span className="font-bold text-slate-700 text-[11px]">Listings Theme Branding Accent Color</span>
+                                 <select className="mt-1 block w-full rounded-md bg-white border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs font-mono" value={userProfile?.profileColor || 'slate'} onChange={e => setUserProfile({...userProfile, profileColor: e.target.value})}>
+                                   <option value="slate">Slate (Default Business)</option>
+                                   <option value="indigo">Indigo (Professional)</option>
+                                   <option value="emerald">Emerald (Growth / Eco)</option>
+                                   <option value="amber">Amber (Creative)</option>
+                                   <option value="rose">Rose (Lifestyle)</option>
+                                 </select>
+                               </label>
+                             </div>
+
+                             <div className="pt-4 flex justify-end">
+                               <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-6 py-2.5 rounded-lg shadow-md transition-colors flex gap-2 text-xs">
+                                 <CheckSquare className="w-4 h-4"/> Save Profile Security Protocol
+                               </button>
+                             </div>
+                           </form>
 
                           <div className="border-t pt-4 mt-4">
                             <h4 className="text-sm font-bold text-slate-800 flex gap-2">
@@ -4103,6 +4316,585 @@ export default function Bizsearch24Home() {
                                 </button>
                               )
                             )}
+                          </div>
+
+                          {/* Danger Zone for regular users */}
+                          {wantDeleteAccount ? (
+                            <div className="bg-red-50 border border-red-200 p-4 rounded-xl space-y-3 mt-4" id="danger-zone-delete-confirm">
+                              <h4 className="text-xs font-bold text-red-800 uppercase tracking-wide">⚠️ CRITICAL: Final Account Deletion Confirmation</h4>
+                              <p className="text-xs text-red-700 leading-relaxed font-semibold">
+                                Are you absolutely sure you want to delete your account? This action is <strong>irreversible</strong> and will permanently remove your contact profile, billing records, and all listings on bizsearch24.co.za.
+                              </p>
+                              <div className="flex gap-2 pt-2">
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    setProfileSaveMsg('Deactivating and deleting your account...');
+                                    try {
+                                      const res = await fetch('/api/user/profile', {
+                                        method: 'DELETE',
+                                        headers: { 'Authorization': `Bearer ${adminToken}` }
+                                      });
+                                      const data = await res.json();
+                                      if (data.success) {
+                                        setAdminToken('');
+                                        setUserProfile(null);
+                                        setUserRole('USER');
+                                        localStorage.removeItem('biz_admin_token');
+                                        alert("Your account & directory listings have been permanently deleted.");
+                                        window.location.reload();
+                                      } else {
+                                        setProfileSaveMsg(data.message || 'Could not complete account deletion.');
+                                      }
+                                    } catch (err) {
+                                      setProfileSaveMsg('Network error.');
+                                    }
+                                  }}
+                                  className="bg-red-650 hover:bg-red-700 text-white font-bold px-4 py-1.5 rounded text-xs cursor-pointer select-none"
+                                  id="btn-delete-confirm-yes"
+                                >
+                                  Yes, Permanent Purge Account & Listings
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setWantDeleteAccount(false)}
+                                  className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-1.5 rounded text-xs cursor-pointer select-none"
+                                  id="btn-delete-confirm-no"
+                                >
+                                  No, Keep My Account (Cancel)
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="bg-red-50 border border-red-100 p-4 rounded-xl mt-4" id="danger-zone-delete-trigger">
+                              <p className="text-[11.5px] text-red-600 font-semibold">Danger Zone: Looking to delete your account?</p>
+                              <button
+                                type="button"
+                                onClick={() => setWantDeleteAccount(true)}
+                                className="bg-red-100 hover:bg-red-200 text-red-700 font-bold px-3 py-1.5 rounded text-[11px] cursor-pointer mt-2"
+                                id="btn-delete-account-trigger"
+                              >
+                                Delete My Account
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {adminActiveSubTab === 'users' && (
+                    <div className="space-y-6" id="admin-users-manager-tab-panel">
+                      <div className="flex justify-between items-center bg-white border border-slate-200 p-5 rounded-2xl shadow-xs">
+                        <div>
+                          <h3 className="text-sm font-black uppercase text-slate-800 font-mono tracking-wide">Users & Directory Membership Control</h3>
+                          <p className="text-[11px] text-slate-500 font-medium mt-1">As super-administrator, you have total authoritative control to view, add, modify, ban, or delete any account and clear their directory listings.</p>
+                        </div>
+                        {!editingUser && !isAddingUser && (
+                          <button
+                            onClick={() => {
+                              setIsAddingUser(true);
+                              setEditingUser(null);
+                              // Reset form fields
+                              setUserFormEmail('');
+                              setUserFormPassword('');
+                              setUserFormRole('USER');
+                              setUserFormFirstName('');
+                              setUserFormLastName('');
+                              setUserFormFullName('');
+                              setUserFormPhone('');
+                              setUserFormIdNumber('');
+                              setUserFormCompanyRegNumber('');
+                              setUserFormBillingAddress('');
+                              setUserFormShowProfileDetails(true);
+                              setUserFormProfileColor('slate');
+                              setUserFormWebsite('');
+                              setUserFormBusinessName('');
+                              setUserFormVatNumber('');
+                              setUserFormMaxListings(1);
+                              setUserFormIsBanned(false);
+                              setAdminUserFormMsg('');
+                            }}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer select-none"
+                            id="admin-add-user-btn"
+                          >
+                            + Register New User Account
+                          </button>
+                        )}
+                      </div>
+
+                      {adminUserFormMsg && (
+                        <div className="bg-indigo-50 border-l-4 border-indigo-600 text-indigo-700 px-4 py-3 border rounded text-xs font-semibold">
+                          {adminUserFormMsg}
+                        </div>
+                      )}
+
+                      {/* CREATE OR UPDATE USER FORM */}
+                      {(isAddingUser || editingUser) ? (
+                        <div className="bg-white border text-xs font-sans rounded-2xl p-5 md:p-6 shadow-xs space-y-4" id="admin-user-editor-form">
+                          <div className="flex justify-between items-center border-b border-slate-100 pb-3">
+                            <h4 className="text-xs font-extrabold uppercase font-mono text-indigo-750">
+                              {isAddingUser ? 'Step 1: Admin Registration of New Account' : `Modify Profile & Control Protocol: ${editingUser.email}`}
+                            </h4>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsAddingUser(false);
+                                setEditingUser(null);
+                                setAdminUserFormMsg('');
+                              }}
+                              className="text-slate-500 hover:text-indigo-600 font-extrabold font-mono text-xs cursor-pointer select-none"
+                            >
+                              [Back to Users List]
+                            </button>
+                          </div>
+
+                          <form onSubmit={async (e) => {
+                            e.preventDefault();
+                            setAdminUserFormMsg('Transmitting secure user profile updates...');
+                            try {
+                              const bodyObj: any = {
+                                email: userFormEmail,
+                                password: userFormPassword,
+                                role: userFormRole,
+                                firstName: userFormFirstName,
+                                lastName: userFormLastName,
+                                fullName: userFormFullName,
+                                phone: userFormPhone,
+                                idNumber: userFormIdNumber,
+                                companyRegNumber: userFormCompanyRegNumber,
+                                billingAddress: userFormBillingAddress,
+                                showProfileDetails: userFormShowProfileDetails,
+                                profileColor: userFormProfileColor,
+                                website: userFormWebsite,
+                                businessName: userFormBusinessName,
+                                vatNumber: userFormVatNumber,
+                                maxListings: Number(userFormMaxListings),
+                                isBanned: userFormIsBanned
+                              };
+
+                              let res;
+                              if (isAddingUser) {
+                                res = await fetch('/api/user/admin', {
+                                  method: 'POST',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${adminToken}`
+                                  },
+                                  body: JSON.stringify(bodyObj)
+                                });
+                              } else {
+                                bodyObj.id = editingUser.id;
+                                res = await fetch('/api/user/admin', {
+                                  method: 'PUT',
+                                  headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${adminToken}`
+                                  },
+                                  body: JSON.stringify(bodyObj)
+                                });
+                              }
+
+                              const data = await res.json();
+                              if (data.success) {
+                                setAdminUserFormMsg(isAddingUser ? 'New user registered successfully!' : 'User updated successfully!');
+                                fetchAdminUsers();
+                                setTimeout(() => {
+                                  setIsAddingUser(false);
+                                  setEditingUser(null);
+                                  setAdminUserFormMsg('');
+                                }, 1000);
+                              } else {
+                                setAdminUserFormMsg(data.message || 'Operation failed.');
+                              }
+                            } catch (err) {
+                              setAdminUserFormMsg('A critical network error occurred.');
+                            }
+                          }} className="space-y-4">
+                            
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <label className="block">
+                                <span className="font-bold text-slate-750">Login Email Address</span>
+                                <input required type="email" value={userFormEmail} onChange={e => setUserFormEmail(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">{isAddingUser ? 'Secure Password' : 'Change Password (Blank to keep current)'}</span>
+                                <input required={isAddingUser} type="text" value={userFormPassword} onChange={e => setUserFormPassword(e.target.value)} placeholder="Type password" className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Account System Role</span>
+                                <select value={userFormRole} onChange={e => setUserFormRole(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 bg-white outline-none text-xs">
+                                  <option value="USER">USER (Regular submitter)</option>
+                                  <option value="ADMIN">ADMIN (Super-admin backend access)</option>
+                                </select>
+                              </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+                              <label className="block">
+                                <span className="font-bold text-slate-755">First Name</span>
+                                <input type="text" value={userFormFirstName} onChange={e => setUserFormFirstName(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Last Name</span>
+                                <input type="text" value={userFormLastName} onChange={e => setUserFormLastName(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Full Public Display Name</span>
+                                <input type="text" value={userFormFullName} onChange={e => setUserFormFullName(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" placeholder="e.g. Johnathan Doe" />
+                              </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Contact Phone</span>
+                                <input type="text" value={userFormPhone} onChange={e => setUserFormPhone(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">ID / Passport Number</span>
+                                <input type="text" value={userFormIdNumber} onChange={e => setUserFormIdNumber(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Full Billing Address</span>
+                                <input type="text" value={userFormBillingAddress} onChange={e => setUserFormBillingAddress(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 border-t border-slate-100 pt-3">
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Business Name</span>
+                                <input type="text" value={userFormBusinessName} onChange={e => setUserFormBusinessName(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Company Registration Number</span>
+                                <input type="text" value={userFormCompanyRegNumber} onChange={e => setUserFormCompanyRegNumber(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">VAT Number (10 digit)</span>
+                                <input type="text" value={userFormVatNumber} onChange={e => setUserFormVatNumber(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Business Website</span>
+                                <input type="url" value={userFormWebsite} onChange={e => setUserFormWebsite(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" placeholder="https://..." />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Allowed Free Listings Cap</span>
+                                <input type="number" min="1" value={userFormMaxListings} onChange={e => setUserFormMaxListings(Number(e.target.value))} className="mt-1 block w-full rounded-md border-slate-250 p-2 outline-none text-xs" />
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-slate-755">Listings Branding Style Accent</span>
+                                <select value={userFormProfileColor} onChange={e => setUserFormProfileColor(e.target.value)} className="mt-1 block w-full rounded-md border-slate-250 p-2 bg-white outline-none text-xs">
+                                  <option value="slate">Slate (Business Grey)</option>
+                                  <option value="indigo">Indigo (Professional Blue)</option>
+                                  <option value="emerald">Emerald (Green Growth)</option>
+                                  <option value="amber">Amber (Creative Gold)</option>
+                                  <option value="rose">Rose (Warm lifestyle)</option>
+                                </select>
+                              </label>
+                            </div>
+
+                            <div className="bg-slate-55/60 p-4 rounded-xl space-y-4 border border-slate-200">
+                              <h5 className="font-extrabold text-slate-800 uppercase tracking-wide text-[10px] font-mono">Governance & Privacy Overrides</h5>
+                              <div className="flex flex-wrap gap-6 text-[11px]">
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input type="checkbox" checked={userFormShowProfileDetails} onChange={e => setUserFormShowProfileDetails(e.target.checked)} className="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" />
+                                  <span className="text-slate-800 font-bold">Public Listing visibility toggle (Show contact details publicly)</span>
+                                </label>
+                                <label className="flex items-center space-x-2 cursor-pointer">
+                                  <input type="checkbox" checked={userFormIsBanned} onChange={e => setUserFormIsBanned(e.target.checked)} className="rounded text-red-600 focus:ring-red-500 w-4 h-4 cursor-pointer" />
+                                  <span className="text-red-700 font-extrabold uppercase">🚫 BANNED FROM DIRECTORY (Disable sign in & listings)</span>
+                                </label>
+                              </div>
+                            </div>
+
+                            <div className="flex justify-end gap-2 pt-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsAddingUser(false);
+                                  setEditingUser(null);
+                                  setAdminUserFormMsg('');
+                                }}
+                                className="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-4 py-2 rounded-lg text-xs select-none cursor-pointer"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="bg-indigo-650 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-lg shadow-sm text-xs select-none cursor-pointer"
+                              >
+                                {isAddingUser ? 'Register New User Account' : 'Commit Security Profile Changes'}
+                              </button>
+                            </div>
+                          </form>
+                        </div>
+                      ) : (
+                        /* USERS LIST TABLE ACCORDION */
+                        <div className="bg-white border text-xs font-sans rounded-2xl p-4 md:p-6 shadow-xs space-y-4">
+                          <h4 className="font-extrabold text-slate-950 text-sm">Directory Membership Base ({adminUsers.length} total registered profiles)</h4>
+                          
+                          {adminUsersLoading ? (
+                            <p className="text-xs text-slate-500 font-mono">Streaming active directory database records...</p>
+                          ) : adminUsers.length === 0 ? (
+                            <p className="text-xs text-slate-400 italic text-center py-6">No user profiles present in database.</p>
+                          ) : (
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left border-collapse text-[11px]" id="admin-users-data-table">
+                                <thead>
+                                  <tr className="border-b border-slate-100 text-slate-400 font-mono bg-slate-50 text-[10px] uppercase">
+                                    <th className="p-2">Role / Status</th>
+                                    <th className="p-2">Auth Account</th>
+                                    <th className="p-2">Human & ID Details</th>
+                                    <th className="p-2">Correlated Business / VAT</th>
+                                    <th className="p-2">Vis. Toggle (Privacy)</th>
+                                    <th className="p-2">Active Ads</th>
+                                    <th className="p-2 text-right">Administrative Action</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {adminUsers.map((user) => {
+                                    const userAds = adminListings.filter(l => l.userId === user.id);
+                                    return (
+                                      <tr key={user.id} className={cn("border-b border-slate-100/50 hover:bg-slate-50/50", user.isBanned && "bg-red-50/40")}>
+                                        <td className="p-2 font-mono whitespace-nowrap">
+                                          <span className={cn(
+                                            "px-2 py-0.5 rounded text-[9px] font-bold block w-fit mb-1 uppercase text-center leading-none border",
+                                            user.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-850 border-indigo-200' : 'bg-slate-100 text-slate-800 border-slate-200'
+                                          )}>
+                                            {user.role}
+                                          </span>
+                                          {user.isBanned ? (
+                                            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-extrabold bg-red-100 text-red-800 uppercase block tracking-wider font-sans border border-red-200 w-fit">
+                                              Banned
+                                            </span>
+                                          ) : (
+                                            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-semibold bg-emerald-50 text-emerald-800 uppercase block w-fit border border-emerald-200 font-sans">
+                                              Active
+                                            </span>
+                                          )}
+                                        </td>
+                                        <td className="p-2 font-mono leading-tight whitespace-normal break-all">
+                                          <p className="font-extrabold text-slate-900">{user.email}</p>
+                                          <p className="text-[10px] text-slate-450 mt-1 font-semibold">ID: {user.id}</p>
+                                        </td>
+                                        <td className="p-2 leading-tight">
+                                          <div className="font-bold text-slate-850">{user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || <span className="italic text-slate-300">- No name listed -</span>}</div>
+                                          {user.phone && <p className="font-semibold text-slate-650 mt-1">📞 {user.phone}</p>}
+                                          {user.idNumber && <p className="text-[10px] font-mono text-slate-500 mt-1">ID #: {user.idNumber}</p>}
+                                          {user.billingAddress && <p className="text-[10px] text-slate-500 mt-1 max-w-[150px] truncate" title={user.billingAddress}>📍 {user.billingAddress}</p>}
+                                        </td>
+                                        <td className="p-2 leading-tight font-mono text-[10.5px]">
+                                          {user.businessName ? (
+                                            <div className="space-y-1">
+                                              <p className="font-extrabold text-indigo-900 uppercase font-sans truncate max-w-[150px]">{user.businessName}</p>
+                                              {user.companyRegNumber && <p className="text-[9.5px] text-slate-450 font-semibold uppercase">Reg: {user.companyRegNumber}</p>}
+                                              {user.vatNumber && <p className="text-[9.5px] text-emerald-700 font-bold">VAT: {user.vatNumber}</p>}
+                                              {user.website && <a href={user.website} target="_blank" rel="noreferrer" className="text-[9.5px] hover:underline text-blue-600 block truncate max-w-[150px]">{user.website}</a>}
+                                            </div>
+                                          ) : (
+                                            <span className="text-slate-355 italic">- None -</span>
+                                          )}
+                                        </td>
+                                        <td className="p-2">
+                                          {user.showProfileDetails ? (
+                                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-850 border border-emerald-200 rounded font-semibold text-[10px] uppercase font-sans">
+                                              Visible (Public)
+                                            </span>
+                                          ) : (
+                                            <span className="px-2 py-0.5 bg-amber-50 text-amber-850 border border-amber-200 rounded font-bold text-[10px] uppercase font-sans">
+                                              Private (Hidden)
+                                            </span>
+                                          )}
+                                          <p className="text-[9px] text-slate-400 font-mono mt-1.5 leading-tight">Admin Override Active: Details above are fully visible here even if user turned visibility toggle off.</p>
+                                        </td>
+                                        <td className="p-2 font-mono text-center">
+                                          <div className="text-sm font-black text-slate-800">{userAds.length}</div>
+                                          <p className="text-[8.5px] text-slate-400">Cap: {user.maxListings || 1}</p>
+                                        </td>
+                                        <td className="p-2 text-right">
+                                          <div className="flex flex-col gap-1 items-end">
+                                            <button
+                                              onClick={() => {
+                                                setEditingUser(user);
+                                                setIsAddingUser(false);
+                                                setUserFormEmail(user.email || '');
+                                                setUserFormPassword('');
+                                                setUserFormRole(user.role || 'USER');
+                                                setUserFormFirstName(user.firstName || '');
+                                                setUserFormLastName(user.lastName || '');
+                                                setUserFormFullName(user.fullName || '');
+                                                setUserFormPhone(user.phone || '');
+                                                setUserFormIdNumber(user.idNumber || '');
+                                                setUserFormCompanyRegNumber(user.companyRegNumber || '');
+                                                setUserFormBillingAddress(user.billingAddress || '');
+                                                setUserFormShowProfileDetails(user.showProfileDetails || false);
+                                                setUserFormProfileColor(user.profileColor || 'slate');
+                                                setUserFormWebsite(user.website || '');
+                                                setUserFormBusinessName(user.businessName || '');
+                                                setUserFormVatNumber(user.vatNumber || '');
+                                                setUserFormMaxListings(user.maxListings || 1);
+                                                setUserFormIsBanned(user.isBanned || false);
+                                                setAdminUserFormMsg('');
+                                              }}
+                                              className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-bold text-[9px] block w-24 text-center cursor-pointer uppercase select-none transition-all"
+                                            >
+                                              🔧 Edit Profile
+                                            </button>
+                                            
+                                            <button
+                                              onClick={async () => {
+                                                const check = confirm(`⚠️ WARNING: Are you absolutely sure you want to permanently delete user account "${user.email}"?\n\nThis will immediately delete their entire profile AND cascade-delete all their directory listings (${userAds.length} ads) from the system permanently!`);
+                                                if (check) {
+                                                  setAdminUserFormMsg(`Deleting ${user.email} and purging active listings...`);
+                                                  try {
+                                                    const res = await fetch(`/api/user/admin?id=${user.id}`, {
+                                                      method: 'DELETE',
+                                                      headers: { 'Authorization': `Bearer ${adminToken}` }
+                                                    });
+                                                    const data = await res.json();
+                                                    if (data.success) {
+                                                      setAdminUserFormMsg(`Purged successfully: ${user.email}`);
+                                                      fetchAdminUsers();
+                                                      fetchListings();
+                                                      setTimeout(() => setAdminUserFormMsg(''), 2000);
+                                                    } else {
+                                                      setAdminUserFormMsg(data.message || 'Deletion failed.');
+                                                    }
+                                                  } catch (err) {
+                                                    setAdminUserFormMsg('Error performing delete request.');
+                                                  }
+                                                }
+                                              }}
+                                              className="px-2.5 py-1 bg-red-100 hover:bg-red-200 text-red-705 rounded-md font-bold text-[9px] block w-24 text-center cursor-pointer uppercase select-none transition-all"
+                                            >
+                                              ❌ Purge & Delete
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
+                          )}
+
+                          {/* SUB-AD SECTION CONTROLLER */}
+                          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4">
+                            <h5 className="font-extrabold text-slate-800 uppercase tracking-wide text-[10.5px] font-mono">Authoritative Controls over all users&apos; ads & listings</h5>
+                            <p className="text-[11px] text-slate-550 leading-relaxed">
+                              Below is the live operational feed of every active ad/listing in the directory database. You has the admin have full complete control to quickly approve, reject, modify, or permanently delete any listing at any time.
+                            </p>
+                            
+                            <div className="overflow-x-auto">
+                              <table className="w-full text-left border-collapse text-[10px]">
+                                <thead>
+                                  <tr className="border-b border-slate-200 text-slate-400 font-mono uppercase bg-slate-100 text-[8.5px]">
+                                    <th className="p-2">Listing ID</th>
+                                    <th className="p-2">Owner / email</th>
+                                    <th className="p-2">Business Name / details</th>
+                                    <th className="p-2">Verification Status</th>
+                                    <th className="p-2 text-right">Authoritative Action</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {adminListings.map((listing) => {
+                                    const owner = adminUsers.find(u => u.id === listing.userId);
+                                    return (
+                                      <tr key={listing.id} className="border-b border-slate-100 hover:bg-slate-50/50">
+                                        <td className="p-2 font-mono text-[9px] truncate max-w-[80px]" title={listing.id}>{listing.id}</td>
+                                        <td className="p-2 leading-tight">
+                                          <p className="font-bold text-slate-800">{owner ? owner.email : 'Unknown Admin Account'}</p>
+                                          <p className="text-[8.5px] text-slate-450">ID: {listing.userId}</p>
+                                        </td>
+                                        <td className="p-2 leading-tight">
+                                          <p className="font-black text-slate-900 text-[10.5px] uppercase">{listing.businessName}</p>
+                                          <p className="text-[9px] text-slate-500 font-mono">{listing.category} | {listing.province}, {listing.city}</p>
+                                        </td>
+                                        <td className="p-2">
+                                          <span className={cn(
+                                            "px-1.5 py-0.5 rounded text-[8.5px] font-extrabold font-mono uppercase border",
+                                            listing.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-800 border-emerald-200' :
+                                            listing.status === 'REJECTED' ? 'bg-red-50 text-red-800 border-red-200' :
+                                            'bg-amber-50 text-amber-800 border-amber-200'
+                                          )}>
+                                            {listing.status}
+                                          </span>
+                                        </td>
+                                        <td className="p-2 text-right">
+                                          <div className="flex gap-1.5 justify-end">
+                                            {listing.status !== 'APPROVED' && (
+                                              <button
+                                                onClick={async () => {
+                                                  try {
+                                                    const res = await fetch('/api/listings/verify', {
+                                                      method: 'POST',
+                                                      headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Authorization': `Bearer ${adminToken}`
+                                                      },
+                                                      body: JSON.stringify({ listingId: listing.id, action: 'approve' })
+                                                    });
+                                                    if (res.ok) fetchAdminData();
+                                                  } catch (err) { alert('Action failed'); }
+                                                }}
+                                                className="px-1.5 py-0.5 bg-emerald-105 hover:bg-emerald-200 text-emerald-800 rounded font-bold text-[8px] uppercase cursor-pointer"
+                                              >
+                                                Approve
+                                              </button>
+                                            )}
+                                            {listing.status !== 'REJECTED' && (
+                                              <button
+                                                onClick={async () => {
+                                                  try {
+                                                    const res = await fetch('/api/listings/verify', {
+                                                      method: 'POST',
+                                                      headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Authorization': `Bearer ${adminToken}`
+                                                      },
+                                                      body: JSON.stringify({ listingId: listing.id, action: 'reject' })
+                                                    });
+                                                    if (res.ok) fetchAdminData();
+                                                  } catch (err) { alert('Action failed'); }
+                                                }}
+                                                className="px-1.5 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-850 rounded font-bold text-[8px] uppercase cursor-pointer"
+                                              >
+                                                Reject/Hold
+                                              </button>
+                                            )}
+                                            <button
+                                              onClick={async () => {
+                                                const check = confirm(`Delete listing "${listing.businessName}" permanently?`);
+                                                if (check) {
+                                                  try {
+                                                    const res = await fetch('/api/listings/verify', {
+                                                      method: 'POST',
+                                                      headers: {
+                                                        'Content-Type': 'application/json',
+                                                        'Authorization': `Bearer ${adminToken}`
+                                                      },
+                                                      body: JSON.stringify({ listingId: listing.id, action: 'delete' })
+                                                    });
+                                                    if (res.ok) fetchAdminData();
+                                                  } catch (err) { alert('Action failed'); }
+                                                }
+                                              }}
+                                              className="px-1.5 py-0.5 bg-red-100 hover:bg-red-200 text-red-700 rounded font-bold text-[8px] uppercase cursor-pointer"
+                                            >
+                                              Delete
+                                            </button>
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    );
+                                  })}
+                                </tbody>
+                              </table>
+                            </div>
                           </div>
                         </div>
                       )}
@@ -4742,6 +5534,24 @@ export default function Bizsearch24Home() {
                 )}
               </div>
 
+              {/* TOP CAUTION ALERT FOR UNVERIFIED ENTRY */}
+              {!selectedListing.verified && (
+                <div id="det-unverified-top-alert" className="bg-red-50 border-b border-red-200 p-4 text-xs text-red-800 flex items-start space-x-3">
+                  <span className="relative flex h-2.5 w-2.5 mt-1 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-600"></span>
+                  </span>
+                  <div className="space-y-1">
+                    <span className="font-extrabold uppercase tracking-wider text-red-650 block text-[11px]">
+                      ⚠️ Safety Indicator: Not Verified Account
+                    </span>
+                    <p className="text-red-705 leading-relaxed font-semibold">
+                      This business listing is hosted under our open Free Index. BizSearch24 has <strong>not verified</strong> the registration, physical address, or licenses of this provider. <strong>Please proceed with precaution</strong> before booking services or making upfront payments.
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Detailed specs */}
               <div className="p-6 md:p-8 space-y-6" id="det-modal-body">
                 <div className="space-y-2" id="det-title-group">
@@ -4804,15 +5614,42 @@ export default function Bizsearch24Home() {
                 </div>
 
                 {/* Simulated Geographic Vector Alignment visual support block */}
-                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 flex items-center space-x-3" id="det-geo-visual-card">
-                  <div className="w-12 h-12 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-center shrink-0" id="det-geo-ico-bx">
-                    <ShieldCheck className="w-6 h-6 text-emerald-600" id="det-shield-chk-ico" />
+                <div className={cn(
+                  "border rounded-2xl p-4 flex items-center space-x-3",
+                  selectedListing.verified ? "bg-slate-50 border-slate-100" : "bg-red-50/40 border-red-100/60"
+                )} id="det-geo-visual-card">
+                  <div className={cn(
+                    "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 border",
+                    selectedListing.verified ? "bg-emerald-50 border-emerald-100" : "bg-red-50 border-red-100 animate-pulse"
+                  )} id="det-geo-ico-bx">
+                    {selectedListing.verified ? (
+                      <ShieldCheck className="w-6 h-6 text-emerald-600" id="det-shield-chk-ico" />
+                    ) : (
+                      <AlertOctagon className="w-6 h-6 text-red-650" id="det-shield-warn-ico" />
+                    )}
                   </div>
                   <div className="space-y-1 text-slate-700" id="det-geo-visual-text">
-                    <span className="block font-bold text-xs" id="det-verification-indicator">S.A. Directory Verified</span>
-                    <p className="text-[10px] text-slate-550 leading-relaxed font-mono" id="det-verification-date-lbl font">Listed on: {new Date(selectedListing.createdAt).toLocaleDateString()}</p>
+                    <span className={cn("block font-bold text-xs", selectedListing.verified ? "text-slate-800" : "text-red-700")} id="det-verification-indicator">
+                      {selectedListing.verified ? "S.A. Directory Verified" : "NOT VERIFIED (Unregistered Free Tier)"}
+                    </span>
+                    <p className="text-[10.5px] text-slate-550 leading-relaxed font-mono" id="det-verification-date-lbl font">Listed on: {new Date(selectedListing.createdAt).toLocaleDateString()}</p>
                   </div>
                 </div>
+
+                {/* BOTTOM CAUTION ALERT FOR UNVERIFIED ENTRY */}
+                {!selectedListing.verified && (
+                  <div id="det-unverified-bottom-alert" className="bg-red-50 border border-red-200/50 rounded-2xl p-4 text-xs text-red-800 flex items-start space-x-3">
+                    <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5 animate-bounce" id="det-bottom-alert-ico" />
+                    <div className="space-y-1">
+                      <span className="font-extrabold uppercase tracking-wide text-red-700 block text-[10.5px]">
+                        ⚠️ SECURITY CAUTIONARY
+                      </span>
+                      <p className="text-red-750 leading-relaxed font-semibold">
+                        Ensure you confirm physical trade certificates, draft signed legal agreements, or verify registration directly prior to commissioning jobs. BizSearch24 assumes zero liability for transactions with unverified free directory indexees.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Admin Direct Power Action Edit Button */}
                 {isAdminLoggedIn && (
@@ -4985,48 +5822,85 @@ export default function Bizsearch24Home() {
                 
                 {/* 1. USAGE AGREEMENT */}
                 <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-terms">
-                  <h3 className="font-extrabold text-slate-900 text-xs">
-                    1. Directory Usage Terms
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    1. Binding Agreement & Usage Conditions
+                  </h3>
+                  <p className="text-[11px] text-slate-600 text-justify">
+                    Welcome to <strong>bizsearch24.co.za</strong> (&ldquo;BizSearch24&rdquo;). Accessing, browsing, search-indexing, or interacting with our directory services constitutes your absolute and irrevocable agreement to these Terms & Conditions. If you do not agree, you are strictly prohibited from utilizing this platform.
+                  </p>
+                  <p className="text-[11px] text-slate-600 text-justify">
+                    BizSearch24 operates strictly as an open indexed public advertisement directory for regional service providers in South Africa. Automated extraction of directory info, database scraping, API hijacking, or competitive replication is prohibited under criminal liability.
+                  </p>
+                </div>
+
+                {/* 2. STRICT INDEMNIFICATION & ABSOLUTE ZERO LIABILITY */}
+                <div className="space-y-1.5 border-b pb-3 border-slate-100 bg-red-50/50 p-2.5 rounded-xl border-dashed border-red-200" id="safety-pane-liability">
+                  <h3 className="font-extrabold text-red-750 text-xs uppercase tracking-tight">
+                    2. Absolute Zero Liability & General Indemnity
+                  </h3>
+                  <p className="text-[10.5px] text-slate-700 font-extrabold text-justify uppercase">
+                    BIZSEARCH24.CO.ZA, ITS FOUNDERS, SUB-CONTRACTORS, DIRECTORS, PARTNERS, AND OPERATORS (&ldquo;THE COVERED PARTIES&rdquo;) ACCEPT ABSOLUTELY ZERO RESPONSIBILITY, INDEMNITY, OR LIABILITY FOR ANY COMMERCIAL LOSS, THEFT, INJURY, DEFAULT, CONTRACTUAL BREACH, INTENTIONAL MISREPRESENTATION, FRAUD, SCAM, OR BODILY HARM RESULTING FROM YOUR ENGAGEMENT WITH ANY DIRECTORY PROVIDER.
+                  </p>
+                  <p className="text-[10.5px] text-slate-605 text-justify">
+                    By booking or hiring a listed company, you explicitly waive your legal right to seek any financial damages, claims, or lawsuits against the Covered Parties. All negotiations, quotes, and payment transfers are strictly bilateral transactions outside the scope, tracking, or knowledge of BizSearch24.
+                  </p>
+                </div>
+
+                {/* 3. VERIFIED VS. UNVERIFIED SECTORS & RISK EXPOSURE */}
+                <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-verification-policy">
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    3. Unverified Free-tier Postings vs. Verified Spotlights
                   </h3>
                   <p className="text-[11px] text-slate-600">
-                    Welcome to Bizsearch24! This directory allows you to find public trade services across South African cities and towns.
+                    We support two categories of directory listings:
                   </p>
-                  <p className="text-[11px] text-slate-600">
-                    Directory access is free for normal individual searches. Automated crawling, scraping, or heavy copying is strictly prohibited.
+                  <ul className="list-disc leading-normal pl-4 text-[10.5px] text-slate-605 space-y-1">
+                    <li>
+                      <strong className="text-emerald-700">Verified Premium Listings</strong>: These businesses have paid a directory listing fee and undergo high-level manual admin audit of email/phone contact matching during creation.
+                    </li>
+                    <li>
+                      <strong className="text-red-700 font-extrabold">Unverified Free Postings (High Risk)</strong>: These accounts do not undergo search verification, identity check, commercial registry, or licensing validations.
+                    </li>
+                  </ul>
+                  <p className="text-[11.5px] text-slate-600 text-justify">
+                    Unverified listings are subjected to permanent, automated red flashing alerts warning users of <strong className="text-red-700 italic">&ldquo;Not Verified&rdquo;</strong> status at both the upper head and lower base of the business description modal. Users are aggressively cautioned to confirm CIPC registration and withhold upfront deposits on unverified entities.
                   </p>
                 </div>
 
-                {/* 2. DATA PRIVACY POLICY */}
-                <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-privacy">
-                  <h3 className="font-extrabold text-slate-900 text-xs">2. Data Privacy Policy</h3>
-                  <p className="text-[11px] text-slate-600">
-                    We collect simple nameless cookies to understand search volumes and help improve our search rankings.
-                    We do not track your personal device location, contacts list, or identity.
-                  </p>
-                </div>
-
-                {/* 3. POPIA COMPLIANCE */}
+                {/* 4. POPIA COMPLIANCE & PUBLIC RECORD POLICY */}
                 <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-popia">
-                  <h3 className="font-extrabold text-slate-900 text-xs">3. POPIA Compliance (Act 4 of 2513)</h3>
-                  <p className="text-[11px] text-slate-600">
-                    We comply with the Protection of Personal Information Act of South Africa. Bizsearch24 acts as an index of public-domain business records.
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    4. POPIA Compliance & Privacy Act
+                  </h3>
+                  <p className="text-[11px] text-slate-605 text-justify">
+                    We strictly comply with the Protection of Personal Information Act of South Africa (POPIA). BizSearch24 operates under Section 19 regulations representing an index of pre-existing public business registry indexes and general commercial contact numbers.
                   </p>
-                  <p className="text-[11px] text-slate-600">
-                    Any business owner listed in our search results has the right to update details, confirm correct address data, or request permanent removal at any time by contacting our administrators.
+                  <p className="text-[11px] text-slate-605 text-justify">
+                    Any registered franchise, craftsman, or entity listed here retains the absolute right to correct, request immediate unpublishing, or execute a permanent takedown under POPI guidelines. Please contact directory support for instant actioning.
                   </p>
                 </div>
 
-                {/* 4. SCAM WATCH & SAFETY DISCLAIMER (SHOW LAST!) */}
-                <div className="space-y-1.5 bg-amber-50 border border-amber-200 p-3 rounded-xl" id="safety-pane-agreement">
-                  <div className="flex items-center space-x-1 text-amber-800 font-extrabold uppercase tracking-wider text-[10px]">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                    <span>⚠️ SCAM WARNING & DISCLAIMER</span>
-                  </div>
-                  <p className="text-[11px] leading-relaxed font-bold text-amber-950">
-                    This search index is purely for general information. Bizsearch24 does not endorse, verify qualifications, or guarantee any details of the listings published here. It is your sole responsibility to check CIPC registration or trade credentials before paying any funds.
+                {/* 5. DATA PRIVACY & ANALYTICS COOKIES */}
+                <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-privacy-cookies">
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    5. Cookie & Anonymous Metrics Policy
+                  </h3>
+                  <p className="text-[11px] text-slate-605 text-justify">
+                    Our platform executes stateless micro-cookies to record geographic location choices (Province, City) and categorical search frequencies. We never track individuals, compile device metrics, or share personal communications.
                   </p>
-                  <p className="text-[11.5px] leading-relaxed text-amber-900 mt-1 font-semibold">
-                    By proceeding, you agree that Bizsearch24 and its owners accept NO liability for any loss, damage, scam, or distress. You use this free search directory at your own choice.
+                </div>
+
+                {/* 6. SCAM WATCH & SAFETY DISCLAIMER (SHOW LAST!) */}
+                <div className="space-y-1.5 bg-red-50 border border-red-200 p-3.5 rounded-xl text-red-950" id="safety-pane-agreement">
+                  <div className="flex items-center space-x-1 font-extrabold uppercase tracking-wider text-[10.5px]">
+                    <ShieldAlert className="w-4 h-4 shrink-0 text-red-650" />
+                    <span>⚠️ MANDATORY SCAM FRAUD MITIGATION POLICY</span>
+                  </div>
+                  <p className="text-[10.5px] leading-relaxed font-bold text-justify">
+                    South African consumers must execute reasonable diligence: NEVER transfer deposits via EFT, eWallet, or dynamic payments without executing a formal service level contract, meeting at a verified physical brick-and-mortar office, and validating tradesmen certifications.
+                  </p>
+                  <p className="text-[11px] leading-relaxed font-semibold mt-1 text-justify">
+                    By clicking &ldquo;OK&rdquo;, you acknowledge that using <strong>bizsearch24.co.za</strong> falls strictly under your own sovereign discretion. You relinquish any and all future actions of legal recourse against the platform and its operators.
                   </p>
                 </div>
 
@@ -5107,6 +5981,107 @@ export default function Bizsearch24Home() {
               </button>
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* UPGRADE & GET VERIFIED PAYMENT PROMPT FOR FREE TIER REGISTRANTS */}
+      <AnimatePresence>
+        {showUpgradePrompt && (
+          <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md z-[99999] flex items-center justify-center p-4 overflow-y-auto" id="upgrade-prompt-overlay">
+            <motion.div
+              id="upgrade-prompt-modal"
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="bg-white border text-left rounded-3xl overflow-hidden max-w-lg w-full p-6 shadow-2xl relative space-y-5"
+            >
+              <div className="flex items-start justify-between border-b pb-3" id="pro-header">
+                <div className="flex items-center space-x-2.5">
+                  <div className="p-2 bg-red-50 border border-red-100 rounded-xl text-red-650 shrink-0 animate-pulse">
+                    <ShieldAlert className="w-5 h-5 text-red-650" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900 leading-tight">⚠️ Unverified Ad Alert</h3>
+                    <p className="text-[10px] text-slate-500 font-mono">STAND-BY FREE SUBMISSION WARNING</p>
+                  </div>
+                </div>
+                <button
+                  id="upgrade-modal-x"
+                  onClick={() => setShowUpgradePrompt(false)}
+                  className="p-1.5 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3.5 text-xs text-slate-705" id="pro-body">
+                <p className="leading-relaxed">
+                  You are registered under the <strong className="text-slate-900 font-extrabold">Standard Free Listing tier</strong>. Unverified accounts do not undergo business validation and are subject to visual cautionary alerts:
+                </p>
+
+                <div className="bg-red-50/70 border border-red-105 rounded-2xl p-3.5 space-y-2.5 text-[11px]" id="pro-warns">
+                  <div className="flex items-start space-x-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-600 mt-1.5 shrink-0 animate-ping" />
+                    <p className="text-red-800 leading-normal">
+                      <strong>Red Blinking Badge</strong>: Your listing cards will highlight with a highly visible red flashing <strong className="underline font-bold">Not Verified</strong> beacon on all searches.
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-600 mt-1.5 shrink-0" />
+                    <p className="text-red-850 leading-normal">
+                      <strong>Client Safety Banners</strong>: Absolute caution warnings will display at BOTH the top and bottom of your business micro-page advising public consumers to proceed with caution.
+                    </p>
+                  </div>
+                  <div className="flex items-start space-x-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-600 mt-1.5 shrink-0" />
+                    <p className="text-red-900 leading-normal">
+                      <strong>Media Upload Restrictions</strong>: Critical visual trust assets like portfolio images, company logos, gallery uploads, and direct hotline integrations are restricted.
+                    </p>
+                  </div>
+                </div>
+
+                <p className="leading-relaxed font-bold text-slate-800 text-[11.5px]">
+                  Establish direct marketplace authority in South Africa by instantly upgrading to verified status.
+                </p>
+              </div>
+
+              {/* TWO CORE OPTIONS */}
+              <div className="flex flex-col space-y-2.5 pt-2" id="pro-options">
+                {/* UPGRADE STATUS AND PAY CHOOSE */}
+                <button
+                  id="pro-choose-upgrade-pay"
+                  type="button"
+                  onClick={() => {
+                    setSubTier('premium');
+                    setShowUpgradePrompt(false);
+                    alert("💎 Premium Verified Status Activated! Image upload has unlocked. Please choose your image asset and click 'Register Business Listing' to complete verified checkout.");
+                  }}
+                  className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white font-extrabold text-xs rounded-xl flex items-center justify-between shadow-lg shadow-emerald-600/10 cursor-pointer transition-all border border-emerald-550"
+                >
+                  <div className="flex items-center space-x-2 text-left">
+                    <span className="p-1 rounded bg-white/20 text-white shrink-0">
+                      <Sparkles className="w-4 h-4 text-emerald-100" />
+                    </span>
+                    <div>
+                      <span className="block font-bold">✨ UPGRADE & GET CO-VERIFIED</span>
+                      <span className="text-[10px] text-emerald-100 block mt-0.5 font-normal">Instant Premium verification badge, logos & direct index exposure</span>
+                    </div>
+                  </div>
+                  <span className="bg-emerald-700 text-white px-2.5 py-1 rounded font-mono font-black text-[10.5px] uppercase shrink-0">R199/pm</span>
+                </button>
+
+                {/* SLIDE UNDER FOR PROCEED AS FREE STANDARD */}
+                <button
+                  id="pro-choose-proceed-unverified"
+                  type="button"
+                  onClick={handleConfirmFreeSubmit}
+                  className="w-full py-2.5 px-3 bg-slate-100 hover:bg-slate-250 text-slate-700 hover:text-slate-900 font-bold text-[11px] rounded-xl flex items-center justify-center space-x-1 border border-slate-200 transition-all cursor-pointer text-center"
+                >
+                  <span>⚠️ Continue with unverified FREE Ad (I understand the safety badges)</span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
     </div>

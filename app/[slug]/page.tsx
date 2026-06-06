@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import { readDb } from '@/lib/serverDb';
 import { PROVINCES, CITIES_AND_TOWNS } from '@/lib/saData';
-import { MapPin, Phone, Mail, Globe, Calendar, Eye, ShieldCheck, ChevronLeft, CalendarDays } from 'lucide-react';
+import { MapPin, Phone, Mail, Globe, Calendar, Eye, ShieldCheck, ChevronLeft, CalendarDays, Facebook, Twitter, Instagram, Linkedin, Youtube } from 'lucide-react';
 
 function toSlug(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
@@ -202,6 +202,17 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
       const generatedSlug = l.businessName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, '');
       return generatedSlug === decodedSlug;
     }) || null;
+
+    if (matchedListing) {
+      try {
+        const owner = await prisma.user.findUnique({
+          where: { id: matchedListing.userId }
+        });
+        (matchedListing as any).owner = owner || null;
+      } catch (ownerErr) {
+        console.error('Failed to resolve custom listing owner:', ownerErr);
+      }
+    }
   } catch (err) {
     console.error('Failed to load SQLite listings:', err);
   }
@@ -593,6 +604,8 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
     notFound();
   }
 
+  const matchedListingAny = matchedListing as any;
+
   // ==========================================
   // VIEW RENDER FOR BUSINESS LISTING DETAILS
   // ==========================================
@@ -782,6 +795,111 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
                   </div>
                 </div>
               </div>
+
+              {/* Custom Owner Profile Block */}
+              {matchedListingAny.owner && matchedListingAny.owner.showProfileDetails && (
+                <div className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm space-y-4 text-xs font-sans" id="owner-profile-details">
+                  <h4 className="font-bold text-slate-900 uppercase tracking-wider text-[11px] border-b pb-1.5">Direct Owner Profile</h4>
+                  
+                  {matchedListingAny.owner.fullName && (
+                    <div className="space-y-0.5" id="owner-fullname-lbl">
+                      <span className="block text-slate-400 font-mono text-[9px] uppercase font-bold">Authorized Contact</span>
+                      <span className="text-slate-800 font-bold select-all">{matchedListingAny.owner.fullName}</span>
+                    </div>
+                  )}
+
+                  {matchedListingAny.owner.businessName && (
+                    <div className="space-y-0.5" id="owner-bizname-lbl">
+                      <span className="block text-slate-400 font-mono text-[9px] uppercase font-bold">Trading / Registered Entity</span>
+                      <span className="text-slate-800 font-semibold">{matchedListingAny.owner.businessName}</span>
+                    </div>
+                  )}
+
+                  {matchedListingAny.owner.phone && (
+                    <div className="space-y-0.5" id="owner-phone-lbl">
+                      <span className="block text-slate-400 font-mono text-[9px] uppercase font-bold">Direct Line</span>
+                      <a href={`tel:${matchedListingAny.owner.phone}`} className="text-slate-800 font-semibold hover:underline select-all">{matchedListingAny.owner.phone}</a>
+                    </div>
+                  )}
+
+                  {matchedListingAny.owner.email && (
+                    <div className="space-y-0.5" id="owner-email-lbl">
+                      <span className="block text-slate-400 font-mono text-[9px] uppercase font-bold">Official Email</span>
+                      <a href={`mailto:${matchedListingAny.owner.email}`} className="text-slate-800 font-semibold hover:underline select-all">{matchedListingAny.owner.email}</a>
+                    </div>
+                  )}
+
+                  {(matchedListingAny.owner.companyRegNumber || matchedListingAny.owner.vatNumber) && (
+                    <div className="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-lg border border-slate-100 text-[10px]" id="owner-identifiers">
+                      {matchedListingAny.owner.companyRegNumber && (
+                        <div id="owner-reg-val">
+                          <span className="block text-slate-400 font-mono text-[8px] uppercase font-bold">Biz Registration</span>
+                          <span className="text-slate-755 font-mono font-medium">{matchedListingAny.owner.companyRegNumber}</span>
+                        </div>
+                      )}
+                      {matchedListingAny.owner.vatNumber && (
+                        <div id="owner-vat-val">
+                          <span className="block text-slate-400 font-mono text-[8px] uppercase font-bold">VAT Number</span>
+                          <span className="text-slate-755 font-mono font-medium">{matchedListingAny.owner.vatNumber}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {matchedListingAny.owner.website && (
+                    <div className="space-y-0.5" id="owner-web-lbl">
+                      <span className="block text-slate-400 font-mono text-[9px] uppercase font-bold">Corporate Hub</span>
+                      <a href={matchedListingAny.owner.website.startsWith('http') ? matchedListingAny.owner.website : `https://${matchedListingAny.owner.website}`} target="_blank" rel="noopener noreferrer" className="text-emerald-700 font-extrabold hover:underline break-all">
+                        {matchedListingAny.owner.website}
+                      </a>
+                    </div>
+                  )}
+
+                  {/* Social links row */}
+                  {(matchedListingAny.owner.socialFacebook || 
+                    matchedListingAny.owner.socialTwitter || 
+                    matchedListingAny.owner.socialInstagram || 
+                    matchedListingAny.owner.socialLinkedin || 
+                    matchedListingAny.owner.socialYoutube || 
+                    matchedListingAny.owner.socialTiktok) && (
+                    <div className="space-y-1.5 border-t border-slate-100 pt-3" id="owner-social-connections">
+                      <span className="block text-slate-400 font-mono text-[9px] uppercase font-bold">Official Social Media Connections</span>
+                      <div className="flex flex-wrap gap-2 pt-1" id="owner-socials-grid">
+                        {matchedListingAny.owner.socialFacebook && (
+                          <a href={matchedListingAny.owner.socialFacebook} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-full border border-slate-150 transition-colors" title="Facebook Page" id="owner-social-facebook">
+                            <Facebook className="w-4 h-4" />
+                          </a>
+                        )}
+                        {matchedListingAny.owner.socialTwitter && (
+                          <a href={matchedListingAny.owner.socialTwitter} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-full border border-slate-150 transition-colors" title="Twitter / X Profile" id="owner-social-twitter">
+                            <Twitter className="w-4 h-4" />
+                          </a>
+                        )}
+                        {matchedListingAny.owner.socialInstagram && (
+                          <a href={matchedListingAny.owner.socialInstagram} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-full border border-slate-150 transition-colors" title="Instagram Profile" id="owner-social-instagram">
+                            <Instagram className="w-4 h-4" />
+                          </a>
+                        )}
+                        {matchedListingAny.owner.socialLinkedin && (
+                          <a href={matchedListingAny.owner.socialLinkedin} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-full border border-slate-150 transition-colors" title="LinkedIn Hub" id="owner-social-linkedin">
+                            <Linkedin className="w-4 h-4" />
+                          </a>
+                        )}
+                        {matchedListingAny.owner.socialYoutube && (
+                          <a href={matchedListingAny.owner.socialYoutube} target="_blank" rel="noopener noreferrer" className="p-1.5 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-full border border-slate-150 transition-colors" title="YouTube Channel" id="owner-social-youtube">
+                            <Youtube className="w-4 h-4" />
+                          </a>
+                        )}
+                        {matchedListingAny.owner.socialTiktok && (
+                          <a href={matchedListingAny.owner.socialTiktok} target="_blank" rel="noopener noreferrer" className="px-2.5 py-1 bg-slate-50 hover:bg-emerald-50 text-slate-650 hover:text-emerald-600 text-[10px] font-mono font-black rounded-full border border-slate-150 transition-colors" title="TikTok Profile" id="owner-social-tiktok">
+                            TikTok
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Fraud Protection Box */}
               <div className="bg-amber-50 rounded-2xl p-4 border border-amber-200/50 space-y-2 text-[10.5px]" id="sidebar-safety-disclaimer">

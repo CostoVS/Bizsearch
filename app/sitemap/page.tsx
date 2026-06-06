@@ -13,6 +13,7 @@ import {
   Layers, 
   CheckCircle2, 
   AlertTriangle,
+  ShieldAlert,
   FileText
 } from 'lucide-react';
 import { PROVINCES, CITIES_AND_TOWNS } from '@/lib/saData';
@@ -426,48 +427,85 @@ export default function SitemapPage() {
                 
                 {/* 1. USAGE AGREEMENT */}
                 <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-terms">
-                  <h3 className="font-extrabold text-slate-900 text-xs">
-                    1. Directory Usage Terms
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    1. Binding Agreement & Usage Conditions
+                  </h3>
+                  <p className="text-[11px] text-slate-600 text-justify">
+                    Welcome to <strong>bizsearch24.co.za</strong> (&ldquo;BizSearch24&rdquo;). Accessing, browsing, search-indexing, or interacting with our directory services constitutes your absolute and irrevocable agreement to these Terms & Conditions. If you do not agree, you are strictly prohibited from utilizing this platform.
+                  </p>
+                  <p className="text-[11px] text-slate-600 text-justify">
+                    BizSearch24 operates strictly as an open indexed public advertisement directory for regional service providers in South Africa. Automated extraction of directory info, database scraping, API hijacking, or competitive replication is prohibited under criminal liability.
+                  </p>
+                </div>
+
+                {/* 2. STRICT INDEMNIFICATION & ABSOLUTE ZERO LIABILITY */}
+                <div className="space-y-1.5 border-b pb-3 border-slate-100 bg-red-50/50 p-2.5 rounded-xl border-dashed border-red-200" id="safety-pane-liability">
+                  <h3 className="font-extrabold text-red-750 text-xs uppercase tracking-tight">
+                    2. Absolute Zero Liability & General Indemnity
+                  </h3>
+                  <p className="text-[10.5px] text-slate-700 font-extrabold text-justify uppercase">
+                    BIZSEARCH24.CO.ZA, ITS FOUNDERS, SUB-CONTRACTORS, DIRECTORS, PARTNERS, AND OPERATORS (&ldquo;THE COVERED PARTIES&rdquo;) ACCEPT ABSOLUTELY ZERO RESPONSIBILITY, INDEMNITY, OR LIABILITY FOR ANY COMMERCIAL LOSS, THEFT, INJURY, DEFAULT, CONTRACTUAL BREACH, INTENTIONAL MISREPRESENTATION, FRAUD, SCAM, OR BODILY HARM RESULTING FROM YOUR ENGAGEMENT WITH ANY DIRECTORY PROVIDER.
+                  </p>
+                  <p className="text-[10.5px] text-slate-605 text-justify">
+                    By booking or hiring a listed company, you explicitly waive your legal right to seek any financial damages, claims, or lawsuits against the Covered Parties. All negotiations, quotes, and payment transfers are strictly bilateral transactions outside the scope, tracking, or knowledge of BizSearch24.
+                  </p>
+                </div>
+
+                {/* 3. VERIFIED VS. UNVERIFIED SECTORS & RISK EXPOSURE */}
+                <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-verification-policy">
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    3. Unverified Free-tier Postings vs. Verified Spotlights
                   </h3>
                   <p className="text-[11px] text-slate-600">
-                    Welcome to Bizsearch24! This directory allows you to find public trade services across South African cities and towns.
+                    We support two categories of directory listings:
                   </p>
-                  <p className="text-[11px] text-slate-600">
-                    Directory access is free for normal individual searches. Automated crawling, scraping, or heavy copying is strictly prohibited.
+                  <ul className="list-disc leading-normal pl-4 text-[10.5px] text-slate-605 space-y-1">
+                    <li>
+                      <strong className="text-emerald-700">Verified Premium Listings</strong>: These businesses have paid a directory listing fee and undergo high-level manual admin audit of email/phone contact matching during creation.
+                    </li>
+                    <li>
+                      <strong className="text-red-700 font-extrabold">Unverified Free Postings (High Risk)</strong>: These accounts do not undergo search verification, identity check, commercial registry, or licensing validations.
+                    </li>
+                  </ul>
+                  <p className="text-[11.5px] text-slate-600 text-justify">
+                    Unverified listings are subjected to permanent, automated red flashing alerts warning users of <strong className="text-red-700 italic">&ldquo;Not Verified&rdquo;</strong> status at both the upper head and lower base of the business description modal. Users are aggressively cautioned to confirm CIPC registration and withhold upfront deposits on unverified entities.
                   </p>
                 </div>
 
-                {/* 2. DATA PRIVACY POLICY */}
-                <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-privacy">
-                  <h3 className="font-extrabold text-slate-900 text-xs">2. Data Privacy Policy</h3>
-                  <p className="text-[11px] text-slate-600">
-                    We collect simple nameless cookies to understand search volumes and help improve our search rankings.
-                    We do not track your personal device location, contacts list, or identity.
-                  </p>
-                </div>
-
-                {/* 3. POPIA COMPLIANCE */}
+                {/* 4. POPIA COMPLIANCE & PUBLIC RECORD POLICY */}
                 <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-popia">
-                  <h3 className="font-extrabold text-slate-900 text-xs">3. POPIA Compliance (Act 4 of 2513)</h3>
-                  <p className="text-[11px] text-slate-600">
-                    We comply with the Protection of Personal Information Act of South Africa. Bizsearch24 acts as an index of public-domain business records.
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    4. POPIA Compliance & Privacy Act
+                  </h3>
+                  <p className="text-[11px] text-slate-605 text-justify">
+                    We strictly comply with the Protection of Personal Information Act of South Africa (POPIA). BizSearch24 operates under Section 19 regulations representing an index of pre-existing public business registry indexes and general commercial contact numbers.
                   </p>
-                  <p className="text-[11px] text-slate-600">
-                    Any business owner listed in our search results has the right to update details, confirm correct address data, or request permanent removal at any time by contacting our administrators.
+                  <p className="text-[11px] text-slate-605 text-justify">
+                    Any registered franchise, craftsman, or entity listed here retains the absolute right to correct, request immediate unpublishing, or execute a permanent takedown under POPI guidelines. Please contact directory support for instant actioning.
                   </p>
                 </div>
 
-                {/* 4. SCAM WATCH & SAFETY DISCLAIMER (SHOW LAST!) */}
-                <div className="space-y-1.5 bg-amber-50 border border-amber-200 p-3 rounded-xl" id="safety-pane-agreement">
-                  <div className="flex items-center space-x-1 text-amber-800 font-extrabold uppercase tracking-wider text-[10px]">
-                    <AlertTriangle className="w-4 h-4 shrink-0 text-amber-600" />
-                    <span>⚠️ SCAM WARNING & DISCLAIMER</span>
-                  </div>
-                  <p className="text-[11px] leading-relaxed font-bold text-amber-950">
-                    This search index is purely for general information. Bizsearch24 does not endorse, verify qualifications, or guarantee any details of the listings published here. It is your sole responsibility to check CIPC registration or trade credentials before paying any funds.
+                {/* 5. DATA PRIVACY & ANALYTICS COOKIES */}
+                <div className="space-y-1.5 border-b pb-3 border-slate-100" id="safety-pane-privacy-cookies">
+                  <h3 className="font-extrabold text-slate-900 text-xs uppercase tracking-tight">
+                    5. Cookie & Anonymous Metrics Policy
+                  </h3>
+                  <p className="text-[11px] text-slate-605 text-justify">
+                    Our platform executes stateless micro-cookies to record geographic location choices (Province, City) and categorical search frequencies. We never track individuals, compile device metrics, or share personal communications.
                   </p>
-                  <p className="text-[11.5px] leading-relaxed text-amber-900 mt-1 font-semibold">
-                    By proceeding, you agree that Bizsearch24 and its owners accept NO liability for any loss, damage, scam, or distress. You use this free search directory at your own choice.
+                </div>
+
+                {/* 6. SCAM WATCH & SAFETY DISCLAIMER (SHOW LAST!) */}
+                <div className="space-y-1.5 bg-red-50 border border-red-200 p-3.5 rounded-xl text-red-950" id="safety-pane-agreement">
+                  <div className="flex items-center space-x-1 font-extrabold uppercase tracking-wider text-[10.5px]">
+                    <ShieldAlert className="w-4 h-4 shrink-0 text-red-650" />
+                    <span>⚠️ MANDATORY SCAM FRAUD MITIGATION POLICY</span>
+                  </div>
+                  <p className="text-[10.5px] leading-relaxed font-bold text-justify">
+                    South African consumers must execute reasonable diligence: NEVER transfer deposits via EFT, eWallet, or dynamic payments without executing a formal service level contract, meeting at a verified physical brick-and-mortar office, and validating tradesmen certifications.
+                  </p>
+                  <p className="text-[11px] leading-relaxed font-semibold mt-1 text-justify">
+                    By clicking &ldquo;OK&rdquo;, you acknowledge that using <strong>bizsearch24.co.za</strong> falls strictly under your own sovereign discretion. You relinquish any and all future actions of legal recourse against the platform and its operators.
                   </p>
                 </div>
 

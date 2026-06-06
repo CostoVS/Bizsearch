@@ -86,11 +86,22 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
         updatedAt: new Date().toISOString(),
         firstName: data.firstName || '',
         lastName: data.lastName || '',
+        fullName: data.fullName || '',
+        phone: data.phone || '',
         idNumber: data.idNumber || null,
         companyRegNumber: data.companyRegNumber || null,
         billingAddress: data.billingAddress || null,
-        showProfileDetails: false,
-        profileColor: 'slate',
+        socialFacebook: data.socialFacebook || '',
+        socialTwitter: data.socialTwitter || '',
+        socialInstagram: data.socialInstagram || '',
+        socialLinkedin: data.socialLinkedin || '',
+        socialYoutube: data.socialYoutube || '',
+        socialTiktok: data.socialTiktok || '',
+        website: data.website || '',
+        businessName: data.businessName || '',
+        vatNumber: data.vatNumber || '',
+        showProfileDetails: data.showProfileDetails || false,
+        profileColor: data.profileColor || 'slate',
         maxListings: data.maxListings || 1
       };
       dbData.users.push(newUser);
@@ -115,6 +126,17 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
         return dbData.users[idx];
       }
       return null;
+    }
+    if (prop === 'findMany') {
+      return dbData.users;
+    }
+    if (prop === 'delete') {
+      const where = args[0]?.where || {};
+      const found = dbData.users.find((u: any) => u.id === where.id);
+      dbData.users = dbData.users.filter((u: any) => u.id !== where.id);
+      dbData.listings = dbData.listings.filter((l: any) => l.userId !== where.id);
+      saveDb(dbData);
+      return found || null;
     }
   }
 

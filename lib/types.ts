@@ -30,6 +30,13 @@ export interface BusinessListing {
   instagramUrl?: string;
   linkedinUrl?: string;
   appointmentRequired?: 'yes' | 'no';
+  
+  // Database properties for administrative listings
+  userId?: string;
+  status?: string;
+  businessName?: string;
+  contactEmail?: string;
+  contactPhone?: string;
 }
 
 export interface BizAd {

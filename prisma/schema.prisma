@@ -28,10 +28,24 @@ model User {
 
   firstName        String?
   lastName         String?
+  fullName         String?
+  phone            String?
   idNumber         String?
   companyRegNumber String?
   billingAddress   String?
   
+  // Social Media Links
+  socialFacebook   String?
+  socialTwitter    String?
+  socialInstagram  String?
+  socialLinkedin   String?
+  socialYoutube    String?
+  socialTiktok     String?
+  
+  website          String?
+  businessName     String?
+  vatNumber        String?
+
   showProfileDetails Boolean @default(false)
   profileColor     String    @default("slate") // Color theme name or hex
 
