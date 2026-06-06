@@ -62,6 +62,16 @@ echo -e "Detected Docker Compose CLI syntax: ${GREEN}$COMPOSE_CMD${NC}"
 
 $COMPOSE_CMD down || true
 
+# Explicit clean-up for the specific conflicting container names to prevent daemon name collision errors
+for CONTAINER in "bizsearch-db" "bizsearch-app"; do
+    if docker inspect "$CONTAINER" >/dev/null 2>&1; then
+        echo -e "${YELLOW}Found conflicting/stale container name: ${CONTAINER}. Discarding container state safely...${NC}"
+        docker stop "$CONTAINER" >/dev/null 2>&1 || true
+        docker rm -f "$CONTAINER" >/dev/null 2>&1 || true
+        echo -e "${GREEN}✓ Cleaned up conflicting container: ${CONTAINER}${NC}"
+    fi
+done
+
 # Pre-setup data directories
 echo -e "\n${BLUE}[3/8] Creating and securing Docker data volumes...${NC}"
 mkdir -p ./data_store
