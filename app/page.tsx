@@ -490,6 +490,13 @@ export default function Bizsearch24Home() {
     return () => clearTimeout(timer);
   }, [fetchListings, fetchSeoPages, fetchAdsList, trackVisitActivity]);
 
+  // Track active tab navigation changes
+  React.useEffect(() => {
+    if (activeTab !== 'explore') {
+      trackVisitActivity('tab_switch', `/${activeTab}`);
+    }
+  }, [activeTab, trackVisitActivity]);
+
   // Logout session helper declared with stable dependencies
   const handleLogout = React.useCallback(async () => {
     try {
@@ -644,6 +651,7 @@ export default function Bizsearch24Home() {
         setActivePageSlug(slug);
         setActiveTab('pages');
         setMobileMenuOpen(false);
+        trackVisitActivity('view_page', `/pages/${slug}`, { search: `SEO Page Guide: "${data.page?.title || slug}"` });
       }
     } catch (err) {
       console.error('Error fetching dynamic slug:', err);
@@ -1509,14 +1517,27 @@ export default function Bizsearch24Home() {
 
                 <div className="h-[1.5px] bg-slate-100 my-1" id="mob-nav-div" />
                 {isAdminLoggedIn ? (
-                  <button
-                    id="mob-nav-admin-logged"
-                    onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
-                    className="text-left px-4 py-3 rounded-lg text-base font-semibold text-emerald-700 bg-emerald-50 flex items-center justify-between"
-                  >
-                    <span>My Dashboard</span>
-                    <Settings className="w-4 h-4 animate-spin-slow" id="mob-admin-spin" />
-                  </button>
+                  <div className="flex flex-col space-y-2">
+                    <button
+                      id="mob-nav-admin-logged"
+                      onClick={() => { setActiveTab('admin'); setMobileMenuOpen(false); }}
+                      className="text-left px-4 py-3 rounded-lg text-base font-semibold text-emerald-700 bg-emerald-50 flex items-center justify-between"
+                    >
+                      <span>My Dashboard</span>
+                      <Settings className="w-4 h-4 animate-spin-slow" id="mob-admin-spin" />
+                    </button>
+                    <button
+                      id="mob-nav-logout"
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="text-left px-4 py-3 rounded-lg text-base font-bold text-red-650 flex items-center space-x-2 bg-red-50 hover:bg-red-100 transition-colors"
+                    >
+                      <LogOut className="w-5 h-5 text-red-600" id="mob-logout-icon" />
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
                 ) : (
                   <button
                     id="mob-nav-admin-login"
@@ -4679,6 +4700,11 @@ export default function Bizsearch24Home() {
                                         <td className="p-2 font-mono leading-tight whitespace-normal break-all">
                                           <p className="font-extrabold text-slate-900">{user.email}</p>
                                           <p className="text-[10px] text-slate-450 mt-1 font-semibold">ID: {user.id}</p>
+                                          {user.lastKnownIp && (
+                                            <p className="text-[9.5px] text-indigo-700 mt-1 font-bold bg-indigo-50/60 w-fit px-1.5 py-0.5 rounded border border-indigo-150">
+                                              🖥️ {user.lastKnownIp}
+                                            </p>
+                                          )}
                                         </td>
                                         <td className="p-2 leading-tight">
                                           <div className="font-bold text-slate-850">{user.fullName || `${user.firstName || ''} ${user.lastName || ''}`.trim() || <span className="italic text-slate-300">- No name listed -</span>}</div>
@@ -5732,9 +5758,9 @@ export default function Bizsearch24Home() {
           </div>
 
           <div className="space-y-3 md:col-span-1 text-xs" id="footer-admin-col">
-            <span className="text-white font-semibold block" id="footer-admin-lbl">S.A. Partners Desk</span>
+            <span className="text-white font-semibold block" id="footer-admin-lbl">Secure Access Portal</span>
             <p className="text-[11px] leading-relaxed text-slate-500 font-medium" id="footer-admin-desc">
-              All logins are secure. New public business registrations are checked and approved before going live.
+              All logins are secure. New business registrations are checked and approved before going live.
             </p>
             {isAdminLoggedIn ? (
               <button
@@ -5752,7 +5778,7 @@ export default function Bizsearch24Home() {
                 className="text-slate-350 hover:text-white hover:underline transition-colors flex items-center space-x-1"
               >
                 <LogIn className="w-4 h-4 text-slate-400" id="footer-login-ico" />
-                <span>Partner Sign In</span>
+                <span>Login or Sign Up Registration</span>
               </button>
             )}
 
