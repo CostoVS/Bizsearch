@@ -124,6 +124,21 @@ export default function Bizsearch24Home() {
   const [selectedCity, setSelectedCity] = React.useState<string>('');
   const [selectedSuburb, setSelectedSuburb] = React.useState<string>('');
   const [selectedCategory, setSelectedCategory] = React.useState<string>('');
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = React.useState<boolean>(false);
+  const [categorySearchQuery, setCategorySearchQuery] = React.useState<string>('');
+  const catDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (catDropdownRef.current && !catDropdownRef.current.contains(event.target as Node)) {
+        setCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   // Dynamic override states to allow typing literally any custom town, city, suburb, or area in South Africa
   const [manualLocationMode, setManualLocationMode] = React.useState<boolean>(false);
@@ -1622,31 +1637,188 @@ export default function Bizsearch24Home() {
                   </div>
                 </form>
 
-                {/* CATEGORIES HORIZONTAL SELECTIONS BOARD */}
-                <div className="border-t border-slate-100 pt-4" id="category-scroller-panel">
-                  <span className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2.5" id="cat-scroll-title">Business Categories</span>
-                  <div className="flex flex-wrap gap-2" id="category-button-group">
-                    {CATEGORIES.map(cat => {
-                      const isSelected = selectedCategory === cat.id;
-                      return (
-                        <button
-                          id={`cat-btn-${cat.id}`}
-                          key={cat.id}
-                          onClick={() => handleCategorySelect(cat.id)}
+                {/* CATEGORIES DROPDOWN SELECTOR */}
+                <div className="border-t border-slate-100 pt-4" id="category-dropdown-panel" ref={catDropdownRef}>
+                  <label className="block text-xs font-mono text-slate-400 uppercase tracking-wider mb-2.5" id="cat-dropdown-title">
+                    Business Categories
+                  </label>
+                  
+                  <div className="relative w-full">
+                    {/* Trigger Button */}
+                    <button
+                      id="category-dropdown-trigger"
+                      type="button"
+                      onClick={() => setCategoryDropdownOpen(!categoryDropdownOpen)}
+                      className={cn(
+                        "w-full px-4 py-3 rounded-xl text-sm font-medium border cursor-pointer flex items-center justify-between transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 bg-white",
+                        selectedCategory 
+                          ? "border-emerald-500 text-slate-805 shadow-xs" 
+                          : "border-slate-200 text-slate-500 hover:border-slate-300"
+                      )}
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0" id="selected-category-info">
+                        {selectedCategory ? (
+                          <>
+                            <span className="inline-flex shrink-0 p-0.5 rounded-md bg-emerald-50 text-emerald-600">
+                              {getCategoryIcon(selectedCategory)}
+                            </span>
+                            <span className="font-semibold text-slate-900 truncate">
+                              {CATEGORIES.find(c => c.id === selectedCategory)?.name}
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span className="inline-flex shrink-0 p-0.5 text-slate-400">
+                              <Layers className="w-5 h-5 animate-pulse" id="category-placeholder-icon" />
+                            </span>
+                            <span className="truncate">All Business Sectors (Filter or Select Any)</span>
+                          </>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-1.5 ml-2 shrink-0">
+                        {selectedCategory && (
+                          <button
+                            id="category-clear-inline-btn"
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCategorySelect('');
+                            }}
+                            className="p-1 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-all cursor-pointer"
+                            title="Clear category filter"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        )}
+                        <ChevronDown 
                           className={cn(
-                            "px-4 py-2.5 rounded-full text-xs font-medium cursor-pointer transition-all duration-200 border flex items-center space-x-2 focus:ring-1 focus:ring-emerald-500",
-                            isSelected 
-                              ? "bg-emerald-600 border-emerald-600 text-white shadow-xs" 
-                              : "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-                          )}
+                            "w-5 h-5 text-slate-400 transition-transform duration-200", 
+                            categoryDropdownOpen ? "transform rotate-180" : ""
+                          )} 
+                          id="category-dropdown-chevron"
+                        />
+                      </div>
+                    </button>
+
+                    {/* Dropdown Menu Panel */}
+                    <AnimatePresence>
+                      {categoryDropdownOpen && (
+                        <motion.div
+                          id="category-dropdown-menu"
+                          initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                          animate={{ opacity: 1, y: 0, scale: 1 }}
+                          exit={{ opacity: 0, y: 10, scale: 0.98 }}
+                          transition={{ duration: 0.15, ease: "easeOut" }}
+                          className="absolute left-0 mt-2 w-full bg-white border border-slate-205 rounded-2xl shadow-xl z-50 overflow-hidden"
                         >
-                          <span className={cn("inline-flex shrink-0 p-0.5 rounded-md", isSelected ? "text-white" : "text-emerald-600")}>
-                            {getCategoryIcon(cat.id)}
-                          </span>
-                          <span>{cat.name}</span>
-                        </button>
-                      );
-                    })}
+                          {/* Search Area */}
+                          <div className="p-3 border-b border-slate-100 bg-slate-50 flex items-center space-x-2" id="cat-search-box-container">
+                            <Search className="w-4 h-4 text-slate-400 shrink-0 ml-1" id="cat-search-glass" />
+                            <input
+                              id="category-inner-search-input"
+                              type="text"
+                              placeholder="Search categories (e.g. Health, Law, Café...)"
+                              value={categorySearchQuery}
+                              onChange={(e) => setCategorySearchQuery(e.target.value)}
+                              className="w-full bg-transparent border-0 p-1 text-sm outline-none focus:ring-0 text-slate-805 placeholder:text-slate-400"
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                            {categorySearchQuery && (
+                              <button
+                                id="cat-inner-search-clear"
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setCategorySearchQuery('');
+                                }}
+                                className="p-1 hover:bg-slate-200 rounded-full text-slate-400 hover:text-slate-600 shrink-0"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            )}
+                          </div>
+
+                          {/* Categories Scrollable Area */}
+                          <div className="max-h-72 overflow-y-auto py-1 scrollbar-thin scrollbar-thumb-slate-205" id="category-dropdown-list">
+                            {/* All Categories Option */}
+                            <button
+                              id="cat-option-all"
+                              type="button"
+                              onClick={() => {
+                                handleCategorySelect('');
+                                setCategoryDropdownOpen(false);
+                                setCategorySearchQuery('');
+                              }}
+                              className={cn(
+                                "w-full text-left px-4 py-2.5 text-xs font-medium transition-all flex items-center justify-between hover:bg-slate-50 cursor-pointer",
+                                !selectedCategory ? "bg-emerald-50 text-emerald-700" : "text-slate-700"
+                              )}
+                            >
+                              <div className="flex items-center space-x-2.5 min-w-0">
+                                <span className={cn("p-1 rounded-md shrink-0", !selectedCategory ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")}>
+                                  <Layers className="w-4 h-4" />
+                                </span>
+                                <span className="font-semibold truncate">All Categories (Show All Industries)</span>
+                              </div>
+                              {!selectedCategory && (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                              )}
+                            </button>
+
+                            <div className="border-t border-slate-100 my-1 font-mono" />
+
+                            {/* Render lists */}
+                            {(() => {
+                              const filtered = CATEGORIES.filter(cat => 
+                                cat.name.toLowerCase().includes(categorySearchQuery.toLowerCase()) ||
+                                cat.id.toLowerCase().includes(categorySearchQuery.toLowerCase())
+                              );
+
+                              if (filtered.length === 0) {
+                                return (
+                                  <div className="p-8 text-center text-slate-400 text-xs" id="no-matching-categories-alert">
+                                    No categories match &ldquo;{categorySearchQuery}&rdquo;
+                                  </div>
+                                );
+                              }
+
+                              return filtered.map(cat => {
+                                const isSelected = selectedCategory === cat.id;
+                                return (
+                                  <button
+                                    id={`cat-option-${cat.id}`}
+                                    key={cat.id}
+                                    type="button"
+                                    onClick={() => {
+                                      handleCategorySelect(cat.id);
+                                      setCategoryDropdownOpen(false);
+                                      setCategorySearchQuery('');
+                                    }}
+                                    className={cn(
+                                      "w-full text-left px-4 py-2.5 text-xs font-medium transition-all flex items-center justify-between hover:bg-slate-50 cursor-pointer",
+                                      isSelected ? "bg-emerald-50 text-emerald-750" : "text-slate-700"
+                                    )}
+                                  >
+                                    <div className="flex items-center space-x-2.5 min-w-0">
+                                      <span className={cn("inline-flex shrink-0 p-1 rounded-md", isSelected ? "bg-emerald-100" : "bg-slate-50")}>
+                                        {getCategoryIcon(cat.id)}
+                                      </span>
+                                      <span className={cn("truncate", isSelected ? "font-bold text-emerald-900" : "")}>
+                                        {cat.name}
+                                      </span>
+                                    </div>
+                                    {isSelected && (
+                                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                                    )}
+                                  </button>
+                                );
+                              });
+                            })()}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </div>
                 </div>
               </div>
