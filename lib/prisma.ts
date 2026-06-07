@@ -159,6 +159,11 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
         websiteUrl: l.website || '',
         keywords: cleanKeywords,
         clicks: l.views || 0,
+        whatsappNumber: l.whatsappNumber || '',
+        facebookUrl: l.facebookUrl || '',
+        instagramUrl: l.instagramUrl || '',
+        tiktokUrl: l.tiktokUrl || '',
+        youtubeUrl: l.youtubeUrl || '',
         publishedAt: l.publishedAt ? new Date(l.publishedAt) : (l.createdAt ? new Date(l.createdAt) : new Date()),
         expiresAt: l.expiresAt ? new Date(l.expiresAt) : null,
         createdAt: l.createdAt ? new Date(l.createdAt) : new Date(),
@@ -208,6 +213,11 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
         image: '',
         tags: data.keywords ? data.keywords.split(',') : [],
         views: 0,
+        whatsappNumber: data.whatsappNumber || '',
+        facebookUrl: data.facebookUrl || '',
+        instagramUrl: data.instagramUrl || '',
+        tiktokUrl: data.tiktokUrl || '',
+        youtubeUrl: data.youtubeUrl || '',
         slug: data.businessName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, ''),
         createdAt: new Date().toISOString()
       };
@@ -233,7 +243,12 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
           website: data.websiteUrl !== undefined ? data.websiteUrl : dbData.listings[idx].website,
           verified: data.status === 'APPROVED' ? true : (data.status === 'PENDING' ? false : dbData.listings[idx].verified),
           tags: data.keywords !== undefined ? data.keywords.split(',') : dbData.listings[idx].tags,
-          views: data.clicks !== undefined ? data.clicks : dbData.listings[idx].views
+          views: data.clicks !== undefined ? data.clicks : dbData.listings[idx].views,
+          whatsappNumber: data.whatsappNumber !== undefined ? data.whatsappNumber : dbData.listings[idx].whatsappNumber,
+          facebookUrl: data.facebookUrl !== undefined ? data.facebookUrl : dbData.listings[idx].facebookUrl,
+          instagramUrl: data.instagramUrl !== undefined ? data.instagramUrl : dbData.listings[idx].instagramUrl,
+          tiktokUrl: data.tiktokUrl !== undefined ? data.tiktokUrl : dbData.listings[idx].tiktokUrl,
+          youtubeUrl: data.youtubeUrl !== undefined ? data.youtubeUrl : dbData.listings[idx].youtubeUrl
         };
         dbData.listings[idx] = updated;
         saveDb(dbData);

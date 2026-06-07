@@ -217,6 +217,8 @@ export default function Bizsearch24Home() {
   const [editTwitter, setEditTwitter] = React.useState<string>('');
   const [editInstagram, setEditInstagram] = React.useState<string>('');
   const [editLinkedin, setEditLinkedin] = React.useState<string>('');
+  const [editTiktok, setEditTiktok] = React.useState<string>('');
+  const [editYoutube, setEditYoutube] = React.useState<string>('');
   const [editAppointmentRequired, setEditAppointmentRequired] = React.useState<'yes' | 'no'>('no');
 
   // Ad placement management states
@@ -225,6 +227,7 @@ export default function Bizsearch24Home() {
   const [adsLoading, setAdsLoading] = React.useState<boolean>(false);
   const [isCreatingAd, setIsCreatingAd] = React.useState<boolean>(false);
   const [editingAd, setEditingAd] = React.useState<BizAd | null>(null);
+  const [dismissedBannerId, setDismissedBannerId] = React.useState<string | null>(null);
   
   // Ad campaign form fields
   const [adTitle, setAdTitle] = React.useState<string>('');
@@ -263,6 +266,15 @@ export default function Bizsearch24Home() {
       (ad.suburb && ad.suburb.toLowerCase().includes(query))
     );
   }, [adminAds, adSearchQuery]);
+
+  // Find current active top-banner ad to display site-wide
+  const activeTopBanner = React.useMemo(() => {
+    const banner = adsList.find(ad => ad.active && ad.position === 'top-banner');
+    if (banner && banner.id !== dismissedBannerId) {
+      return banner;
+    }
+    return null;
+  }, [adsList, dismissedBannerId]);
 
   // Visitor traffic logs and tracking states
   const [visitorLogs, setVisitorLogs] = React.useState<any[]>([]);
@@ -332,6 +344,11 @@ export default function Bizsearch24Home() {
   const [subEmail, setSubEmail] = React.useState<string>('');
   const [subWebsite, setSubWebsite] = React.useState<string>('');
   const [subTags, setSubTags] = React.useState<string>('');
+  const [subWhatsapp, setSubWhatsapp] = React.useState<string>('');
+  const [subFacebook, setSubFacebook] = React.useState<string>('');
+  const [subInstagram, setSubInstagram] = React.useState<string>('');
+  const [subTiktok, setSubTiktok] = React.useState<string>('');
+  const [subYoutube, setSubYoutube] = React.useState<string>('');
   const [submittingUser, setSubmittingUser] = React.useState<boolean>(false);
   const [submissionSuccess, setSubmissionSuccess] = React.useState<string>('');
   const [submissionError, setSubmissionError] = React.useState<string>('');
@@ -666,6 +683,10 @@ export default function Bizsearch24Home() {
     e.preventDefault();
     setSubmissionError('');
     setSubmissionSuccess('');
+    if (!isAdminLoggedIn) {
+      setSubmissionError('You must be logged in to create an ad.');
+      return;
+    }
     if (!subName || !subCategory || !subAddress || !subProvince || !subCity) {
       setSubmissionError('Please fill in all mandatory fields.');
       return;
@@ -697,6 +718,20 @@ export default function Bizsearch24Home() {
       return;
     }
 
+    if (subEmail) {
+      const emailDomain = subEmail.toLowerCase().split('@')[1];
+      const freeDomains = [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'ymail.com', 
+        'live.com', 'aol.com', 'icloud.com', 'mail.ru', 'protonmail.com', 
+        'webmail.co.za', 'zoho.com', 'proton.me', 'gmx.com', 'mail.com'
+      ];
+      if (emailDomain && freeDomains.some(fd => emailDomain === fd || emailDomain.endsWith('.' + fd))) {
+        setSubmissionError('Free email addresses (like Gmail, Yahoo, Hotmail, etc.) are not permitted for listing ads. Please use a professional business email address (e.g. contact@yourcompany.co.za).');
+        setSubmittingUser(false);
+        return;
+      }
+    }
+
     try {
       const tagArray = subTags ? subTags.split(',').map(t => t.trim()).filter(Boolean) : [];
       const res = await fetch('/api/listings', {
@@ -707,17 +742,22 @@ export default function Bizsearch24Home() {
         },
         body: JSON.stringify({
           name: subName,
-          description: subDesc,
+          description: subTier === 'premium' ? subDesc : '',
           category: subCategory,
           address: subAddress,
           province: subProvince,
           city: subCity,
           suburb: subSuburb,
           phone: subPhone,
-          email: subEmail,
-          website: subWebsite,
-          tags: tagArray,
+          email: subTier === 'premium' ? subEmail : '',
+          website: subTier === 'premium' ? subWebsite : '',
+          tags: subTier === 'premium' ? tagArray : [],
           image: subTier === 'premium' ? subImage : '',
+          whatsappNumber: subTier === 'premium' ? subWhatsapp : '',
+          facebookUrl: subTier === 'premium' ? subFacebook : '',
+          instagramUrl: subTier === 'premium' ? subInstagram : '',
+          tiktokUrl: subTier === 'premium' ? subTiktok : '',
+          youtubeUrl: subTier === 'premium' ? subYoutube : '',
         }),
       });
 
@@ -971,6 +1011,8 @@ export default function Bizsearch24Home() {
     setEditTwitter(listing.twitterUrl || '');
     setEditInstagram(listing.instagramUrl || '');
     setEditLinkedin(listing.linkedinUrl || '');
+    setEditTiktok(listing.tiktokUrl || '');
+    setEditYoutube(listing.youtubeUrl || '');
     setEditAppointmentRequired(listing.appointmentRequired || 'no');
 
     setEditListingError('');
@@ -1015,6 +1057,8 @@ export default function Bizsearch24Home() {
           twitterUrl: editTwitter,
           instagramUrl: editInstagram,
           linkedinUrl: editLinkedin,
+          tiktokUrl: editTiktok,
+          youtubeUrl: editYoutube,
           appointmentRequired: editAppointmentRequired
         }),
       });
@@ -1583,6 +1627,80 @@ export default function Bizsearch24Home() {
 
       {/* CORE WRAPPER */}
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8" id="main-content-area">
+        <AnimatePresence mode="wait">
+          {activeTopBanner && (
+            <motion.div
+              key="site-wide-banner-active"
+              initial={{ opacity: 0, height: 0, y: -10 }}
+              animate={{ opacity: 1, height: 'auto', y: 0 }}
+              exit={{ opacity: 0, height: 0, y: -10 }}
+              className="mb-6 bg-gradient-to-r from-amber-500/10 via-emerald-500/5 to-amber-500/10 border border-amber-200 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm relative overflow-hidden"
+              id="site-wide-premium-banner"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center space-x-3.5 z-10 w-full sm:w-auto">
+                <div className="w-14 h-10 relative bg-slate-50 rounded-lg overflow-hidden shrink-0 border border-amber-200/50 shadow-xs">
+                  <img
+                    src={activeTopBanner.imageUrl}
+                    alt={activeTopBanner.title}
+                    referrerPolicy="no-referrer"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-[8px] bg-amber-500 text-slate-950 px-1.5 py-0.5 rounded font-black font-mono tracking-wider uppercase">
+                      SPONSORED
+                    </span>
+                    {activeTopBanner.badge && activeTopBanner.badge !== 'standard' && (
+                      <span className="text-[8px] bg-emerald-650 text-white px-1.5 py-0.5 rounded font-bold font-mono tracking-wide uppercase">
+                        {activeTopBanner.badge}
+                      </span>
+                    )}
+                    {activeTopBanner.province && (
+                      <span className="text-[9px] text-slate-500 font-mono">
+                        📍 {activeTopBanner.province.toUpperCase()} {activeTopBanner.city && `• ${activeTopBanner.city.toUpperCase()}`}
+                      </span>
+                    )}
+                  </div>
+                  <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 leading-snug mt-1">
+                    {activeTopBanner.title}
+                  </h4>
+                  {activeTopBanner.description && (
+                    <p className="text-[10px] sm:text-[10.5px] text-slate-500 leading-normal line-clamp-1 mt-0.5">
+                      {activeTopBanner.description}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3 w-full sm:w-auto justify-end z-10">
+                <a
+                  href={activeTopBanner.targetUrl || '#'}
+                  target={activeTopBanner.targetUrl && activeTopBanner.targetUrl.startsWith('http') ? '_blank' : '_self'}
+                  rel="noreferrer"
+                  onClick={() => {
+                    trackVisitActivity('click', 'site-side-banner', {
+                      adClick: { id: activeTopBanner.id, title: activeTopBanner.title }
+                    });
+                  }}
+                  className="py-1.5 px-4 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all shadow-xs shrink-0 flex items-center space-x-1 border-0 outline-none cursor-pointer"
+                >
+                  <span>Call Promotion</span>
+                  <ExternalLink className="w-3 h-3 ml-0.5" />
+                </a>
+                <button
+                  onClick={() => setDismissedBannerId(activeTopBanner.id)}
+                  className="p-1 hover:bg-slate-100 rounded-full text-slate-450 hover:text-slate-650 transition-colors shrink-0 cursor-pointer border-0 outline-none bg-transparent"
+                  title="Dismiss Banner ad"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
         <AnimatePresence mode="wait">
           
           {/* EXPLORE DIRECTORY VIEW */}
@@ -2211,8 +2329,8 @@ export default function Bizsearch24Home() {
                 </div>
               )}
 
-              {submissionError && (
-                <div className="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl text-sm flex items-start space-x-2" id="sub-error-banner">
+              {submissionError && !submissionError.toLowerCase().includes('logged in') && (
+                <div className="bg-red-50 border border-red-200 text-red-808 p-4 rounded-xl text-sm flex items-start space-x-2" id="sub-error-banner">
                   <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" id="sub-err-icon" />
                   <p className="font-medium text-xs sm:text-sm">{submissionError}</p>
                 </div>
@@ -2404,6 +2522,94 @@ export default function Bizsearch24Home() {
                   </div>
                 </div>
 
+                {/* Social media connections - Premium check */}
+                <div className={cn(
+                  "p-4 border rounded-xl space-y-4 transition-all duration-200",
+                  subTier === 'premium' ? "bg-emerald-50/15 border-emerald-100" : "bg-slate-50/80 border-slate-100 opacity-80"
+                )} id="pub-social-presence-card">
+                  <div className="flex items-center justify-between" id="pub-social-header">
+                    <div className="space-y-0.5">
+                      <span className="text-xs font-bold text-slate-800 flex items-center">
+                        <Sparkles className="w-4 h-4 mr-1 text-amber-500 animate-pulse" />
+                        Premium Ad Social Channels
+                      </span>
+                      <p className="text-[10px] text-slate-500">Connect with users on TikTok, WhatsApp, FB, Instagram and YouTube directly.</p>
+                    </div>
+                    {subTier !== 'premium' && (
+                      <span className="text-[9px] bg-amber-500/10 text-amber-700 px-2 py-0.5 rounded-full font-bold flex items-center border border-amber-500/20">
+                        <Lock className="w-2.5 h-2.5 mr-1" /> Premium Only
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5" id="pub-social-form-grid">
+                    {/* WhatsApp */}
+                    <div className="space-y-1" id="sub-whatsapp-f">
+                      <label className="text-[11px] font-bold text-slate-650">WhatsApp Trading Number</label>
+                      <input
+                        type="text"
+                        disabled={subTier !== 'premium'}
+                        placeholder={subTier === 'premium' ? "e.g. +27821234567" : "🔒 Premium Verified Only"}
+                        value={subWhatsapp}
+                        onChange={(e) => setSubWhatsapp(e.target.value)}
+                        className="w-full bg-white border border-slate-200 disabled:bg-slate-100 disabled:text-slate-405 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                      />
+                    </div>
+
+                    {/* Facebook */}
+                    <div className="space-y-1" id="sub-facebook-f">
+                      <label className="text-[11px] font-bold text-slate-650">Facebook Page Link</label>
+                      <input
+                        type="url"
+                        disabled={subTier !== 'premium'}
+                        placeholder={subTier === 'premium' ? "e.g. https://facebook.com/mybiz" : "🔒 Premium Verified Only"}
+                        value={subFacebook}
+                        onChange={(e) => setSubFacebook(e.target.value)}
+                        className="w-full bg-white border border-slate-200 disabled:bg-slate-100 disabled:text-slate-405 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                      />
+                    </div>
+
+                    {/* Instagram */}
+                    <div className="space-y-1" id="sub-instagram-f">
+                      <label className="text-[11px] font-bold text-slate-650">Instagram Profile Link</label>
+                      <input
+                        type="url"
+                        disabled={subTier !== 'premium'}
+                        placeholder={subTier === 'premium' ? "e.g. https://instagram.com/mybiz" : "🔒 Premium Verified Only"}
+                        value={subInstagram}
+                        onChange={(e) => setSubInstagram(e.target.value)}
+                        className="w-full bg-white border border-slate-200 disabled:bg-slate-100 disabled:text-slate-405 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                      />
+                    </div>
+
+                    {/* TikTok */}
+                    <div className="space-y-1" id="sub-tiktok-f">
+                      <label className="text-[11px] font-bold text-slate-650">TikTok Profile Link</label>
+                      <input
+                        type="url"
+                        disabled={subTier !== 'premium'}
+                        placeholder={subTier === 'premium' ? "e.g. https://tiktok.com/@mybiz" : "🔒 Premium Verified Only"}
+                        value={subTiktok}
+                        onChange={(e) => setSubTiktok(e.target.value)}
+                        className="w-full bg-white border border-slate-200 disabled:bg-slate-100 disabled:text-slate-405 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none transition-all"
+                      />
+                    </div>
+
+                    {/* YouTube */}
+                    <div className="space-y-1 sm:col-span-2" id="sub-youtube-f">
+                      <label className="text-[11px] font-bold text-slate-650">YouTube Channel Link</label>
+                      <input
+                        type="url"
+                        disabled={subTier !== 'premium'}
+                        placeholder={subTier === 'premium' ? "e.g. https://youtube.com/@mybiz" : "🔒 Premium Verified Only"}
+                        value={subYoutube}
+                        onChange={(e) => setSubYoutube(e.target.value)}
+                        className="w-full bg-white border border-slate-200 disabled:bg-slate-100 disabled:text-slate-405 rounded-lg px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none transition-all font-sans"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Subscription Tier & Conditional Image Upload Component */}
                 <div className="space-y-3 p-4 bg-slate-50 border border-slate-100 rounded-xl" id="pub-subscription-and-image-section">
                   <div className="flex flex-col space-y-1">
@@ -2490,6 +2696,9 @@ export default function Bizsearch24Home() {
                               };
                               reader.readAsDataURL(file);
                             }
+                          }}
+                          onClick={() => {
+                            document.getElementById('file-input-pub-sub')?.click();
                           }}
                           className="border-2 border-dashed border-slate-300 hover:border-emerald-400 bg-white rounded-lg p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-1 relative"
                         >
@@ -2586,6 +2795,33 @@ export default function Bizsearch24Home() {
                     <span>Register Business Listing</span>
                   )}
                 </button>
+
+                {(!isAdminLoggedIn || (submissionError && submissionError.toLowerCase().includes('logged in'))) && (
+                  <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl space-y-3 animate-fade-in" id="login-gate-warning-box">
+                    <div className="flex items-start space-x-2">
+                      <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0 mt-0.5 animate-bounce" id="sub-gate-err-icon" />
+                      <div className="space-y-1">
+                        <p className="font-bold text-slate-805 text-[11px] uppercase tracking-wider">Account Authentication Required</p>
+                        <p className="text-slate-600 text-xs leading-relaxed">
+                          You must be logged in to your BizSearch24 account to publish or create listing ads.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRegistering(true);
+                          setActiveTab('admin');
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="w-full py-2.5 px-4 bg-amber-500 hover:bg-amber-600 active:scale-98 text-slate-950 font-bold rounded-lg text-xs transition-all shadow-sm flex items-center justify-center space-x-2 cursor-pointer"
+                      >
+                        <span>👉 Click here to Sign Up / Register Account to Publish Ad</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </form>
             </motion.div>
           )}
@@ -2791,7 +3027,10 @@ export default function Bizsearch24Home() {
                   </div>
                   <h3 className="text-lg font-black text-slate-905">Total Digital Suite Package</h3>
                   <p className="text-slate-600 text-xs max-w-lg leading-relaxed">
-                    This all-inclusive bundle costs only <strong>R199 per month</strong> (month-to-month, cancel anytime) and <strong>INCLUDES</strong> a Premium BizSearch24 Directory account, website building, hosting, and unlimited email mailboxes. Secure your <strong>custom .co.za domain name for just R99 once-per-year</strong>!
+                    This all-inclusive bundle costs only <strong>R199 per month</strong> (month-to-month, cancel anytime) and <strong>INCLUDES</strong> a Premium BizSearch24 Directory account, website building, hosting, and unlimited email mailboxes.
+                  </p>
+                  <p className="text-slate-650 text-xs max-w-lg leading-relaxed mt-1">
+                    <strong>Professional Domain Addon:</strong> Secure your custom <strong>.co.za domain name for just R99 once-per-year</strong>! Please note the domain is a separate addon (not inclusive in the monthly rate). If you select the domain addon, the total setup cost is <strong>R298 once-off</strong> for the first month, then <strong>R199 per month</strong> month-to-month and <strong>R99 per year</strong> for domain renewal.
                   </p>
                   <p className="text-[11px] text-slate-500 font-medium">
                     💬 Got questions? Talk directly to our technical desk via WhatsApp: <strong>075 161 3007</strong>
@@ -2800,9 +3039,14 @@ export default function Bizsearch24Home() {
                 
                 <div className="bg-white border border-emerald-250 p-5 rounded-2xl shadow-inner text-center shrink-0 w-full md:w-80" id="pricing-tag-box">
                   <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">Exclusive Pricing</p>
-                  <div className="my-2 space-y-1">
-                    <p className="text-2xl font-black text-emerald-700">R199 <span className="text-xs text-slate-500 font-normal">/pm</span></p>
-                    <p className="text-sm font-semibold text-teal-700">+ R99 <span className="text-xs text-slate-505 font-mono">/year domain</span></p>
+                  <div className="my-2 space-y-1.5">
+                    <p className="text-2xl font-black text-emerald-700">R199 <span className="text-xs text-slate-500 font-normal">/ month</span></p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">— PLUS OPTIONAL ADDON —</p>
+                    <p className="text-sm font-extrabold text-teal-700">R99 <span className="text-xs text-slate-505 font-mono">/ year domain</span></p>
+                    <div className="pt-2 border-t border-slate-100 mt-2 text-[10.5px] text-slate-700 font-medium" id="total-price-breakdown-custom">
+                      <p className="font-bold text-slate-900">First Month with Domain: <span className="text-emerald-700 font-black">R298 once</span></p>
+                      <p className="text-[9.5px] text-slate-500 font-normal leading-tight mt-0.5">Thereafter: R199/month + R99/year for domain renewal</p>
+                    </div>
                   </div>
                   <p className="text-[10px] text-slate-450 mt-1">No Contract, Cancel Anytime</p>
                   
@@ -4141,12 +4385,38 @@ export default function Bizsearch24Home() {
                                       <p className="max-w-[140px] truncate text-slate-500 font-mono" title={ad.targetUrl}>{ad.targetUrl || 'None'}</p>
                                     </td>
                                     <td>
-                                      <span className={cn(
-                                        "px-2 py-0.5 rounded-full text-[9px] font-mono font-bold",
-                                        ad.active ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-500"
-                                      )}>
-                                        {ad.active ? 'LIVE / ACTIVE' : 'INACTIVE'}
-                                      </span>
+                                      <button
+                                        type="button"
+                                        onClick={async () => {
+                                          const nextActive = !ad.active;
+                                          const res = await fetch('/api/ads', {
+                                            method: 'PUT',
+                                            headers: {
+                                              'Content-Type': 'application/json',
+                                              'Authorization': `Bearer ${adminToken}`
+                                            },
+                                            body: JSON.stringify({ ...ad, active: nextActive })
+                                          });
+                                          const data = await res.json();
+                                          if (data.success) {
+                                            fetchAdminAds();
+                                            fetchAdsList();
+                                          }
+                                        }}
+                                        className={cn(
+                                          "px-2.5 py-1 rounded-full text-[9px] font-mono font-bold cursor-pointer transition-all border shrink-0 flex items-center space-x-1 outline-none",
+                                          ad.active 
+                                            ? "bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200" 
+                                            : "bg-slate-50 hover:bg-slate-100 text-slate-500 border-slate-200"
+                                        )}
+                                        title="Click to toggle Active status instantly"
+                                      >
+                                        <span className={cn(
+                                          "w-1.5 h-1.5 rounded-full inline-block mr-1.5",
+                                          ad.active ? "bg-emerald-600 animate-pulse" : "bg-slate-400"
+                                        )}></span>
+                                        <span>{ad.active ? 'LIVE / ACTIVE' : 'INACTIVE'}</span>
+                                      </button>
                                     </td>
                                     <td className="text-right space-x-1.5 whitespace-nowrap">
                                       <button

@@ -75,6 +75,11 @@ export async function GET(req: NextRequest) {
       status: l.status,
       views: l.clicks,
       tags: l.keywords ? l.keywords.split(',') : [],
+      whatsappNumber: l.whatsappNumber || '',
+      facebookUrl: l.facebookUrl || '',
+      instagramUrl: l.instagramUrl || '',
+      tiktokUrl: l.tiktokUrl || '',
+      youtubeUrl: l.youtubeUrl || '',
       slug: l.businessName.toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/(^-|-$)+/g, ''),
       // Base64 encode the image byte array for the frontend if exists
       image: l.images[0] ? `data:${l.images[0].mimeType};base64,${Buffer.from(l.images[0].imageData).toString('base64')}` : null,
@@ -118,7 +123,22 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { name, description, category, address, province, city, suburb, phone, email, website, tags, image } = body;
+    const { 
+      name, description, category, address, province, city, suburb, phone, email, website, tags, image,
+      whatsappNumber, facebookUrl, instagramUrl, tiktokUrl, youtubeUrl
+    } = body;
+
+    if (email) {
+      const emailDomain = email.toLowerCase().split('@')[1];
+      const freeDomains = [
+        'gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'ymail.com', 
+        'live.com', 'aol.com', 'icloud.com', 'mail.ru', 'protonmail.com', 
+        'webmail.co.za', 'zoho.com', 'proton.me', 'gmx.com', 'mail.com'
+      ];
+      if (emailDomain && freeDomains.some(fd => emailDomain === fd || emailDomain.endsWith('.' + fd))) {
+        return NextResponse.json({ success: false, message: 'Free email domains (Gmail, Yahoo, Hotmail, etc.) are not allowed. Please enter a professional business email address associated with your trading registry.' }, { status: 400 });
+      }
+    }
 
     const isAdmin = user.role === 'ADMIN';
 
@@ -142,6 +162,11 @@ export async function POST(req: NextRequest) {
         status: isAdmin ? 'APPROVED' : 'PENDING',
         expiresAt: isAdmin ? null : expiresAt,
         publishedAt: isAdmin ? new Date() : null,
+        whatsappNumber: whatsappNumber || '',
+        facebookUrl: facebookUrl || '',
+        instagramUrl: instagramUrl || '',
+        tiktokUrl: tiktokUrl || '',
+        youtubeUrl: youtubeUrl || '',
       }
     });
 

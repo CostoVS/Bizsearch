@@ -85,6 +85,13 @@ model Listing {
   websiteUrl     String?
   keywords       String?
   
+  // Custom Social Presence Addons
+  whatsappNumber String?
+  facebookUrl    String?
+  instagramUrl   String?
+  tiktokUrl      String?
+  youtubeUrl     String?
+  
   publishedAt    DateTime?
   expiresAt      DateTime?
 

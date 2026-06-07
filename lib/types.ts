@@ -29,6 +29,8 @@ export interface BusinessListing {
   twitterUrl?: string;
   instagramUrl?: string;
   linkedinUrl?: string;
+  tiktokUrl?: string;
+  youtubeUrl?: string;
   appointmentRequired?: 'yes' | 'no';
   
   // Database properties for administrative listings

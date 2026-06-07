@@ -193,6 +193,11 @@ export async function PUT(req: NextRequest) {
         keywords: tagString,
         status: updatedListing.verified ? 'APPROVED' : 'PENDING',
         expiresAt: updatedListing.verified ? null : undefined,
+        whatsappNumber: updatedListing.whatsappNumber || '',
+        facebookUrl: updatedListing.facebookUrl || '',
+        instagramUrl: updatedListing.instagramUrl || '',
+        tiktokUrl: updatedListing.tiktokUrl || '',
+        youtubeUrl: updatedListing.youtubeUrl || '',
       }
     });
 
