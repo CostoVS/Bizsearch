@@ -60,7 +60,7 @@ else
 fi
 echo -e "Detected Docker Compose CLI syntax: ${GREEN}$COMPOSE_CMD${NC}"
 
-$COMPOSE_CMD down || true
+$COMPOSE_CMD down -v --remove-orphans || true
 
 # Explicit clean-up for the specific conflicting container names to prevent daemon name collision errors
 for CONTAINER in "bizsearch-db" "bizsearch-app"; do

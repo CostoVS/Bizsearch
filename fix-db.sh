@@ -6,7 +6,7 @@ echo "==============================================="
 
 # 1. Stop currently running docker containers to release file locks before deleting
 echo "Step 1: Stopping docker services..."
-docker-compose down
+docker-compose down -v --remove-orphans || true
 
 # 2. Fix Docker Volume Directory Permissions (ensure UID 1001 has write access to Sqlite)
 echo "Step 2: Securing data store permissions for nextjs process..."

@@ -12,7 +12,7 @@ services:
     ports:
       - "5435:5432"
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - bizsearch_postgres_vol_v2:/var/lib/postgresql/data
 
   bizsearch:
     build:
@@ -37,6 +37,6 @@ services:
     command: sh -c "npx prisma db push && node server.js"
 
 volumes:
-  pgdata:
+  bizsearch_postgres_vol_v2:
 
 
