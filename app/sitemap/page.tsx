@@ -95,8 +95,8 @@ export default function SitemapPage() {
             <div className="h-4 w-px bg-slate-200" id="logo-divider" />
             <span className="text-slate-900 font-mono text-xs hidden sm:inline-flex bg-slate-100 px-2.5 py-1 rounded-md" id="sitemap-indicator-badge">SITEMAP DIRECTORY</span>
           </div>
-          <Link href="/" className="font-extrabold text-xl tracking-tight text-slate-900" id="logo-brand">
-            Biz<span className="text-emerald-500 font-black text-2xl drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_1.5px_1.5px_0_#000,_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000]">s</span>earch24
+          <Link href="/" className="font-bold tracking-tight text-slate-900 block leading-tight whitespace-nowrap" id="logo-brand">
+            <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
           </Link>
         </div>
       </header>
@@ -360,8 +360,8 @@ export default function SitemapPage() {
       <footer className="bg-slate-900 border-t border-slate-800 py-8 text-slate-400 text-xs sm:text-sm" id="sitemap-footer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4" id="sitemap-footer-inner">
           <div className="text-center sm:text-left space-y-1" id="sitemap-footer-copys">
-            <span className="text-white text-base font-bold tracking-tight block">
-              Biz<span className="text-emerald-400 font-black text-xl drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_1.2px_1.2px_0_#000,_-1.2px_-1.2px_0_#000,_1.2px_-1.2px_0_#000,_-1.2px_1.2px_0_#000]">s</span>earch24
+            <span className="text-white text-base font-bold tracking-tight block whitespace-nowrap">
+              <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
             </span>
             <p className="text-slate-500 text-[11px] leading-relaxed">© 2026 Bizsearch24 South Africa directory maps index. All Rights Reserved.</p>
           </div>

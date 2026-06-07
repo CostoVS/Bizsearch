@@ -235,8 +235,8 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
               <ChevronLeft className="w-5 h-5 text-emerald-600" />
               <span className="text-xs font-bold font-mono">BACK TO FINDER</span>
             </Link>
-            <Link href="/" className="font-extrabold text-lg text-slate-950" id="dynamic-logo">
-              Biz<span className="text-emerald-500 font-black">s</span>earch24
+            <Link href="/" className="font-bold tracking-tight text-slate-950 block leading-tight whitespace-nowrap" id="dynamic-logo">
+              <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
             </Link>
           </div>
         </header>
@@ -298,8 +298,8 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
 
         <footer className="bg-slate-900 border-t border-slate-800 py-8 text-slate-400 text-xs" id="dynamic-footer">
           <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4" id="dynamic-footer-inner">
-            <span className="font-extrabold text-white text-md">
-              Biz<span className="text-emerald-400 font-black">s</span>earch24
+            <span className="font-bold tracking-tight text-white block leading-tight whitespace-nowrap">
+              <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
             </span>
             <p className="text-slate-500 text-[10.5px]">© 2026 Bizsearch24. Fully indexed for Chrome, Safari, Firefox, Google Search, and AI crawlers.</p>
           </div>
@@ -352,8 +352,8 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
               <ChevronLeft className="w-5 h-5 text-emerald-600" />
               <span className="text-xs font-bold font-mono">BACK TO FINDER</span>
             </Link>
-            <Link href="/" className="font-extrabold text-lg text-slate-950" id="location-logo">
-              Biz<span className="text-emerald-500 font-black">s</span>earch24
+            <Link href="/" className="font-bold tracking-tight text-slate-950 block leading-tight whitespace-nowrap" id="location-logo">
+              <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
             </Link>
           </div>
         </header>
@@ -590,8 +590,8 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
 
         <footer className="bg-slate-900 border-t border-slate-800 py-8 text-slate-400 text-xs" id="location-footer">
           <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4" id="location-footer-inner">
-            <span className="font-extrabold text-white text-md">
-              Biz<span className="text-emerald-400 font-black">s</span>earch24
+            <span className="font-bold tracking-tight text-white block leading-tight whitespace-nowrap">
+              <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
             </span>
             <p className="text-slate-500 text-[10.5px]">© 2026 Bizsearch24 South Africa Directory. All rights reserved.</p>
           </div>
@@ -650,8 +650,8 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
             <ChevronLeft className="w-5 h-5 text-emerald-650" />
             <span className="text-xs font-bold font-mono">BACK TO FINDER</span>
           </Link>
-          <Link href="/" className="font-extrabold text-xl text-slate-950" id="listing-logo">
-            Biz<span className="text-emerald-500 font-black">s</span>earch24
+          <Link href="/" className="font-bold tracking-tight text-slate-950 block leading-tight whitespace-nowrap" id="listing-logo">
+            <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
           </Link>
         </div>
       </header>
@@ -915,8 +915,8 @@ export default async function SlugDetailPage({ params }: { params: Promise<{ slu
 
       <footer className="bg-slate-900 border-t border-slate-800 py-8 text-slate-400 text-xs" id="listing-footer">
         <div className="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4" id="listing-footer-inner">
-          <span className="font-extrabold text-white text-md">
-            Biz<span className="text-emerald-400 font-black">s</span>earch24
+          <span className="font-bold tracking-tight text-white block leading-tight whitespace-nowrap">
+            <span className="text-white font-black text-2xl inline-block mr-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#10b981,_1.5px_-1.5px_0_#10b981,_-1.5px_1.5px_0_#10b981,_1.5px_1.5px_0_#10b981,_0px_-1.5px_0_#10b981,_0px_1.5px_0_#10b981,_-1.5px_0px_0_#10b981,_1.5px_0px_0_#10b981]">B</span>iz<span className="text-emerald-500 font-black text-2xl inline-block mx-px drop-shadow-[0_1px_1px_rgba(0,0,0,0.15)] [text-shadow:_-1.5px_-1.5px_0_#000,_1.5px_-1.5px_0_#000,_-1.5px_1.5px_0_#000,_1.5px_1.5px_0_#000,_0px_-1.5px_0_#000,_0px_1.5px_0_#000,_-1.5px_0px_0_#000,_1.5px_0px_0_#000]">S</span>earch24
           </span>
           <p className="text-slate-500 text-[10.5px]">© 2026 Bizsearch24 South Africa Directory. All indexed links mapped into search protocols.</p>
         </div>
