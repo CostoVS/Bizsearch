@@ -204,6 +204,7 @@ export default function Bizsearch24Home() {
   const [editWebsite, setEditWebsite] = React.useState<string>('');
   const [editTags, setEditTags] = React.useState<string>('');
   const [editVerified, setEditVerified] = React.useState<boolean>(true);
+  const [editExpiresAt, setEditExpiresAt] = React.useState<string>('');
   const [editListingError, setEditListingError] = React.useState<string>('');
 
   // New administrative listings edit states
@@ -251,6 +252,9 @@ export default function Bizsearch24Home() {
   const [adPlacementSponsored, setAdPlacementSponsored] = React.useState<boolean>(false);
   const [adExpiryType, setAdExpiryType] = React.useState<'permanent' | 'date'>('permanent');
   const [adExpiryDate, setAdExpiryDate] = React.useState<string>('');
+  const [adTargetPage, setAdTargetPage] = React.useState<'all' | 'home' | 'news' | 'sitemaps'>('all');
+  const [adLayoutRow, setAdLayoutRow] = React.useState<'top' | 'middle' | 'bottom'>('top');
+  const [adOrderIndex, setAdOrderIndex] = React.useState<string>('0');
 
   // Filtered ads list for admin section search
   const filteredAdminAds = React.useMemo(() => {
@@ -275,6 +279,15 @@ export default function Bizsearch24Home() {
     }
     return null;
   }, [adsList, dismissedBannerId]);
+
+  const { topAds, middleAds, bottomAds } = React.useMemo(() => {
+    const activeAds = adsList.filter(ad => ad.active);
+    return {
+      topAds: activeAds.filter(ad => ad.layoutRow === 'top' || !ad.layoutRow),
+      middleAds: activeAds.filter(ad => ad.layoutRow === 'middle'),
+      bottomAds: activeAds.filter(ad => ad.layoutRow === 'bottom')
+    };
+  }, [adsList]);
 
   // Visitor traffic logs and tracking states
   const [visitorLogs, setVisitorLogs] = React.useState<any[]>([]);
@@ -360,6 +373,13 @@ export default function Bizsearch24Home() {
   const totalListingsCount = listings.length;
   const verifiedListingsCount = listings.filter(l => l.verified).length;
 
+  const sortedListings = React.useMemo(() => {
+    return [...listings].sort((a, b) => {
+      if (a.verified === b.verified) return 0;
+      return a.verified ? -1 : 1;
+    });
+  }, [listings]);
+
   // Load and refresh listings from the API
   const fetchListings = React.useCallback(async (termVal = '', pVal = '', cVal = '', sVal = '', catVal = '') => {
     setLoadingListings(true);
@@ -370,7 +390,7 @@ export default function Bizsearch24Home() {
       if (cVal) qParams.append('city', cVal);
       if (sVal) qParams.append('suburb', sVal);
       if (catVal) qParams.append('category', catVal);
-      qParams.append('onlyVerified', 'true'); // Filter out unverified for normal public directories
+      qParams.append('publicAll', 'true'); // Fetch both verified and unverified for public directories
 
       const res = await fetch(`/api/listings?${qParams.toString()}`);
       const data = await res.json();
@@ -423,6 +443,7 @@ export default function Bizsearch24Home() {
       if (prov) qParams.append('province', prov);
       if (ct) qParams.append('city', ct);
       if (sub) qParams.append('suburb', sub);
+      qParams.append('page', 'home');
       const res = await fetch(`/api/ads?${qParams.toString()}`);
       const data = await res.json();
       if (data.success) {
@@ -999,6 +1020,7 @@ export default function Bizsearch24Home() {
     setEditWebsite(listing.website || '');
     setEditTags(listing.tags.join(', '));
     setEditVerified(listing.verified);
+    setEditExpiresAt(listing.expiresAt ? listing.expiresAt : '');
     
     // Set extended administrative attributes
     setEditSlug(listing.slug || '');
@@ -1048,6 +1070,7 @@ export default function Bizsearch24Home() {
           website: editWebsite,
           tags: tagArray,
           verified: editVerified,
+          expiresAt: editExpiresAt || null,
           // Extended attributes:
           servicesOffered: serviceArray,
           tradingTimes: editTradingTimes,
@@ -1389,6 +1412,156 @@ export default function Bizsearch24Home() {
   // Submit fields cascades
   const subProvinceCities = CITIES_AND_TOWNS.filter(c => c.provinceId === subProvince);
   const subCitySuburbs = CITIES_AND_TOWNS.find(c => c.id === subCity)?.suburbs || [];
+
+  const renderAds = (adsArray: BizAd[], label: string) => {
+    if (!adsArray || adsArray.length === 0) return null;
+    return (
+      <div className="mb-8 bg-amber-50/40 border border-amber-200/50 rounded-2xl p-5 space-y-3 shadow-xs">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-1.5 text-xs font-black uppercase text-amber-805 tracking-wider">
+            <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-ping shrink-0" />
+            <span>{label}</span>
+          </div>
+          <span className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">geotargeted match</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
+          {adsArray.map(ad => (
+            <a
+              id={`sponsored-ad-card-${ad.id}`}
+              href={ad.targetUrl || '#'}
+              target={ad.targetUrl && ad.targetUrl.startsWith('http') ? '_blank' : '_self'}
+              rel="noreferrer"
+              key={ad.id}
+              onClick={() => {
+                trackVisitActivity('click', '/explore', {
+                  adClick: { id: ad.id, title: ad.title }
+                });
+              }}
+              className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-xs hover:shadow-md hover:border-amber-300 transition-all flex h-28 group relative"
+            >
+              <div className="w-1/3 relative bg-slate-50 shrink-0">
+                <img
+                  src={ad.imageUrl}
+                  alt={ad.title}
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                />
+                <div className="absolute bottom-1 right-1 bg-black/75 px-1 py-0.5 rounded text-[8px] font-bold uppercase text-white font-mono tracking-wider">
+                  SPONSOR
+                </div>
+              </div>
+              <div className="p-3.5 flex flex-col justify-between w-2/3">
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between gap-1.5">
+                    <h4 className="font-extrabold text-sm text-slate-900 line-clamp-1 group-hover:text-amber-800 transition-colors">
+                      {ad.title}
+                    </h4>
+                    {ad.badge && ad.badge !== 'standard' && (
+                      <span className={cn(
+                        "text-[8px] font-mono font-black px-1 py-0.5 rounded uppercase tracking-wider shrink-0",
+                        ad.badge === 'premium-verified' && "bg-amber-100 text-amber-800 border border-amber-200",
+                        ad.badge === 'premium' && "bg-amber-50 text-amber-700 border border-amber-100",
+                        ad.badge === 'verified' && "bg-emerald-50 text-emerald-800 border border-emerald-100"
+                      )}>
+                        {ad.badge.replace('-', ' ')}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
+                    {ad.description || 'Verified local vendor on Bizsearch24. Secure premium service offerings, catalogs, & phone hotlines.'}
+                  </p>
+                </div>
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderListingCard = (l: BusinessListing, index: number) => {
+    const provObj = PROVINCES.find(p => p.id === l.province);
+    const cityObj = CITIES_AND_TOWNS.find(c => c.id === l.city);
+    const catObj = CATEGORIES.find(c => c.id === l.category);
+    
+    return (
+      <motion.div
+        id={`listing-card-${l.id}`}
+        key={l.id}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: Math.min(index * 0.05, 0.4) }}
+        onClick={() => handleListingClick(l)}
+        className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-slate-300/60 cursor-pointer transition-all duration-300 flex flex-col justify-between group"
+      >
+        <div>
+          {/* Listing visual block overlay */}
+          <div className="relative h-44 w-full bg-slate-100 overflow-hidden" id={`card-image-wrap-${l.id}`}>
+            {/* Background placeholder or Picsum link */}
+            <img
+              id={`card-img-${l.id}`}
+              src={l.image || `https://picsum.photos/seed/${l.id}/800/600`}
+              alt={l.name}
+              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+            />
+            <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center space-x-1" id={`card-category-badge-${l.id}`}>
+              <span className="p-0.5 rounded-sm overflow-hidden text-emerald-600 block shrink-0 bg-emerald-50">
+                {getCategoryIcon(l.category)}
+              </span>
+              <span className="text-slate-700">{catObj?.name || l.category}</span>
+            </div>
+
+            <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5" id={`card-verified-container-${l.id}`}>
+              {l.verified ? (
+                <div className="bg-emerald-600 text-white px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center space-x-1" id={`card-verified-badge-${l.id}`}>
+                  <CheckCircle2 className="w-3.5 h-3.5" id={`card-verified-chk-${l.id}`} />
+                  <span>Verified</span>
+                </div>
+              ) : (
+                <div className="bg-red-950/90 text-red-200 border border-red-600/40 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase shadow-md flex items-center space-x-1.5" id={`card-unverified-badge-${l.id}`}>
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-600"></span>
+                  </span>
+                  <span>Not Verified</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="p-5 space-y-2.5" id={`card-body-${l.id}`}>
+            <h3 className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-1 text-base leading-tight" id={`card-title-${l.id}`}>
+              {l.name}
+            </h3>
+            <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed" id={`card-desc-${l.id}`}>
+              {l.description}
+            </p>
+            
+            <div className="flex flex-wrap gap-1 pt-1.5" id={`card-tags-${l.id}`}>
+              {l.tags.slice(0, 3).map((tag, tIdx) => (
+                <span id={`card-tag-${l.id}-${tIdx}`} key={tag} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[10px] font-mono leading-none">
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="px-5 py-4 border-t border-slate-50 flex items-center justify-between text-slate-500 text-xs bg-slate-50/30 font-mono" id={`card-footer-${l.id}`}>
+          <div className="flex items-center space-x-1 text-slate-600" id={`card-footer-location-${l.id}`}>
+            <MapPin className="w-3.5 h-3.5 text-emerald-500" id={`card-footer-map-pin-${l.id}`} />
+            <span className="line-clamp-1 text-[11px]">
+              {l.suburb ? `${l.suburb}, ` : ''}{cityObj?.name || l.city} ({provObj?.code})
+            </span>
+          </div>
+          <div className="flex items-center space-x-1 text-slate-400 font-mono text-[10px]" id={`card-footer-views-${l.id}`}>
+            <Eye className="w-3.5 h-3.5 text-slate-400" id={`card-footer-eye-${l.id}`} />
+            <span>{l.views || 0}</span>
+          </div>
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <div className="flex flex-col min-h-screen font-sans" id="apps-container">
@@ -2077,87 +2250,12 @@ export default function Bizsearch24Home() {
               <div id="directory-results-container">
                 <div className="flex items-center justify-between mb-4" id="results-count-bar">
                   <h2 className="text-xl font-bold tracking-tight text-slate-800" id="dir-results-title">
-                    {loadingListings ? 'Scanning SA Directory...' : `Directory Findings (${listings.length})`}
+                    {loadingListings ? 'Scanning SA Directory...' : `Directory Findings (${totalListingsCount})`}
                   </h2>
                   <span className="text-xs text-slate-450 font-mono" id="results-local-time">Johannesburg (GMT+2)</span>
                 </div>
 
-                {/* GEOLOCATION SPONSORED PROMOTIONS */}
-                {adsList && adsList.length > 0 && (
-                  <div className="mb-6 bg-amber-50/40 border border-amber-200/50 rounded-2xl p-5 space-y-3" id="proximity-ads-showcase">
-                    <div className="flex items-center justify-between" id="ads-showcase-head">
-                      <div className="flex items-center space-x-1.5 text-xs font-black uppercase text-amber-805 tracking-wider">
-                        <span className="inline-block w-2 h-2 bg-amber-500 rounded-full animate-ping shrink-0" />
-                        <span>Premium Directory Partners</span>
-                      </div>
-                      <span className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">geotargeted match</span>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" id="premium-ads-grid">
-                      {adsList.map(ad => (
-                        <a
-                          id={`sponsored-ad-card-${ad.id}`}
-                          href={ad.targetUrl || '#'}
-                          target={ad.targetUrl && ad.targetUrl.startsWith('http') ? '_blank' : '_self'}
-                          rel="noreferrer"
-                          key={ad.id}
-                          onClick={() => {
-                            trackVisitActivity('click', '/explore', {
-                              adClick: { id: ad.id, title: ad.title }
-                            });
-                          }}
-                          className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-xs hover:shadow-md hover:border-amber-300 transition-all flex h-28 group relative"
-                        >
-                          <div className="w-1/3 relative bg-slate-50 shrink-0">
-                            {/* Visual ad of any dimension rendered of any size dynamically */}
-                            <img
-                              src={ad.imageUrl}
-                              alt={ad.title}
-                              referrerPolicy="no-referrer"
-                              className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
-                            />
-                            <div className="absolute bottom-1 right-1 bg-black/75 px-1 py-0.5 rounded text-[8px] font-bold uppercase text-white font-mono tracking-wider">
-                              SPONSOR
-                            </div>
-                          </div>
-                          <div className="p-3.5 flex flex-col justify-between w-2/3">
-                            <div className="space-y-1">
-                              <div className="flex items-center justify-between gap-1.5">
-                                <h4 className="font-extrabold text-sm text-slate-900 line-clamp-1 group-hover:text-amber-800 transition-colors">
-                                  {ad.title}
-                                </h4>
-                                {ad.badge && ad.badge !== 'standard' && (
-                                  <span className={cn(
-                                    "text-[8px] font-mono font-black px-1 py-0.5 rounded uppercase tracking-wider shrink-0",
-                                    ad.badge === 'premium-verified' && "bg-amber-100 text-amber-800 border border-amber-200",
-                                    ad.badge === 'premium' && "bg-amber-50 text-amber-700 border border-amber-100",
-                                    ad.badge === 'verified' && "bg-emerald-50 text-emerald-800 border border-emerald-100"
-                                  )}>
-                                    {ad.badge.replace('-', ' ')}
-                                  </span>
-                                )}
-                              </div>
-                              <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">
-                                {ad.description || 'Verified local vendor on Bizsearch24. Secure premium service offerings, catalogs, & phone hotlines.'}
-                              </p>
-                            </div>
-                            <div className="flex items-center justify-between">
-                              <span className="text-[10px] text-amber-700 font-extrabold flex items-center space-x-1 underline">
-                                <span>Redeem Promotion</span>
-                                <span>→</span>
-                              </span>
-                              {ad.alwaysOnTop && (
-                                <span className="text-[8px] text-amber-600 font-mono font-bold bg-amber-50 px-1 rounded">
-                                  PRIORITY ALWAYS-ON-TOP
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        </a>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                {renderAds(topAds, 'Premium Directory Partners')}
 
                 {loadingListings ? (
                   <div className="py-24 text-center space-y-3" id="loading-spinner-block">
@@ -2167,7 +2265,7 @@ export default function Bizsearch24Home() {
                 ) : listings.length === 0 ? (
                   <div className="bg-white border border-dashed border-slate-200 rounded-2xl py-16 px-4 text-center" id="empty-results-fallback">
                     <ShieldAlert className="w-12 h-12 text-slate-350 mx-auto mb-3" id="fallback-shield" />
-                    <h3 className="text-lg font-bold text-slate-800" id="fallback-title">No Verified Listings Found</h3>
+                    <h3 className="text-lg font-bold text-slate-800" id="fallback-title">No Local Listings Found</h3>
                     <p className="text-slate-500 text-sm max-w-sm mx-auto mt-1 leading-relaxed" id="fallback-desc">
                       We couldn&apos;t locate active businesses matching those specific criteria. Try adjusting filters or register your own company!
                     </p>
@@ -2180,90 +2278,32 @@ export default function Bizsearch24Home() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="listings-grid">
-                    {listings.map((l, index) => {
-                      const provObj = PROVINCES.find(p => p.id === l.province);
-                      const cityObj = CITIES_AND_TOWNS.find(c => c.id === l.city);
-                      const catObj = CATEGORIES.find(c => c.id === l.category);
-                      
-                      return (
-                        <motion.div
-                          id={`listing-card-${l.id}`}
-                          key={l.id}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: Math.min(index * 0.05, 0.4) }}
-                          onClick={() => handleListingClick(l)}
-                          className="bg-white border border-slate-100 rounded-2xl overflow-hidden hover:shadow-lg hover:border-slate-300/60 cursor-pointer transition-all duration-300 flex flex-col justify-between group"
-                        >
-                          <div>
-                            {/* Listing visual block overlay */}
-                            <div className="relative h-44 w-full bg-slate-100 overflow-hidden" id={`card-image-wrap-${l.id}`}>
-                              {/* Background placeholder or Picsum link */}
-                              <img
-                                id={`card-img-${l.id}`}
-                                src={l.image || `https://picsum.photos/seed/${l.id}/800/600`}
-                                alt={l.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                              />
-                              <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-xs px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center space-x-1" id={`card-category-badge-${l.id}`}>
-                                <span className="p-0.5 rounded-sm overflow-hidden text-emerald-600 block shrink-0 bg-emerald-50">
-                                  {getCategoryIcon(l.category)}
-                                </span>
-                                <span className="text-slate-700">{catObj?.name || l.category}</span>
-                              </div>
+                  <div className="space-y-8">
+                    {/* VERIFIED LISTINGS ROW */}
+                    {sortedListings.filter(l => l.verified).length > 0 && (
+                      <div className="space-y-4">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="listings-grid-verified">
+                          {sortedListings.filter(l => l.verified).map((l, index) => renderListingCard(l, index))}
+                        </div>
+                      </div>
+                    )}
 
-                              <div className="absolute top-3 right-3 flex flex-col items-end gap-1.5" id={`card-verified-container-${l.id}`}>
-                                {l.verified ? (
-                                  <div className="bg-emerald-600 text-white px-2.5 py-1 rounded-full text-[10px] font-bold tracking-wider uppercase shadow-xs flex items-center space-x-1" id={`card-verified-badge-${l.id}`}>
-                                    <CheckCircle2 className="w-3.5 h-3.5" id={`card-verified-chk-${l.id}`} />
-                                    <span>Verified</span>
-                                  </div>
-                                ) : (
-                                  <div className="bg-red-950/90 text-red-200 border border-red-600/40 px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wider uppercase shadow-md flex items-center space-x-1.5" id={`card-unverified-badge-${l.id}`}>
-                                    <span className="relative flex h-1.5 w-1.5 shrink-0">
-                                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                      <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-600"></span>
-                                    </span>
-                                    <span>Not Verified</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
+                    {renderAds(middleAds, 'Featured Directory Specials')}
 
-                            <div className="p-5 space-y-2.5" id={`card-body-${l.id}`}>
-                              <h3 className="font-bold text-slate-900 group-hover:text-emerald-700 transition-colors line-clamp-1 text-base leading-tight" id={`card-title-${l.id}`}>
-                                {l.name}
-                              </h3>
-                              <p className="text-slate-500 text-xs line-clamp-2 leading-relaxed" id={`card-desc-${l.id}`}>
-                                {l.description}
-                              </p>
-                              
-                              <div className="flex flex-wrap gap-1 pt-1.5" id={`card-tags-${l.id}`}>
-                                {l.tags.slice(0, 3).map((tag, tIdx) => (
-                                  <span id={`card-tag-${l.id}-${tIdx}`} key={tag} className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md text-[10px] font-mono leading-none">
-                                    #{tag}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
+                    {/* UNVERIFIED LISTINGS ROW */}
+                    {sortedListings.filter(l => !l.verified).length > 0 && (
+                      <div className="space-y-4">
+                        <div className="flex items-center space-x-2 border-b border-slate-200 pb-2">
+                          <span className="bg-slate-100 text-slate-500 text-[10px] uppercase font-bold tracking-widest px-2 py-0.5 rounded">Free Listings</span>
+                          <span className="text-slate-400 text-[11px]">Unverified local listings awaiting processing</span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 opacity-85" id="listings-grid-unverified">
+                          {sortedListings.filter(l => !l.verified).map((l, index) => renderListingCard(l, index))}
+                        </div>
+                      </div>
+                    )}
 
-                          <div className="px-5 py-4 border-t border-slate-50 flex items-center justify-between text-slate-500 text-xs bg-slate-50/30 font-mono" id={`card-footer-${l.id}`}>
-                            <div className="flex items-center space-x-1 text-slate-600" id={`card-footer-location-${l.id}`}>
-                              <MapPin className="w-3.5 h-3.5 text-emerald-500" id={`card-footer-map-pin-${l.id}`} />
-                              <span className="line-clamp-1 text-[11px]">
-                                {l.suburb ? `${l.suburb}, ` : ''}{cityObj?.name || l.city} ({provObj?.code})
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1 text-slate-400 font-mono text-[10px]" id={`card-footer-views-${l.id}`}>
-                              <Eye className="w-3.5 h-3.5 text-slate-400" id={`card-footer-eye-${l.id}`} />
-                              <span>{l.views || 0}</span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                    {renderAds(bottomAds, 'Promoted Local Services')}
                   </div>
                 )}
               </div>
@@ -3920,6 +3960,9 @@ export default function Bizsearch24Home() {
                                 setAdPlacementSponsored(false);
                                 setAdExpiryType('permanent');
                                 setAdExpiryDate('');
+                                setAdTargetPage('all');
+                                setAdLayoutRow('top');
+                                setAdOrderIndex('0');
                               }}
                               className="text-xs text-slate-500 hover:text-slate-800 underline cursor-pointer"
                             >
@@ -3950,7 +3993,10 @@ export default function Bizsearch24Home() {
                               placementNews: adPlacementNews,
                               placementSponsored: adPlacementSponsored,
                               expiryType: adExpiryType,
-                              expiryDate: adExpiryType === 'date' ? adExpiryDate : null
+                              expiryDate: adExpiryType === 'date' ? adExpiryDate : null,
+                              targetPage: adTargetPage,
+                              layoutRow: adLayoutRow,
+                              orderIndex: parseInt(adOrderIndex, 10) || 0
                             };
 
                             const url = '/api/ads';
@@ -3985,6 +4031,9 @@ export default function Bizsearch24Home() {
                               setAdPlacementSponsored(false);
                               setAdExpiryType('permanent');
                               setAdExpiryDate('');
+                              setAdTargetPage('all');
+                              setAdLayoutRow('top');
+                              setAdOrderIndex('0');
                               fetchAdminAds();
                               fetchAdsList();
                             } else {
@@ -4288,6 +4337,48 @@ export default function Bizsearch24Home() {
                             </div>
                           </div>
 
+                          <div className="col-span-full bg-slate-50/50 p-4 rounded-xl border border-slate-150 space-y-4">
+                            <h4 className="text-xs font-black uppercase text-slate-600 tracking-wider">Layout Settings</h4>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-700 block">Target Page</label>
+                                <select
+                                  value={adTargetPage}
+                                  onChange={(e: any) => setAdTargetPage(e.target.value)}
+                                  className="w-full bg-white border border-slate-205 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none cursor-pointer"
+                                >
+                                  <option value="all">All Pages</option>
+                                  <option value="home">Home (Directory / Explore)</option>
+                                  <option value="news">News</option>
+                                  <option value="sitemaps">Sitemaps</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-700 block">Layout Row</label>
+                                <select
+                                  value={adLayoutRow}
+                                  onChange={(e: any) => setAdLayoutRow(e.target.value)}
+                                  className="w-full bg-white border border-slate-205 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none cursor-pointer"
+                                >
+                                  <option value="top">Top Row (Above verified)</option>
+                                  <option value="middle">Middle Row (Between verified & unverified)</option>
+                                  <option value="bottom">Bottom Row (Below unverified)</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-700 block">Order Index (Sort by lowest first)</label>
+                                <input
+                                  type="number"
+                                  value={adOrderIndex}
+                                  onChange={(e) => setAdOrderIndex(e.target.value)}
+                                  className="w-full bg-white border border-slate-205 rounded-xl px-3 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
                           <div className="col-span-full pt-2 flex justify-end">
                             <button
                               id="btn-ad-campaign-submit-panel"
@@ -4439,6 +4530,9 @@ export default function Bizsearch24Home() {
                                           setAdPlacementSponsored(!!ad.placementSponsored);
                                           setAdExpiryType(ad.expiryType || 'permanent');
                                           setAdExpiryDate(ad.expiryDate || '');
+                                          setAdTargetPage(ad.targetPage || 'all');
+                                          setAdLayoutRow(ad.layoutRow || 'top');
+                                          setAdOrderIndex(ad.orderIndex !== undefined ? ad.orderIndex.toString() : '0');
                                         }}
                                         className="px-2 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded font-bold text-[10px] uppercase tracking-wide cursor-pointer"
                                       >
@@ -6103,6 +6197,19 @@ export default function Bizsearch24Home() {
                             <label htmlFor="edit-listing-verified-checkbox" className="font-bold text-slate-700 cursor-pointer text-xs select-none">
                               Verified & Approved Listing Badge (Shown to public searchers)
                             </label>
+                          </div>
+
+                          <div className="space-y-1 p-3 bg-slate-50 border rounded-xl" id="edit-listing-expires-wrap">
+                            <label className="font-bold text-slate-700 text-xs flex items-center justify-between">
+                              Time Limit / Expiration (For Unverified or Temporary Listings)
+                            </label>
+                            <input
+                              type="datetime-local"
+                              value={editExpiresAt ? new Date(editExpiresAt).toISOString().slice(0,16) : ''}
+                              onChange={(e) => setEditExpiresAt(e.target.value ? new Date(e.target.value).toISOString() : '')}
+                              className="w-full bg-white border border-slate-205 rounded-xl px-3 py-1.5 text-xs focus:ring-1 focus:ring-emerald-500 outline-none"
+                            />
+                            <p className="text-[10px] text-slate-500 font-mono mt-1">Leave empty for NO TIME LIMIT. Listing will persist forever unless deleted manually.</p>
                           </div>
 
                           <button

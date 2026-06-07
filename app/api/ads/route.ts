@@ -9,6 +9,7 @@ export async function GET(req: NextRequest) {
     const province = searchParams.get('province')?.toLowerCase() || '';
     const city = searchParams.get('city')?.toLowerCase() || '';
     const suburb = searchParams.get('suburb')?.toLowerCase() || '';
+    const targetPageParam = searchParams.get('page')?.toLowerCase() || '';
 
     const dbData = readDb();
     let ads = dbData.ads || [];
@@ -29,15 +30,28 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // Sort: priority / alwaysOnTop first, then newest
+    // Sort: priority / alwaysOnTop first, then orderIndex ascending, then newest
     ads = [...ads].sort((a, b) => {
       const aTop = a.alwaysOnTop ? 1 : 0;
       const bTop = b.alwaysOnTop ? 1 : 0;
       if (aTop !== bTop) {
         return bTop - aTop; // 1 (alwaysOnTop) comes before 0
       }
+      const aOrder = a.orderIndex !== undefined ? a.orderIndex : 0;
+      const bOrder = b.orderIndex !== undefined ? b.orderIndex : 0;
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder; // ascending order index: lower comes first
+      }
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
+
+    // If target page specifier is provided, filter ads accordingly
+    if (targetPageParam) {
+      ads = ads.filter(ad => {
+        const adTarget = ad.targetPage || 'all';
+        return adTarget === 'all' || adTarget === targetPageParam;
+      });
+    }
 
     // If matching filters are provided, filter ads accordingly.
     // Ads can match 'all' or are target-matched to the corresponding location fields.
@@ -83,7 +97,10 @@ export async function POST(req: NextRequest) {
       placementNews,
       placementSponsored,
       expiryType,
-      expiryDate
+      expiryDate,
+      targetPage,
+      layoutRow,
+      orderIndex
     } = body;
 
     if (!title || !imageUrl) {
@@ -112,6 +129,9 @@ export async function POST(req: NextRequest) {
       placementSponsored: !!placementSponsored,
       expiryType: expiryType || 'permanent',
       expiryDate: expiryDate || null,
+      targetPage: targetPage || 'all',
+      layoutRow: layoutRow || 'top',
+      orderIndex: typeof orderIndex === 'number' ? orderIndex : parseInt(orderIndex || '0', 10) || 0,
       createdAt: new Date().toISOString()
     };
 

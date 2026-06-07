@@ -61,6 +61,9 @@ export interface BizAd {
   placementSponsored?: boolean;
   expiryType?: 'permanent' | 'date';
   expiryDate?: string | null;
+  targetPage?: 'all' | 'home' | 'news' | 'sitemaps';
+  layoutRow?: 'top' | 'middle' | 'bottom';
+  orderIndex?: number;
 }
 
 export interface VisitorTrackingLog {

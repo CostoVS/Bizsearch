@@ -192,7 +192,9 @@ export async function PUT(req: NextRequest) {
         websiteUrl: updatedListing.website || '',
         keywords: tagString,
         status: updatedListing.verified ? 'APPROVED' : 'PENDING',
-        expiresAt: updatedListing.verified ? null : undefined,
+        expiresAt: updatedListing.expiresAt !== undefined 
+          ? (updatedListing.expiresAt ? new Date(updatedListing.expiresAt) : null) 
+          : (updatedListing.verified ? null : undefined),
         whatsappNumber: updatedListing.whatsappNumber || '',
         facebookUrl: updatedListing.facebookUrl || '',
         instagramUrl: updatedListing.instagramUrl || '',

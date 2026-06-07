@@ -24,13 +24,17 @@ export async function GET(req: NextRequest) {
     const province = searchParams.get('province') || '';
     const city = searchParams.get('city') || '';
     const category = searchParams.get('category') || '';
-    const onlyVerified = searchParams.get('onlyVerified') !== 'false';
-    const isDashboardFetch = searchParams.get('onlyVerified') === 'false';
+    const publicAll = searchParams.get('publicAll') === 'true';
+    const onlyVerified = !publicAll && searchParams.get('onlyVerified') !== 'false';
+    const isDashboardFetch = !publicAll && searchParams.get('onlyVerified') === 'false';
     
     const user = await getUser(req);
     const isAdmin = user?.role === 'ADMIN';
 
-    let filterStatus = onlyVerified && !isAdmin ? 'APPROVED' : undefined;
+    let filterStatus: any = onlyVerified && !isAdmin ? 'APPROVED' : undefined;
+    if (publicAll && !isAdmin) {
+      filterStatus = { in: ['APPROVED', 'PENDING'] };
+    }
     let filterUserId = undefined;
 
     if (isDashboardFetch && !isAdmin) {
@@ -48,7 +52,7 @@ export async function GET(req: NextRequest) {
       userId: filterUserId,
     };
 
-    if (onlyVerified && !isAdmin) {
+    if ((onlyVerified || publicAll) && !isAdmin) {
       whereClause.OR = [
         { expiresAt: { gt: new Date() } },
         { expiresAt: null }
@@ -142,9 +146,6 @@ export async function POST(req: NextRequest) {
 
     const isAdmin = user.role === 'ADMIN';
 
-    // 30 day timer for default listings
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
-
     // Create the listing
     const listing = await prisma.listing.create({
       data: {
@@ -160,7 +161,7 @@ export async function POST(req: NextRequest) {
         websiteUrl: website || '',
         keywords: Array.isArray(tags) ? tags.join(',') : '',
         status: isAdmin ? 'APPROVED' : 'PENDING',
-        expiresAt: isAdmin ? null : expiresAt,
+        expiresAt: null,
         publishedAt: isAdmin ? new Date() : null,
         whatsappNumber: whatsappNumber || '',
         facebookUrl: facebookUrl || '',
