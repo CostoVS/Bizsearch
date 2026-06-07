@@ -163,6 +163,7 @@ export default function Bizsearch24Home() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState<boolean>(false);
   const [userRole, setUserRole] = React.useState<string>('USER');
   const [isRegistering, setIsRegistering] = React.useState<boolean>(false);
+  const [postLoginIntent, setPostLoginIntent] = React.useState<string | null>(null);
   const [regTier, setRegTier] = React.useState<'FREE' | 'PREMIUM'>('FREE');
   const [userFormSelectedTier, setUserFormSelectedTier] = React.useState<'FREE' | 'PREMIUM'>('FREE');
   const [userFormTier, setUserFormTier] = React.useState<'FREE' | 'PREMIUM'>('FREE');
@@ -357,6 +358,7 @@ export default function Bizsearch24Home() {
   const [subEmail, setSubEmail] = React.useState<string>('');
   const [subWebsite, setSubWebsite] = React.useState<string>('');
   const [subTags, setSubTags] = React.useState<string>('');
+  const [subServices, setSubServices] = React.useState<string>('');
   const [subWhatsapp, setSubWhatsapp] = React.useState<string>('');
   const [subFacebook, setSubFacebook] = React.useState<string>('');
   const [subInstagram, setSubInstagram] = React.useState<string>('');
@@ -569,10 +571,18 @@ export default function Bizsearch24Home() {
       if (profData.success) {
         setUserProfile(profData.profile);
         setUserRole(profData.profile.role);
+        if (profData.profile.selectedTier) {
+          setSubTier(profData.profile.selectedTier.toLowerCase());
+        }
         if (profData.profile.role === 'ADMIN') {
           fetchAdminAds();
           fetchAnalyticsLogs();
           fetchAdminUsers();
+        }
+        if (postLoginIntent === 'submit') {
+          setActiveTab('submit');
+          setPostLoginIntent(null);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
       }
 
@@ -660,6 +670,22 @@ export default function Bizsearch24Home() {
     setSelectedCategory(newVal);
     fetchListings(term, selectedProvince, selectedCity, selectedSuburb, newVal);
     trackVisitActivity('filter_category', '/explore', { search: `Category Selected: "${newVal || 'Clear'}"` });
+  };
+
+  const handleCreateAdClick = () => {
+    setViewingPage(null);
+    setMobileMenuOpen(false);
+    if (!isAdminLoggedIn) {
+      if (!isRegistering) {
+        setIsRegistering(true);
+      }
+      setPostLoginIntent('submit');
+      setActiveTab('admin');
+      window.scrollTo({ top: 300, behavior: 'smooth' });
+    } else {
+      setActiveTab('submit');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   };
 
   // Click on a listing
@@ -773,6 +799,7 @@ export default function Bizsearch24Home() {
           email: subTier === 'premium' ? subEmail : '',
           website: subTier === 'premium' ? subWebsite : '',
           tags: subTier === 'premium' ? tagArray : [],
+          servicesOffered: subTier === 'premium' ? (subServices ? subServices.split(',').map(s => s.trim()).filter(Boolean) : []) : [],
           image: subTier === 'premium' ? subImage : '',
           whatsappNumber: subTier === 'premium' ? subWhatsapp : '',
           facebookUrl: subTier === 'premium' ? subFacebook : '',
@@ -797,6 +824,7 @@ export default function Bizsearch24Home() {
         setSubEmail('');
         setSubWebsite('');
         setSubTags('');
+        setSubServices('');
         setSubImage('');
         setSubTier('free');
         fetchListings(); // reload directory
@@ -1596,7 +1624,7 @@ export default function Bizsearch24Home() {
             </button>
             <button 
               id="nav-btn-submit"
-              onClick={() => { setActiveTab('submit'); setViewingPage(null); }}
+              onClick={handleCreateAdClick}
               className={cn(
                 "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                 activeTab === 'submit' 
@@ -1712,7 +1740,7 @@ export default function Bizsearch24Home() {
                 </button>
                 <button
                   id="mob-nav-submit"
-                  onClick={() => { setActiveTab('submit'); setViewingPage(null); setMobileMenuOpen(false); }}
+                  onClick={handleCreateAdClick}
                   className={cn(
                     "text-left px-4 py-3 rounded-lg text-base font-medium",
                     activeTab === 'submit' ? "bg-slate-100 text-emerald-700" : "text-slate-600"
@@ -1919,7 +1947,7 @@ export default function Bizsearch24Home() {
               <div className="flex justify-start sm:justify-end" id="home-create-ad-row">
                 <button
                   id="btn-create-ad-search-top"
-                  onClick={() => { setActiveTab('submit'); setViewingPage(null); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
+                  onClick={handleCreateAdClick}
                   className="bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white font-extrabold text-sm px-6 py-3 rounded-2xl transition-all duration-155 inline-flex items-center space-x-2 shadow-lg shadow-emerald-600/10 hover:shadow-emerald-650/20 cursor-pointer"
                 >
                   <Plus className="w-4 h-4 text-emerald-100" />
@@ -2271,7 +2299,7 @@ export default function Bizsearch24Home() {
                     </p>
                     <button
                       id="fallback-btn-goto-sub"
-                      onClick={() => setActiveTab('submit')}
+                      onClick={handleCreateAdClick}
                       className="mt-4 px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-all"
                     >
                       Submit Your Brand
@@ -2538,28 +2566,52 @@ export default function Bizsearch24Home() {
                   </div>
 
                   <div className="space-y-1" id="sub-email-f">
-                    <label id="lbl-sub-email" className="text-xs font-bold text-slate-703">Enquiry Email</label>
+                    <label id="lbl-sub-email" className="text-xs font-bold text-slate-703 flex items-center justify-between">
+                      <span>Enquiry Email</span>
+                      {subTier !== 'premium' && <span className="text-[9px] text-slate-400 flex items-center"><Lock className="w-2.5 h-2.5 mr-0.5" /> Premium Only</span>}
+                    </label>
                     <input
                       id="input-sub-email"
                       type="email"
-                      placeholder="e.g. client@sealingco.co.za"
+                      disabled={subTier !== 'premium'}
+                      placeholder={subTier === 'premium' ? "e.g. client@sealingco.co.za" : "🔒 Premium Only"}
                       value={subEmail}
                       onChange={(e) => setSubEmail(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
 
                   <div className="space-y-1" id="sub-website-f">
-                    <label id="lbl-sub-website" className="text-xs font-bold text-slate-704">Web Link (HTTPS)</label>
+                    <label id="lbl-sub-website" className="text-xs font-bold text-slate-704 flex items-center justify-between">
+                      <span>Web Link (HTTPS)</span>
+                      {subTier !== 'premium' && <span className="text-[9px] text-slate-400 flex items-center"><Lock className="w-2.5 h-2.5 mr-0.5" /> Premium Only</span>}
+                    </label>
                     <input
                       id="input-sub-website"
                       type="url"
-                      placeholder="e.g. https://www.sealingco.co.za"
+                      disabled={subTier !== 'premium'}
+                      placeholder={subTier === 'premium' ? "e.g. https://www.sealingco.co.za" : "🔒 Premium Only"}
                       value={subWebsite}
                       onChange={(e) => setSubWebsite(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
                     />
                   </div>
+                </div>
+
+                <div className="space-y-1" id="sub-services-f">
+                  <label id="lbl-sub-services" className="text-xs font-bold text-slate-705 flex items-center justify-between">
+                    <span>Services Offered (comma separated)</span>
+                    {subTier !== 'premium' && <span className="text-[9px] text-slate-400 flex items-center"><Lock className="w-2.5 h-2.5 mr-0.5" /> Premium Only</span>}
+                  </label>
+                  <input
+                    id="input-sub-services"
+                    type="text"
+                    disabled={subTier !== 'premium'}
+                    placeholder={subTier === 'premium' ? "e.g. Plumbing, Electrical, Handyman" : "🔒 Premium Only"}
+                    value={subServices}
+                    onChange={(e) => setSubServices(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                  />
                 </div>
 
                 {/* Social media connections - Premium check */}
@@ -2689,7 +2741,13 @@ export default function Bizsearch24Home() {
                     {/* Premium Card */}
                     <div
                       id="tier-card-premium"
-                      onClick={() => setSubTier('premium')}
+                      onClick={() => {
+                        if (userRole !== 'ADMIN' && userProfile?.selectedTier?.toLowerCase() !== 'premium') {
+                          alert('Upgrade to Premium to get access directly in your dashboard "Profile & Settings"!');
+                          return;
+                        }
+                        setSubTier('premium');
+                      }}
                       className={`cursor-pointer border rounded-lg p-3 flex flex-col justify-between transition-all ${
                         subTier === 'premium'
                           ? 'border-emerald-500 bg-emerald-50/40 ring-1 ring-emerald-500'
@@ -6602,7 +6660,7 @@ export default function Bizsearch24Home() {
             <span className="text-white font-bold block" id="footer-links-lbl">Quick Links</span>
             <ul className="space-y-1.5 text-slate-450" id="footer-links-items">
               <li><button onClick={() => { setActiveTab('explore'); setViewingPage(null); setActivePageSlug(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">Explore Directory</button></li>
-              <li><button onClick={() => { setActiveTab('submit'); setViewingPage(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">Create ad</button></li>
+              <li><button onClick={handleCreateAdClick} className="text-left hover:text-white transition-colors cursor-pointer">Create ad</button></li>
               <li><button onClick={() => { setActiveTab('services'); setViewingPage(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">BizSearch24 Services</button></li>
               <li><button onClick={() => { setActiveTab('pages'); if (seoPages.length > 0 && !viewingPage) handlePageSelect(seoPages[0].slug); else window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">SEO Local Guides</button></li>
               <li className="pt-0.5"><Link href="/news" className="text-left hover:text-emerald-400 text-emerald-500 font-bold block transition-colors">SA News Feed</Link></li>
