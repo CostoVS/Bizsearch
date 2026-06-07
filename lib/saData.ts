@@ -1670,7 +1670,9 @@ export const CATEGORIES = [
   { id: 'massage-spa', name: 'Spas & Massage Therapy', icon: 'Sparkles', color: 'text-teal-500 bg-teal-50' },
   { id: 'tailoring', name: 'Tailoring & Alterations', icon: 'Scissors', color: 'text-pink-600 bg-pink-50' },
 
-  // --- RETAIL & SHOPPING ---
+  // --- RETAIL, WHOLESALE & MANUFACTURING ---
+  { id: 'manufacturing', name: 'Manufacturers & Factories', icon: 'Factory', color: 'text-stone-600 bg-stone-50' },
+  { id: 'suppliers-wholesale', name: 'Suppliers & Wholesale Distributors', icon: 'Box', color: 'text-sky-700 bg-sky-50' },
   { id: 'retail', name: 'Retail Shops & Supermarkets', icon: 'ShoppingBag', color: 'text-pink-500 bg-pink-50' },
   { id: 'fashion-apparel', name: 'Fashion Boutiques & Footwear', icon: 'Shirt', color: 'text-sky-500 bg-sky-50' },
   { id: 'electronics', name: 'Electronics & Home Appliances', icon: 'Tv', color: 'text-purple-500 bg-purple-50' },

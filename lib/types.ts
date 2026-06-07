@@ -39,7 +39,23 @@ export interface BusinessListing {
   businessName?: string;
   contactEmail?: string;
   contactPhone?: string;
+  tier?: 'free' | 'premium';
+  likes?: number;
+  shares?: number;
 }
+
+export interface FeedPost {
+  id: string;
+  userId: string;
+  businessName: string;
+  tier: 'free' | 'premium';
+  imageUrl: string;
+  caption: string;
+  createdAt: string;
+  likes: number;
+  isPinned?: boolean;
+}
+
 
 export interface BizAd {
   id: string;
@@ -128,4 +144,14 @@ export interface NewsArticle {
   imageUrl: string;    // Image URL for visual interest
   publishedAt: string; // Scraped/published timestamp
   category?: string;   // Category of the news
+}
+
+export interface ModerationLog {
+  id: string;
+  timestamp: string;
+  type: 'text' | 'image' | 'scam' | 'user';
+  content: string;
+  reason: string;
+  ip?: string;
+  userId?: string;
 }

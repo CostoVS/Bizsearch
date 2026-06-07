@@ -103,7 +103,11 @@ import {
   Leaf,
   TrendingDown,
   Printer,
-  Coffee
+  Coffee,
+  ThumbsUp,
+  Share2,
+  Image as ImageIcon,
+  Star
 } from 'lucide-react';
 
 import { PROVINCES, CITIES_AND_TOWNS, CATEGORIES } from '@/lib/saData';
@@ -111,12 +115,13 @@ import { BusinessListing, DynamicPage, SlugMapping, BizAd, VisitorTrackingLog } 
 import { cn } from '@/lib/utils';
 
 export default function Bizsearch24Home() {
-  // Navigation tabs: 'explore' | 'submit' | 'pages' | 'services' | 'admin'
-  const [activeTab, setActiveTab] = React.useState<'explore' | 'submit' | 'pages' | 'services' | 'admin'>('explore');
+  // Navigation tabs: 'explore' | 'submit' | 'pages' | 'services' | 'admin' | 'feed'
+  const [activeTab, setActiveTab] = React.useState<'explore' | 'submit' | 'pages' | 'services' | 'admin' | 'feed'>('explore');
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
 
   // States for general listings
   const [listings, setListings] = React.useState<BusinessListing[]>([]);
+  const [feedPosts, setFeedPosts] = React.useState<any[]>([]);
   const [loadingListings, setLoadingListings] = React.useState<boolean>(true);
 
   // Filter criteria states
@@ -295,7 +300,28 @@ export default function Bizsearch24Home() {
   const [analyticsLoading, setAnalyticsLoading] = React.useState<boolean>(false);
 
   // Admin section sub-tab switcher
-  const [adminActiveSubTab, setAdminActiveSubTab] = React.useState<'listings' | 'ads' | 'analytics' | 'users'>('listings');
+  const [adminActiveSubTab, setAdminActiveSubTab] = React.useState<'listings' | 'ads' | 'analytics' | 'users' | 'feed' | 'moderation'>('listings');
+
+  // Moderation state
+  const [moderationLogs, setModerationLogs] = React.useState<any[]>([]);
+  const [moderationLoading, setModerationLoading] = React.useState<boolean>(false);
+
+  const fetchModerationLogs = React.useCallback(async () => {
+    setModerationLoading(true);
+    try {
+      const res = await fetch('/api/admin/moderation', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setModerationLogs(data.logs || []);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setModerationLoading(false);
+    }
+  }, [adminToken]);
 
   // Admin Users Manager states
   const [adminUsers, setAdminUsers] = React.useState<any[]>([]);
@@ -381,6 +407,18 @@ export default function Bizsearch24Home() {
       return a.verified ? -1 : 1;
     });
   }, [listings]);
+
+  const fetchFeedPosts = React.useCallback(async () => {
+    try {
+      const res = await fetch('/api/feed');
+      const data = await res.json();
+      if (data.success && data.posts) {
+        setFeedPosts(data.posts);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
 
   // Load and refresh listings from the API
   const fetchListings = React.useCallback(async (termVal = '', pVal = '', cVal = '', sVal = '', catVal = '') => {
@@ -526,6 +564,7 @@ export default function Bizsearch24Home() {
         setShowConsentBanner(true);
       }
       fetchListings();
+      fetchFeedPosts();
       fetchSeoPages();
       fetchAdsList();
       trackVisitActivity('init', '/');
@@ -763,6 +802,26 @@ export default function Bizsearch24Home() {
       setSubmissionError('Please fill in all mandatory fields.');
       setSubmittingUser(false);
       return;
+    }
+
+    // Safety check first for profanity and appropriate content
+    try {
+      const safetyRes = await fetch('/api/safety-check', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          image: subImage || '', 
+          caption: `Business Name: ${subName}. Description: ${subDesc || 'N/A'}. Tags: ${subTags || 'N/A'}` 
+        }),
+      });
+      const safetyData = await safetyRes.json();
+      if (!safetyData.safe) {
+        setSubmissionError('Safety rejection: ' + (safetyData.reason || 'Content contains inappropriate language or imagery.'));
+        setSubmittingUser(false);
+        return;
+      }
+    } catch (e) {
+      console.warn('Safety check connection bypass');
     }
 
     if (subEmail) {
@@ -1582,9 +1641,23 @@ export default function Bizsearch24Home() {
               {l.suburb ? `${l.suburb}, ` : ''}{cityObj?.name || l.city} ({provObj?.code})
             </span>
           </div>
-          <div className="flex items-center space-x-1 text-slate-400 font-mono text-[10px]" id={`card-footer-views-${l.id}`}>
-            <Eye className="w-3.5 h-3.5 text-slate-400" id={`card-footer-eye-${l.id}`} />
-            <span>{l.views || 0}</span>
+          <div className="flex items-center space-x-3 text-slate-400 font-mono text-[10px]">
+            {l.tier === 'premium' && (
+              <>
+                <button onClick={(e) => { e.stopPropagation(); fetch('/api/listings/interaction', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: l.id, action: 'like' }) }).then(res => { if (res.ok) setListings(prev => prev.map(item => item.id === l.id ? { ...item, likes: (item.likes || 0) + 1 } : item)) }) }} className="flex items-center space-x-1 hover:text-emerald-500 transition-colors cursor-pointer" title="Like">
+                  <ThumbsUp className="w-3.5 h-3.5" />
+                  <span>{l.likes || 0}</span>
+                </button>
+                <button onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(`${window.location.origin}/explore?q=${encodeURIComponent(l.name)}`); alert('Link copied!'); fetch('/api/listings/interaction', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: l.id, action: 'share' }) }).then(res => { if (res.ok) setListings(prev => prev.map(item => item.id === l.id ? { ...item, shares: (item.shares || 0) + 1 } : item)) }) }} className="flex items-center space-x-1 hover:text-emerald-500 transition-colors cursor-pointer" title="Share">
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span>{l.shares || 0}</span>
+                </button>
+              </>
+            )}
+            <div className="flex items-center space-x-1" id={`card-footer-views-${l.id}`} title="Views">
+              <Eye className="w-3.5 h-3.5" id={`card-footer-eye-${l.id}`} />
+              <span>{l.views || 0}</span>
+            </div>
           </div>
         </div>
       </motion.div>
@@ -1621,6 +1694,19 @@ export default function Bizsearch24Home() {
               )}
             >
               Explore Directory
+            </button>
+            <button 
+              id="nav-btn-feed"
+              onClick={() => { setActiveTab('feed'); setViewingPage(null); setActivePageSlug(null); }}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-1.5",
+                activeTab === 'feed' 
+                  ? "bg-emerald-50 text-emerald-700 shadow-inner border border-emerald-100" 
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              )}
+            >
+              <ImageIcon className="w-3.5 h-3.5" />
+              <span>Ad Posts Feed</span>
             </button>
             <button 
               id="nav-btn-submit"
@@ -1737,6 +1823,17 @@ export default function Bizsearch24Home() {
                   )}
                 >
                   Explore Directory
+                </button>
+                <button
+                  id="mob-nav-feed"
+                  onClick={() => { setActiveTab('feed'); setViewingPage(null); setMobileMenuOpen(false); }}
+                  className={cn(
+                    "text-left px-4 py-3 rounded-lg text-base font-medium flex items-center space-x-2",
+                    activeTab === 'feed' ? "bg-emerald-50 text-emerald-700 border border-emerald-100" : "text-slate-600"
+                  )}
+                >
+                  <ImageIcon className="w-4 h-4" />
+                  <span>Ad Posts Feed</span>
                 </button>
                 <button
                   id="mob-nav-submit"
@@ -1903,7 +2000,160 @@ export default function Bizsearch24Home() {
         </AnimatePresence>
 
         <AnimatePresence mode="wait">
-          
+
+          {/* AD POSTS FEED VIEW */}
+          {activeTab === 'feed' && (
+            <motion.div
+              key="feed-tab"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="max-w-3xl mx-auto space-y-6"
+              id="feed-window"
+            >
+              <div className="bg-white border text-center border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+                 <h1 className="text-2xl font-black text-slate-900 mb-2">Daily Community Feed</h1>
+                 <p className="text-sm text-slate-500 mb-6">Promote your business or share updates. Limit 1 per day.</p>
+                 {userProfile ? (
+                   <form onSubmit={async (e) => {
+                     e.preventDefault();
+                     const form = e.target as HTMLFormElement;
+                     const imageFile = (form.elements.namedItem('feedImage') as HTMLInputElement).files?.[0];
+                     const caption = (form.elements.namedItem('feedCaption') as HTMLTextAreaElement).value;
+                     if (!imageFile || !caption) { alert('Please provide both an image and a caption.'); return; }
+                     
+                     // Read image
+                     const reader = new FileReader();
+                     reader.onload = async () => {
+                       const base64Data = reader.result as string;
+                       
+                       // 1. Post to safety check API (we'll create this)
+                       try {
+                         const checkRes = await fetch('/api/safety-check', {
+                           method: 'POST',
+                           headers: { 'Content-Type': 'application/json' },
+                           body: JSON.stringify({ image: base64Data, caption }),
+                         });
+                         const checkData = await checkRes.json();
+                         if (!checkData.safe) {
+                           alert('Post rejected: ' + (checkData.reason || 'Failed safety check. No profanity or inappropriate images allowed.'));
+                           return;
+                         }
+                         
+                         // 2. Submit actual post
+                         const res = await fetch('/api/feed', {
+                           method: 'POST',
+                           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}`},
+                           body: JSON.stringify({ userId: userProfile.id, businessName: userProfile.businessName || userProfile.email, tier: userProfile?.tier === 'PREMIUM' ? 'premium' : 'free', imageUrl: base64Data, caption })
+                         });
+                         const data = await res.json();
+                         if (data.success) {
+                           form.reset();
+                           fetchFeedPosts();
+                           alert('Posted to feed successfully!');
+                         } else {
+                           alert(data.error || 'Failed to post.');
+                         }
+                       } catch(err) {
+                         console.error(err);
+                         alert('An error occurred during submission.');
+                       }
+                     };
+                     reader.readAsDataURL(imageFile);
+                   }} className="max-w-lg mx-auto space-y-4 text-left border p-4 rounded-xl shadow-sm bg-slate-50">
+                     <div>
+                       <label className="block text-xs font-bold text-slate-700 mb-1">Ad Image (will be resized constraints)</label>
+                       <input type="file" name="feedImage" accept="image/*" required className="w-full text-xs" />
+                     </div>
+                     <div>
+                       <label className="block text-xs font-bold text-slate-700 mb-1">Caption / Free Text</label>
+                       <textarea name="feedCaption" required rows={3} placeholder="What are you promoting today?" className="w-full text-sm p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500"></textarea>
+                     </div>
+                     <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-md">
+                       Publish Post
+                     </button>
+                   </form>
+                 ) : (
+                   <button onClick={() => { setActiveTab('submit'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm px-6 py-3 rounded-xl transition-all shadow-md">
+                     Sign in to Post
+                   </button>
+                 )}
+              </div>
+
+              {/* Feed posts rendering logic */}
+              <div className="space-y-6">
+                {feedPosts.length === 0 ? (
+                  <div className="text-center p-8 bg-slate-50 border border-slate-100 rounded-2xl">
+                    <p className="text-slate-500 font-medium">No posts yet. Be the first to share an update!</p>
+                  </div>
+                ) : (
+                  feedPosts.map((post) => (
+                    <div key={post.id} className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+                       <div className="p-5 flex items-center justify-between border-b border-slate-50">
+                         <div className="flex items-center space-x-3">
+                           <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">
+                             {post.businessName.charAt(0)}
+                           </div>
+                           <div>
+                             <h3 className="font-bold text-slate-900 leading-tight flex items-center gap-1.5">
+                               {post.businessName}
+                               {post.tier === 'premium' && (
+                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                               )}
+                               {post.isPinned && (
+                                 <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                               )}
+                             </h3>
+                             <p className="text-[10px] text-slate-400 font-mono">
+                               {new Date(post.createdAt).toLocaleDateString()}
+                             </p>
+                           </div>
+                         </div>
+                         <div className="flex items-center gap-2">
+                            {post.isPinned && (
+                              <span className="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200 text-[9px] font-bold uppercase tracking-wider">Featured Sponsor</span>
+                            )}
+                            {post.tier === 'premium' ? (
+                              <span className="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[9px] font-bold uppercase tracking-wider">Premium Badge</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[9px] font-medium uppercase tracking-wider">Free Tier (Unverified)</span>
+                            )}
+                         </div>
+                       </div>
+                       {post.imageUrl && (
+                         <div className="w-full bg-slate-100">
+                           <img src={post.imageUrl} alt="Ad content" className="w-full max-h-[500px] object-contain" />
+                         </div>
+                       )}
+                       <div className="p-5 flex items-start justify-between gap-4">
+                         <p className="text-sm text-slate-700 whitespace-pre-wrap flex-1">{post.caption}</p>
+                         <div className="flex items-center space-x-1.5 shrink-0">
+                           <button
+                             onClick={async () => {
+                               try {
+                                 const res = await fetch('/api/feed', {
+                                   method: 'POST',
+                                   headers: { 'Content-Type': 'application/json' },
+                                   body: JSON.stringify({ action: 'like', id: post.id })
+                                 });
+                                 const data = await res.json();
+                                 if (data.success) fetchFeedPosts();
+                               } catch (e) {}
+                             }}
+                             className="group flex items-center space-x-1 bg-slate-50 hover:bg-red-50 px-3 py-1.5 rounded-full transition-all border border-slate-100 hover:border-red-100 cursor-pointer"
+                           >
+                             <Heart className="w-4 h-4 text-slate-400 group-hover:text-red-500 group-hover:fill-red-500 transition-colors" />
+                             <span className="text-xs font-bold text-slate-600 group-hover:text-red-600">{post.likes || 0}</span>
+                           </button>
+                         </div>
+                       </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </motion.div>
+          )}
+
           {/* EXPLORE DIRECTORY VIEW */}
           {activeTab === 'explore' && (
             <motion.div
@@ -3579,22 +3829,56 @@ export default function Bizsearch24Home() {
                       {userRole === 'ADMIN' ? 'Listings & Slugs' : 'My Listings'}
                     </button>
                     {userRole === 'ADMIN' && (
-                      <button
-                        type="button"
-                        id="admin-subtab-ads"
-                        onClick={() => {
-                          setAdminActiveSubTab('ads');
-                          fetchAdminAds();
-                        }}
-                        className={cn(
-                          "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
-                          adminActiveSubTab === 'ads' 
-                            ? "border-emerald-600 text-emerald-700 font-extrabold" 
-                            : "border-transparent text-slate-400 hover:text-slate-650"
-                        )}
-                      >
-                        Ads Manager Banners
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          id="admin-subtab-ads"
+                          onClick={() => {
+                            setAdminActiveSubTab('ads');
+                            fetchAdminAds();
+                          }}
+                          className={cn(
+                            "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            adminActiveSubTab === 'ads' 
+                              ? "border-emerald-600 text-emerald-700 font-extrabold" 
+                              : "border-transparent text-slate-400 hover:text-slate-650"
+                          )}
+                        >
+                          Ads Manager Banners
+                        </button>
+                        <button
+                          type="button"
+                          id="admin-subtab-feed"
+                          onClick={() => {
+                            setAdminActiveSubTab('feed');
+                            fetchFeedPosts();
+                          }}
+                          className={cn(
+                            "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            adminActiveSubTab === 'feed' 
+                              ? "border-emerald-600 text-emerald-700 font-extrabold" 
+                              : "border-transparent text-slate-400 hover:text-slate-650"
+                          )}
+                        >
+                          Ad Feed Manager
+                        </button>
+                        <button
+                          type="button"
+                          id="admin-subtab-moderation"
+                          onClick={() => {
+                            setAdminActiveSubTab('moderation');
+                            fetchModerationLogs();
+                          }}
+                          className={cn(
+                            "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            adminActiveSubTab === 'moderation' 
+                              ? "border-emerald-600 text-emerald-700 font-extrabold" 
+                              : "border-transparent text-slate-400 hover:text-slate-650"
+                          )}
+                        >
+                          Bad Actors Log
+                        </button>
+                      </>
                     )}
                     <button
                       type="button"
@@ -5846,6 +6130,114 @@ export default function Bizsearch24Home() {
                     </div>
                   )}
 
+                  {adminActiveSubTab === 'feed' && userRole === 'ADMIN' && (
+                    <div className="space-y-6" id="admin-feed-manager-tab-panel">
+                       <div className="bg-white border text-center border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+                          <h1 className="text-2xl font-black text-slate-900 mb-2">Authoritative Feed Moderator</h1>
+                          <p className="text-sm text-slate-500">Delete inappropriate posts or sponsor them to the top of the feed.</p>
+                       </div>
+                       
+                       <div className="overflow-x-auto border rounded-2xl bg-white shadow-sm">
+                         <table className="w-full text-left border-collapse text-xs">
+                           <thead>
+                             <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
+                               <th className="p-3">Business</th>
+                               <th className="p-3">Caption</th>
+                               <th className="p-3">Date</th>
+                               <th className="p-3 text-right">Actions</th>
+                             </tr>
+                           </thead>
+                           <tbody className="divide-y divide-slate-100">
+                             {feedPosts.length === 0 ? (
+                               <tr><td colSpan={4} className="p-8 text-center text-slate-400">No posts in feed database.</td></tr>
+                             ) : (
+                               feedPosts.map(post => (
+                                 <tr key={post.id} className="hover:bg-slate-50 transition-colors">
+                                   <td className="p-3">
+                                     <div className="font-bold text-slate-900">{post.businessName}</div>
+                                     <div className="text-[10px] text-slate-400">{post.tier}</div>
+                                   </td>
+                                   <td className="p-3 max-w-xs truncate">{post.caption}</td>
+                                   <td className="p-3 text-slate-400 font-mono text-[10px]">{new Date(post.createdAt).toLocaleDateString()}</td>
+                                   <td className="p-3 text-right space-x-3">
+                                     <button onClick={() => {
+                                       fetch('/api/feed', { 
+                                         method: 'POST', 
+                                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, 
+                                         body: JSON.stringify({ action: 'pin', id: post.id, isPinned: !post.isPinned }) 
+                                       })
+                                       .then(res => res.json())
+                                       .then(data => { if(data.success) fetchFeedPosts(); else alert('Operation failed'); });
+                                     }} className={cn(
+                                       "font-bold cursor-pointer transition-colors",
+                                       post.isPinned ? "text-emerald-600 hover:text-emerald-800" : "text-slate-400 hover:text-slate-600"
+                                     )}>
+                                       {post.isPinned ? '★ Sponsoring' : '☆ Sponsor'}
+                                     </button>
+                                     <button onClick={() => {
+                                       if(confirm('Delete this post?')) {
+                                         fetch('/api/feed', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ id: post.id }) })
+                                         .then(res => res.json())
+                                         .then(data => { if(data.success) fetchFeedPosts(); else alert(data.error); });
+                                       }
+                                     }} className="text-red-500 hover:text-red-700 font-bold cursor-pointer">Delete</button>
+                                   </td>
+                                 </tr>
+                               ))
+                             )}
+                           </tbody>
+                         </table>
+                       </div>
+                    </div>
+                  )}
+
+                  {adminActiveSubTab === 'moderation' && userRole === 'ADMIN' && (
+                    <div className="space-y-6" id="admin-moderation-tab-panel">
+                       <div className="bg-white border text-center border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
+                          <h1 className="text-2xl font-black text-slate-900 mb-2">Automated "Bad Actor" Watchtower</h1>
+                          <p className="text-sm text-slate-500">Live logs of blocked submissions and suspected bot activity.</p>
+                       </div>
+
+                       <div className="overflow-x-auto border rounded-2xl bg-white shadow-sm">
+                         <table className="w-full text-left border-collapse text-xs">
+                           <thead>
+                             <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
+                               <th className="p-3">Time</th>
+                               <th className="p-3">Type</th>
+                               <th className="p-3">Pattern / Content</th>
+                               <th className="p-3">Reason</th>
+                               <th className="p-3">Actor Info</th>
+                             </tr>
+                           </thead>
+                           <tbody className="divide-y divide-slate-100">
+                             {moderationLoading ? (
+                               <tr><td colSpan={5} className="p-8 text-center text-slate-400">Scanning logs...</td></tr>
+                             ) : moderationLogs.length === 0 ? (
+                               <tr><td colSpan={5} className="p-8 text-center text-slate-400">No security incidents detected. The wall stands.</td></tr>
+                             ) : (
+                               moderationLogs.map(log => (
+                                 <tr key={log.id} className="hover:bg-red-50/30 transition-colors">
+                                   <td className="p-3 text-slate-400 font-mono text-[10px]">{new Date(log.timestamp).toLocaleString()}</td>
+                                   <td className="p-3">
+                                      <span className="px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 font-bold uppercase text-[9px]">
+                                        {log.type}
+                                      </span>
+                                   </td>
+                                   <td className="p-3 max-w-xs truncate font-mono text-slate-600" title={log.content}>{log.content}</td>
+                                   <td className="p-3 text-red-600 font-bold">{log.reason}</td>
+                                   <td className="p-3 leading-tight">
+                                      <div className="text-slate-900 font-bold">{log.ip}</div>
+                                      <div className="text-[10px] text-slate-400">User: {log.userId}</div>
+                                   </td>
+                                 </tr>
+                               ))
+                             )}
+                           </tbody>
+                         </table>
+                       </div>
+                    </div>
+                  )}
+
                   {/* ADMIN EDIT / CREATE BUSINESS MODAL OVERLAY */}
                   {editingListing && (
                     <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto" id="edit-listing-modal-overlay">
@@ -6682,7 +7074,8 @@ export default function Bizsearch24Home() {
             <span className="text-white font-bold block" id="footer-links-lbl">Quick Links</span>
             <ul className="space-y-1.5 text-slate-450" id="footer-links-items">
               <li><button onClick={() => { setActiveTab('explore'); setViewingPage(null); setActivePageSlug(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">Explore Directory</button></li>
-              <li><button onClick={handleCreateAdClick} className="text-left hover:text-white transition-colors cursor-pointer">Create ad</button></li>
+              <li><button onClick={() => { setActiveTab('feed'); setViewingPage(null); setActivePageSlug(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">Ad Posts Feed</button></li>
+               <li><button onClick={handleCreateAdClick} className="text-left hover:text-white transition-colors cursor-pointer">Create ad</button></li>
               <li><button onClick={() => { setActiveTab('services'); setViewingPage(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">BizSearch24 Services</button></li>
               <li><button onClick={() => { setActiveTab('pages'); if (seoPages.length > 0 && !viewingPage) handlePageSelect(seoPages[0].slug); else window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">SEO Local Guides</button></li>
               <li className="pt-0.5"><Link href="/news" className="text-left hover:text-emerald-400 text-emerald-500 font-bold block transition-colors">SA News Feed</Link></li>

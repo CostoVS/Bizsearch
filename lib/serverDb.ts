@@ -1,6 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { BusinessListing, DynamicPage, SlugMapping, BizAd, VisitorTrackingLog, NewsArticle } from './types';
+import { BusinessListing, DynamicPage, SlugMapping, BizAd, VisitorTrackingLog, NewsArticle, FeedPost, ModerationLog } from './types';
 
 const DB_DIR = path.join(process.cwd(), 'data');
 const DB_FILE = path.join(DB_DIR, 'db.json');
@@ -318,6 +318,8 @@ interface DatabaseSchema {
   slugMappings: SlugMapping[];
   ads: BizAd[];
   visitorLogs: VisitorTrackingLog[];
+  feedPosts?: FeedPost[];
+  moderationLogs?: ModerationLog[];
   newsCache?: {
     articles: NewsArticle[];
     lastFetchedAt: string;
@@ -344,6 +346,8 @@ export function readDb(): DatabaseSchema {
     if (!memoryDb.slugMappings) memoryDb.slugMappings = [];
     if (!memoryDb.ads) memoryDb.ads = SEED_ADS;
     if (!memoryDb.visitorLogs) memoryDb.visitorLogs = SEED_VISITOR_LOGS;
+    if (!memoryDb.feedPosts) memoryDb.feedPosts = [];
+    if (!memoryDb.moderationLogs) memoryDb.moderationLogs = [];
     return memoryDb;
   }
 
@@ -356,6 +360,7 @@ export function readDb(): DatabaseSchema {
       if (!memoryDb!.ads) memoryDb!.ads = SEED_ADS;
       if (!memoryDb!.visitorLogs) memoryDb!.visitorLogs = SEED_VISITOR_LOGS;
       if (!memoryDb!.newsCache) memoryDb!.newsCache = { articles: [], lastFetchedAt: '' };
+      if (!memoryDb!.feedPosts) memoryDb!.feedPosts = [];
       return memoryDb!;
     }
   } catch (error) {
@@ -371,6 +376,7 @@ export function readDb(): DatabaseSchema {
       if (!memoryDb!.ads) memoryDb!.ads = SEED_ADS;
       if (!memoryDb!.visitorLogs) memoryDb!.visitorLogs = SEED_VISITOR_LOGS;
       if (!memoryDb!.newsCache) memoryDb!.newsCache = { articles: [], lastFetchedAt: '' };
+      if (!memoryDb!.feedPosts) memoryDb!.feedPosts = [];
       return memoryDb!;
     }
   } catch (error) {
