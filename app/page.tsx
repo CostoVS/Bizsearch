@@ -1665,7 +1665,7 @@ export default function Bizsearch24Home() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen font-sans" id="apps-container">
+    <div className="flex flex-col min-h-screen font-sans overflow-x-hidden" id="apps-container">
       {/* HEADER SECTION */}
       <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs" id="main-header">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
@@ -3719,28 +3719,28 @@ export default function Bizsearch24Home() {
                   {userRole === 'ADMIN' ? (
                     <>
                       {/* QUICK CONSOLE DIRECTORY STATS */}
-                      <div className="grid grid-cols-1 sm:grid-cols-4 gap-4" id="admin-stats-grid">
-                        <div className="bg-white border p-5 rounded-xl text-center" id="stat-card-total">
-                          <span className="block text-slate-400 text-[10px] font-mono tracking-wider uppercase mb-1">Total Submissions</span>
-                          <span className="text-2xl font-black text-slate-800" id="stat-total-val">{adminListings.length}</span>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4" id="admin-stats-grid">
+                        <div className="bg-white border p-3 sm:p-5 rounded-xl text-center" id="stat-card-total">
+                          <span className="block text-slate-400 text-[9px] sm:text-[10px] font-mono tracking-wider uppercase mb-1">Total Submissions</span>
+                          <span className="text-xl sm:text-2xl font-black text-slate-800" id="stat-total-val">{adminListings.length}</span>
                         </div>
-                        <div className="bg-white border p-5 rounded-xl text-center" id="stat-card-pending">
-                          <span className="block text-amber-650 text-[10px] font-mono tracking-wider uppercase mb-1">Pending Approval</span>
-                          <span className="text-2xl font-black text-amber-500" id="stat-pending-val">{adminListings.filter(l => !l.verified).length}</span>
+                        <div className="bg-white border p-3 sm:p-5 rounded-xl text-center" id="stat-card-pending">
+                          <span className="block text-amber-650 text-[9px] sm:text-[10px] font-mono tracking-wider uppercase mb-1">Pending Approval</span>
+                          <span className="text-xl sm:text-2xl font-black text-amber-500" id="stat-pending-val">{adminListings.filter(l => !l.verified).length}</span>
                         </div>
-                        <div className="bg-white border p-5 rounded-xl text-center" id="stat-card-active-pages">
-                          <span className="block text-emerald-850 text-[10px] font-mono tracking-wider uppercase mb-1">Dynamic SEO Pages</span>
-                          <span className="text-2xl font-black text-emerald-600" id="stat-pages-val">{seoPages.length}</span>
+                        <div className="bg-white border p-3 sm:p-5 rounded-xl text-center" id="stat-card-active-pages">
+                          <span className="block text-emerald-850 text-[9px] sm:text-[10px] font-mono tracking-wider uppercase mb-1">Dynamic SEO Pages</span>
+                          <span className="text-xl sm:text-2xl font-black text-emerald-600" id="stat-pages-val">{seoPages.length}</span>
                         </div>
-                        <div className="bg-white border p-5 rounded-xl text-center" id="stat-card-traffic">
-                          <span className="block text-slate-400 text-[10px] font-mono tracking-wider uppercase mb-1">Aggregate Views</span>
-                          <span className="text-2xl font-black text-slate-800" id="stat-views-val">{adminListings.reduce((sum, item) => sum + (item.views || 0), 0)}</span>
+                        <div className="bg-white border p-3 sm:p-5 rounded-xl text-center" id="stat-card-traffic">
+                          <span className="block text-slate-400 text-[9px] sm:text-[10px] font-mono tracking-wider uppercase mb-1">Aggregate Views</span>
+                          <span className="text-xl sm:text-2xl font-black text-slate-800" id="stat-views-val">{adminListings.reduce((sum, item) => sum + (item.views || 0), 0)}</span>
                         </div>
                       </div>
 
                       {/* SUPREME ADMINISTRATIVE POWERS & BULK CONTROLS */}
                       <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white rounded-2xl p-6 border border-emerald-500/30 shadow-lg space-y-4" id="admin-bulk-powers-panel">
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 border-b border-white/10 pb-3" id="admin-powers-header">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-white/10 pb-3" id="admin-powers-header">
                           <div className="space-y-1" id="admin-powers-h-labels">
                             <div className="flex items-center space-x-2">
                               <span className="bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full text-[9px] font-mono uppercase tracking-wider font-extrabold flex items-center gap-1">
@@ -3754,7 +3754,7 @@ export default function Bizsearch24Home() {
                           <span className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">authorized: NIC6604211989!?</span>
                         </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5" id="admin-powers-grid">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5" id="admin-powers-grid">
                           {/* ACTION 1: BOOST ORGANIC VIEWS */}
                           <button
                             type="button"
@@ -3814,13 +3814,13 @@ export default function Bizsearch24Home() {
                   ) : null}
 
                   {/* Sub-tab switcher */}
-                  <div className="flex border-b border-slate-200 mb-6 gap-2" id="admin-tabs-nav">
+                  <div className="flex flex-wrap border-b border-slate-200 mb-6 sm:mx-0 sm:px-0" id="admin-tabs-nav">
                     <button
                       type="button"
                       id="admin-subtab-listings"
                       onClick={() => setAdminActiveSubTab('listings')}
                       className={cn(
-                        "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                        "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
                         adminActiveSubTab === 'listings' 
                           ? "border-emerald-600 text-emerald-700 font-extrabold" 
                           : "border-transparent text-slate-400 hover:text-slate-650"
@@ -3838,13 +3838,13 @@ export default function Bizsearch24Home() {
                             fetchAdminAds();
                           }}
                           className={cn(
-                            "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
                             adminActiveSubTab === 'ads' 
                               ? "border-emerald-600 text-emerald-700 font-extrabold" 
                               : "border-transparent text-slate-400 hover:text-slate-650"
                           )}
                         >
-                          Ads Manager Banners
+                          Ads Manager
                         </button>
                         <button
                           type="button"
@@ -3854,13 +3854,13 @@ export default function Bizsearch24Home() {
                             fetchFeedPosts();
                           }}
                           className={cn(
-                            "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
                             adminActiveSubTab === 'feed' 
                               ? "border-emerald-600 text-emerald-700 font-extrabold" 
                               : "border-transparent text-slate-400 hover:text-slate-650"
                           )}
                         >
-                          Ad Feed Manager
+                          Ad Feed
                         </button>
                         <button
                           type="button"
@@ -3870,13 +3870,13 @@ export default function Bizsearch24Home() {
                             fetchModerationLogs();
                           }}
                           className={cn(
-                            "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
                             adminActiveSubTab === 'moderation' 
                               ? "border-emerald-600 text-emerald-700 font-extrabold" 
                               : "border-transparent text-slate-400 hover:text-slate-650"
                           )}
                         >
-                          Bad Actors Log
+                          Bad Actors
                         </button>
                       </>
                     )}
@@ -3888,13 +3888,13 @@ export default function Bizsearch24Home() {
                         if (userRole === 'ADMIN') fetchAnalyticsLogs();
                       }}
                       className={cn(
-                        "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                        "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
                         adminActiveSubTab === 'analytics' 
                           ? "border-emerald-600 text-emerald-700 font-extrabold" 
                           : "border-transparent text-slate-400 hover:text-slate-650"
                       )}
                     >
-                      {userRole === 'ADMIN' ? 'Traffic Telemetry Stats' : 'Profile & Settings'}
+                      {userRole === 'ADMIN' ? 'Traffic Stats' : 'Analytics'}
                     </button>
                     {userRole === 'ADMIN' && (
                       <button
@@ -3905,7 +3905,7 @@ export default function Bizsearch24Home() {
                           fetchAdminUsers();
                         }}
                         className={cn(
-                          "px-4 py-2.5 text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                          "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
                           adminActiveSubTab === 'users' 
                             ? "border-emerald-600 text-emerald-700 font-extrabold" 
                             : "border-transparent text-slate-400 hover:text-slate-650"
@@ -4236,59 +4236,90 @@ export default function Bizsearch24Home() {
                       </form>
                     )}
 
-                    <div className="overflow-x-auto border rounded-2xl" id="slugs-table-container">
-                      <table className="w-full text-left border-collapse text-xs" id="slugs-table">
-                        <thead>
-                          <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
-                            <th className="p-3">Source Route / Mapped SEO Path</th>
-                            <th className="p-3">Dynamic Destination Route</th>
-                            <th className="p-3">SEO Method Type</th>
-                            <th className="p-3 text-center">In-Service</th>
-                            <th className="p-3 text-right">Operations</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-150" id="slugs-table-rows">
-                          {slugMappings.length === 0 ? (
-                            <tr>
-                              <td colSpan={5} className="p-8 text-center text-slate-400 font-mono">No custom redirections or subdomains maps logged inside local cache.</td>
+                    <div className="border rounded-2xl bg-white shadow-sm overflow-hidden" id="slugs-table-container">
+                      <div className="hidden sm:block overflow-x-auto">
+                        <table className="w-full text-left border-collapse text-xs" id="slugs-table">
+                          <thead>
+                            <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
+                              <th className="p-3">Source Route / Mapped SEO Path</th>
+                              <th className="p-3">Dynamic Destination Route</th>
+                              <th className="p-3">SEO Method Type</th>
+                              <th className="p-3 text-center">In-Service</th>
+                              <th className="p-3 text-right">Operations</th>
                             </tr>
-                          ) : (
-                            slugMappings.map(m => (
-                              <tr id={`slug-row-${m.id}`} key={m.id} className="hover:bg-slate-50/50">
-                                <td className="p-3 font-mono font-extrabold text-slate-800">{m.source}</td>
-                                <td className="p-3 font-mono text-emerald-800">{m.target}</td>
-                                <td className="p-3">
-                                  <span className="px-2 py-0.5 rounded-full text-[9px] bg-slate-100 text-slate-700 border font-mono font-bold uppercase">
-                                    {m.type}
-                                  </span>
-                                </td>
-                                <td className="p-3 text-center">
-                                  <span className={cn(
-                                    "inline-flex w-2.5 h-2.5 rounded-full",
-                                    m.active ? "bg-emerald-600 animate-pulse" : "bg-slate-350"
-                                  )} id={`slug-active-dot-${m.id}`} />
-                                </td>
-                                <td className="p-3 text-right space-x-2 whitespace-nowrap font-semibold">
-                                  <button
-                                    id={`slug-btn-edit-${m.id}`}
-                                    onClick={() => startEditSlugMapping(m)}
-                                    className="text-slate-600 hover:text-slate-900"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    id={`slug-btn-dele-${m.id}`}
-                                    onClick={() => handleDeleteSlugMapping(m.id)}
-                                    className="text-red-650 hover:text-red-800 font-bold"
-                                  >
-                                    Revoke
-                                  </button>
-                                </td>
+                          </thead>
+                          <tbody className="divide-y divide-slate-150" id="slugs-table-rows">
+                            {slugMappings.length === 0 ? (
+                              <tr>
+                                <td colSpan={5} className="p-8 text-center text-slate-400 font-mono">No custom redirections or subdomains maps logged inside local cache.</td>
                               </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
+                            ) : (
+                              slugMappings.map(m => (
+                                <tr id={`slug-row-${m.id}`} key={m.id} className="hover:bg-slate-50/50">
+                                  <td className="p-3 font-mono font-extrabold text-slate-800">{m.source}</td>
+                                  <td className="p-3 font-mono text-emerald-800">{m.target}</td>
+                                  <td className="p-3">
+                                    <span className="px-2 py-0.5 rounded-full text-[9px] bg-slate-100 text-slate-700 border font-mono font-bold uppercase">
+                                      {m.type}
+                                    </span>
+                                  </td>
+                                  <td className="p-3 text-center">
+                                    <span className={cn(
+                                      "inline-flex w-2.5 h-2.5 rounded-full",
+                                      m.active ? "bg-emerald-600 animate-pulse" : "bg-slate-350"
+                                    )} id={`slug-active-dot-${m.id}`} />
+                                  </td>
+                                  <td className="p-3 text-right space-x-3 font-semibold">
+                                    <button
+                                      id={`slug-btn-edit-${m.id}`}
+                                      onClick={() => startEditSlugMapping(m)}
+                                      className="text-slate-600 hover:text-slate-900 cursor-pointer"
+                                    >
+                                      Edit
+                                    </button>
+                                    <button
+                                      id={`slug-btn-dele-${m.id}`}
+                                      onClick={() => handleDeleteSlugMapping(m.id)}
+                                      className="text-red-650 hover:text-red-800 font-bold cursor-pointer"
+                                    >
+                                      Revoke
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* Mobile Card Layout for Slugs */}
+                      <div className="sm:hidden divide-y divide-slate-150">
+                        {slugMappings.length === 0 ? (
+                          <div className="p-8 text-center text-slate-400 text-[10px] font-mono">No mappings.</div>
+                        ) : (
+                          slugMappings.map(m => (
+                            <div key={m.id} className="p-4 space-y-3 bg-white">
+                               <div className="flex justify-between items-start">
+                                  <div className="space-y-1">
+                                    <div className="text-[11px] font-mono font-black text-slate-800">{m.source}</div>
+                                    <div className="text-[10px] font-mono text-emerald-600">→ {m.target}</div>
+                                  </div>
+                                  <div className={cn(
+                                    "w-3 h-3 rounded-full",
+                                    m.active ? "bg-emerald-600 animate-pulse" : "bg-slate-300"
+                                  )} />
+                               </div>
+                               <div className="flex justify-between items-center whitespace-nowrap">
+                                  <span className="px-2 py-0.5 rounded-full text-[8px] bg-slate-100 text-slate-700 border font-bold uppercase">{m.type}</span>
+                                  <div className="flex space-x-3 text-[10px]">
+                                     <button onClick={() => startEditSlugMapping(m)} className="text-slate-500 font-bold">Edit</button>
+                                     <button onClick={() => handleDeleteSlugMapping(m.id)} className="text-red-600 font-bold">Revoke</button>
+                                  </div>
+                               </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
                     </div>
                   </div>
                     </>
@@ -4804,8 +4835,9 @@ export default function Bizsearch24Home() {
                             </button>
                           </div>
                         ) : (
-                          <div className="overflow-x-auto">
-                            <table className="w-full text-left border-collapse text-xs">
+                        <div className="border border-slate-100 rounded-2xl overflow-hidden" id="admin-ads-table-wrapper">
+                          <div className="hidden lg:block overflow-x-auto">
+                             <table className="w-full text-left border-collapse text-xs">
                               <thead>
                                 <tr className="border-b border-slate-100 text-slate-400 font-mono">
                                   <th className="py-2.5">Ad Banner</th>
@@ -4926,6 +4958,29 @@ export default function Bizsearch24Home() {
                               </tbody>
                             </table>
                           </div>
+                          {/* Mobile Ads Layout */}
+                          <div className="lg:hidden divide-y divide-slate-100">
+                             {filteredAdminAds.map(ad => (
+                               <div key={ad.id} className="p-4 space-y-3 bg-white">
+                                  <div className="flex items-center space-x-3">
+                                     <img src={ad.imageUrl} alt={ad.title} referrerPolicy="no-referrer" className="w-16 h-12 object-cover rounded-md border" />
+                                     <div className="flex-1 min-w-0">
+                                        <p className="font-bold text-slate-800 text-xs truncate">{ad.title}</p>
+                                        <p className="text-[10px] text-slate-400 font-mono">ID: {ad.id}</p>
+                                     </div>
+                                  </div>
+                                  <div className="flex justify-between items-center bg-slate-50 p-2 rounded-lg text-[10px] font-mono">
+                                     <span className="text-slate-500">{ad.placement.toUpperCase()}</span>
+                                     <span className="font-bold text-emerald-700">{ad.position || 'sidebar'}</span>
+                                  </div>
+                                  <div className="flex justify-between items-center text-[10px] font-bold">
+                                     <button onClick={() => { if(confirm('Delete ad?')) fetch('/api/ads', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ id: ad.id }) }).then(r => { if(r.ok) fetchAdminData(); }) }} className="text-red-600">Delete</button>
+                                     <div className={cn("w-2 h-2 rounded-full", ad.active ? "bg-emerald-500 animate-pulse" : "bg-slate-300")} />
+                                  </div>
+                               </div>
+                             ))}
+                          </div>
+                        </div>
                         )}
                       </div>
                     </div>
@@ -4936,7 +4991,7 @@ export default function Bizsearch24Home() {
                     <div className="space-y-8" id="admin-analytics-profile-tab-panel">
                       {userRole === 'ADMIN' ? (
                         <>
-                          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                             {/* Sessions Count */}
                             <div className="bg-white border rounded-2xl p-5 shadow-xs flex flex-col justify-between">
                               <span className="text-[10px] font-mono uppercase text-slate-400 tracking-wider">Total Recorded Sessions</span>
@@ -5015,8 +5070,9 @@ export default function Bizsearch24Home() {
                             ) : visitorLogs.length === 0 ? (
                               <p className="text-xs text-slate-400 font-mono italic text-center py-6">No traffic recorded yet or server-level telemetry disabled.</p>
                             ) : (
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-left border-collapse text-[11px]">
+                              <div className="border border-slate-100 rounded-xl overflow-hidden" id="analytics-logs-container">
+                                <div className="hidden lg:block overflow-x-auto">
+                                  <table className="w-full text-left border-collapse text-[11px]">
                                   <thead>
                                     <tr className="border-b border-slate-100 text-slate-400 font-mono bg-slate-50 text-[10px] uppercase">
                                       <th className="p-2">Time / Session</th>
@@ -5080,6 +5136,32 @@ export default function Bizsearch24Home() {
                                     ))}
                                   </tbody>
                                 </table>
+                              </div>
+                                {/* Mobile Traffic Analytics Cards */}
+                                <div className="lg:hidden divide-y divide-slate-100">
+                                   {visitorLogs.map(log => (
+                                      <div key={log.id} className="p-4 space-y-2 bg-white">
+                                         <div className="flex justify-between items-start">
+                                            <div className="text-[10px] font-mono text-slate-400 uppercase leading-tight font-extrabold">
+                                               {new Date(log.timestamp).toLocaleTimeString()}<br/>
+                                               {new Date(log.timestamp).toLocaleDateString()}
+                                            </div>
+                                            <div className="text-xs font-black text-slate-800">{log.ip}</div>
+                                         </div>
+                                         <div className="flex justify-between items-center text-[11px]">
+                                            <span className="bg-slate-100 px-2 py-0.5 rounded text-slate-600 border border-slate-200">{log.deviceType || 'Desktop'}</span>
+                                            <span className="font-mono text-emerald-600 truncate max-w-[150px]">{log.path}</span>
+                                         </div>
+                                         <div className="text-[10px] text-slate-400 truncate bg-slate-50 p-1.5 rounded">
+                                            Source: {log.referrer || 'Direct Load'}
+                                         </div>
+                                         <div className="flex justify-between text-[10px] font-mono text-slate-500 pt-1">
+                                            <span>Clicks: {log.clicks?.length || 0}</span>
+                                            <span>Terms: {log.searches?.length || 0}</span>
+                                         </div>
+                                      </div>
+                                   ))}
+                                </div>
                               </div>
                             )}
                           </div>
@@ -5850,8 +5932,10 @@ export default function Bizsearch24Home() {
                           ) : adminUsers.length === 0 ? (
                             <p className="text-xs text-slate-400 italic text-center py-6">No user profiles present in database.</p>
                           ) : (
-                            <div className="overflow-x-auto">
-                              <table className="w-full text-left border-collapse text-[11px]" id="admin-users-data-table">
+                            <div className="space-y-4">
+                              <div className="border border-slate-150 rounded-2xl overflow-hidden" id="admin-users-table-wrapper">
+                              <div className="hidden lg:block overflow-x-auto">
+                                <table className="w-full text-left border-collapse text-[11px]" id="admin-users-data-table">
                                 <thead>
                                   <tr className="border-b border-slate-100 text-slate-400 font-mono bg-slate-50 text-[10px] uppercase">
                                     <th className="p-2">Role / Status</th>
@@ -6009,16 +6093,66 @@ export default function Bizsearch24Home() {
                                 </tbody>
                               </table>
                             </div>
-                          )}
+                            {/* Mobile User Profiles Layout */}
+                            <div className="lg:hidden divide-y divide-slate-100">
+                               {adminUsers.map(user => {
+                                  const userAdsCount = adminListings.filter(l => l.userId === user.id).length;
+                                  return (
+                                    <div key={user.id} className={cn("p-4 space-y-3 bg-white", user.isBanned && "bg-red-50/10")}>
+                                       <div className="flex justify-between items-start">
+                                          <div className="space-y-1">
+                                             <div className="font-bold text-slate-950 text-xs truncate max-w-[220px]">{user.email}</div>
+                                             <div className="flex gap-1.5 flex-wrap">
+                                                <span className={cn("px-1.5 py-0.5 rounded text-[8px] font-black uppercase text-center border", user.role === 'ADMIN' ? 'bg-indigo-100 text-indigo-800' : 'bg-slate-100 text-slate-600')}>{user.role}</span>
+                                                {user.isBanned && <span className="bg-red-100 text-red-700 px-1.5 py-0.5 rounded text-[8px] font-black uppercase">Banned</span>}
+                                             </div>
+                                          </div>
+                                          <div className="text-right">
+                                             <div className="text-[12px] font-black text-slate-800">{userAdsCount}</div>
+                                             <div className="text-[8px] uppercase font-mono text-slate-400">Total Ads</div>
+                                          </div>
+                                       </div>
+                                       <div className="flex gap-2 pt-1 border-t border-slate-50 mt-2">
+                                          <button onClick={() => {
+                                             setEditingUser(user);
+                                             setIsAddingUser(false);
+                                             setUserFormEmail(user.email || '');
+                                             setUserFormPassword('');
+                                             setUserFormRole(user.role || 'USER');
+                                             setUserFormFirstName(user.firstName || '');
+                                             setUserFormLastName(user.lastName || '');
+                                             setUserFormFullName(user.fullName || '');
+                                             setUserFormPhone(user.phone || '');
+                                             setUserFormIdNumber(user.idNumber || '');
+                                             setUserFormCompanyRegNumber(user.companyRegNumber || '');
+                                             setUserFormBillingAddress(user.billingAddress || '');
+                                             setUserFormShowProfileDetails(user.showProfileDetails || false);
+                                             setUserFormEmail(user.email || '');
+                                             setUserFormWebsite(user.website || '');
+                                             setUserFormBusinessName(user.businessName || '');
+                                             setUserFormVatNumber(user.vatNumber || '');
+                                             setUserFormMaxListings(user.maxListings || 1);
+                                             setUserFormIsBanned(user.isBanned || false);
+                                             setUserFormSelectedTier(user.selectedTier || 'FREE');
+                                             setUserFormTier(user.tier || 'FREE');
+                                             setAdminUserFormMsg('');
+                                          }} className="flex-1 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 rounded font-black text-[9px] uppercase border shadow-xs">🔧 Manage User</button>
+                                       </div>
+                                    </div>
+                                  );
+                               })}
+                            </div>
+                          </div>
 
-                          {/* SUB-AD SECTION CONTROLLER */}
-                          <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4">
-                            <h5 className="font-extrabold text-slate-800 uppercase tracking-wide text-[10.5px] font-mono">Authoritative Controls over all users&apos; ads & listings</h5>
-                            <p className="text-[11px] text-slate-550 leading-relaxed">
-                              Below is the live operational feed of every active ad/listing in the directory database. You has the admin have full complete control to quickly approve, reject, modify, or permanently delete any listing at any time.
-                            </p>
-                            
-                            <div className="overflow-x-auto">
+                        {/* SUB-AD SECTION CONTROLLER */}
+                        <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 space-y-4">
+                          <h5 className="font-extrabold text-slate-800 uppercase tracking-wide text-[10.5px] font-mono">Authoritative Controls over all users&apos; ads & listings</h5>
+                          <p className="text-[11px] text-slate-550 leading-relaxed">
+                            Below is the live operational feed of every active ad/listing in the directory database. You has the admin have full complete control to quickly approve, reject, modify, or permanently delete any listing at any time.
+                          </p>
+                          
+                          <div className="border border-slate-150 rounded-xl overflow-hidden" id="admin-listings-manager-wrapper">
+                            <div className="hidden lg:block overflow-x-auto">
                               <table className="w-full text-left border-collapse text-[10px]">
                                 <thead>
                                   <tr className="border-b border-slate-200 text-slate-400 font-mono uppercase bg-slate-100 text-[8.5px]">
@@ -6124,69 +6258,125 @@ export default function Bizsearch24Home() {
                                 </tbody>
                               </table>
                             </div>
+                            {/* Mobile Listings Card Feed */}
+                            <div className="lg:hidden divide-y divide-slate-100">
+                               {adminListings.map((listing) => (
+                                 <div key={listing.id} className="p-4 space-y-2 bg-white">
+                                    <div className="flex justify-between items-start">
+                                       <div className="font-black text-[11px] text-slate-900 uppercase truncate max-w-[180px]">{listing.businessName}</div>
+                                       <span className={cn(
+                                          "px-1.5 py-0.5 rounded text-[8px] font-mono font-black uppercase border",
+                                          listing.status === 'APPROVED' ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'
+                                       )}>{listing.status}</span>
+                                    </div>
+                                    <div className="text-[10px] text-slate-500 font-mono">
+                                       {listing.category} | {listing.city}
+                                    </div>
+                                    <div className="flex gap-2 pt-2">
+                                       {listing.status !== 'APPROVED' && (
+                                          <button onClick={() => fetch('/api/listings/verify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ listingId: listing.id, action: 'approve' }) }).then(r => { if(r.ok) fetchAdminData(); })} className="flex-1 py-1 px-2 bg-emerald-50 text-emerald-800 rounded text-[9px] font-bold uppercase">Approve</button>
+                                       )}
+                                       <button onClick={() => { if(confirm(`Delete ${listing.businessName}?`)) { fetch('/api/listings/verify', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ listingId: listing.id, action: 'delete' }) }).then(r => { if(r.ok) fetchAdminData(); }); } }} className="flex-1 py-1 px-2 bg-red-50 text-red-600 rounded text-[9px] font-bold uppercase">Delete</button>
+                                    </div>
+                                 </div>
+                               ))}
+                            </div>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
 
-                  {adminActiveSubTab === 'feed' && userRole === 'ADMIN' && (
+          {adminActiveSubTab === 'feed' && userRole === 'ADMIN' && (
                     <div className="space-y-6" id="admin-feed-manager-tab-panel">
                        <div className="bg-white border text-center border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
                           <h1 className="text-2xl font-black text-slate-900 mb-2">Authoritative Feed Moderator</h1>
                           <p className="text-sm text-slate-500">Delete inappropriate posts or sponsor them to the top of the feed.</p>
                        </div>
                        
-                       <div className="overflow-x-auto border rounded-2xl bg-white shadow-sm">
-                         <table className="w-full text-left border-collapse text-xs">
-                           <thead>
-                             <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
-                               <th className="p-3">Business</th>
-                               <th className="p-3">Caption</th>
-                               <th className="p-3">Date</th>
-                               <th className="p-3 text-right">Actions</th>
-                             </tr>
-                           </thead>
-                           <tbody className="divide-y divide-slate-100">
-                             {feedPosts.length === 0 ? (
-                               <tr><td colSpan={4} className="p-8 text-center text-slate-400">No posts in feed database.</td></tr>
-                             ) : (
-                               feedPosts.map(post => (
-                                 <tr key={post.id} className="hover:bg-slate-50 transition-colors">
-                                   <td className="p-3">
-                                     <div className="font-bold text-slate-900">{post.businessName}</div>
-                                     <div className="text-[10px] text-slate-400">{post.tier}</div>
-                                   </td>
-                                   <td className="p-3 max-w-xs truncate">{post.caption}</td>
-                                   <td className="p-3 text-slate-400 font-mono text-[10px]">{new Date(post.createdAt).toLocaleDateString()}</td>
-                                   <td className="p-3 text-right space-x-3">
-                                     <button onClick={() => {
-                                       fetch('/api/feed', { 
-                                         method: 'POST', 
-                                         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, 
-                                         body: JSON.stringify({ action: 'pin', id: post.id, isPinned: !post.isPinned }) 
-                                       })
-                                       .then(res => res.json())
-                                       .then(data => { if(data.success) fetchFeedPosts(); else alert('Operation failed'); });
-                                     }} className={cn(
-                                       "font-bold cursor-pointer transition-colors",
-                                       post.isPinned ? "text-emerald-600 hover:text-emerald-800" : "text-slate-400 hover:text-slate-600"
-                                     )}>
-                                       {post.isPinned ? '★ Sponsoring' : '☆ Sponsor'}
-                                     </button>
-                                     <button onClick={() => {
-                                       if(confirm('Delete this post?')) {
-                                         fetch('/api/feed', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ id: post.id }) })
+                       <div className="border border-slate-150 rounded-2xl bg-white shadow-sm overflow-hidden" id="admin-feed-manager-table-wrapper">
+                         <div className="hidden lg:block overflow-x-auto">
+                           <table className="w-full text-left border-collapse text-xs">
+                             <thead>
+                               <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
+                                 <th className="p-3">Business</th>
+                                 <th className="p-3">Caption</th>
+                                 <th className="p-3">Date</th>
+                                 <th className="p-3 text-right">Actions</th>
+                               </tr>
+                             </thead>
+                             <tbody className="divide-y divide-slate-100">
+                               {feedPosts.length === 0 ? (
+                                 <tr><td colSpan={4} className="p-8 text-center text-slate-400">No posts in feed database.</td></tr>
+                               ) : (
+                                 feedPosts.map(post => (
+                                   <tr key={post.id} className="hover:bg-slate-50 transition-colors">
+                                     <td className="p-3">
+                                       <div className="font-bold text-slate-900">{post.businessName}</div>
+                                       <div className="text-[10px] text-slate-400 uppercase font-bold">{post.tier} Account</div>
+                                     </td>
+                                     <td className="p-3 max-w-xs truncate text-slate-600 font-medium">{post.caption}</td>
+                                     <td className="p-3 text-slate-400 font-mono text-[10px] uppercase">{new Date(post.createdAt).toLocaleDateString()}</td>
+                                     <td className="p-3 text-right space-x-3">
+                                       <button onClick={() => {
+                                         fetch('/api/feed', { 
+                                           method: 'POST', 
+                                           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, 
+                                           body: JSON.stringify({ action: 'pin', id: post.id, isPinned: !post.isPinned }) 
+                                         })
                                          .then(res => res.json())
-                                         .then(data => { if(data.success) fetchFeedPosts(); else alert(data.error); });
-                                       }
-                                     }} className="text-red-500 hover:text-red-700 font-bold cursor-pointer">Delete</button>
-                                   </td>
-                                 </tr>
-                               ))
-                             )}
-                           </tbody>
-                         </table>
+                                         .then(data => { if(data.success) fetchFeedPosts(); else alert('Operation failed'); });
+                                       }} className={cn(
+                                         "font-bold cursor-pointer transition-colors",
+                                         post.isPinned ? "text-emerald-600 hover:text-emerald-800" : "text-slate-400 hover:text-slate-600"
+                                       )}>
+                                         {post.isPinned ? '★ Sponsoring' : '☆ Sponsor'}
+                                       </button>
+                                       <button onClick={() => {
+                                         if(confirm('Delete this post?')) {
+                                           fetch('/api/feed', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ id: post.id }) })
+                                           .then(res => res.json())
+                                           .then(data => { if(data.success) fetchFeedPosts(); else alert(data.error); });
+                                         }
+                                       }} className="text-red-500 hover:text-red-700 font-bold cursor-pointer text-[10px] uppercase">Delete</button>
+                                     </td>
+                                   </tr>
+                                 ))
+                               )}
+                             </tbody>
+                           </table>
+                         </div>
+                         {/* Mobile Feed Admin Cards */}
+                         <div className="lg:hidden divide-y divide-slate-100">
+                           {feedPosts.length === 0 ? (
+                             <div className="p-8 text-center text-slate-400 text-xs italic">No feed content discovered in active buffers.</div>
+                           ) : (
+                             feedPosts.map(post => (
+                               <div key={post.id} className="p-4 space-y-2 bg-white">
+                                  <div className="flex justify-between items-start">
+                                     <div className="font-bold text-slate-900 text-xs truncate max-w-[200px]">{post.businessName}</div>
+                                     <div className="text-[9px] text-slate-400 font-mono italic">{new Date(post.createdAt).toLocaleDateString()}</div>
+                                  </div>
+                                  <div className="text-xs text-slate-600 line-clamp-2 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic text-[11px]">&quot;{post.caption}&quot;</div>
+                                  <div className="flex justify-end gap-3 pt-1">
+                                     <button onClick={() => {
+                                        fetch('/api/feed', { 
+                                          method: 'POST', 
+                                          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, 
+                                          body: JSON.stringify({ action: 'pin', id: post.id, isPinned: !post.isPinned }) 
+                                        })
+                                        .then(res => res.json())
+                                        .then(data => { if(data.success) fetchFeedPosts(); else alert('Operation failed'); });
+                                     }} className={cn("text-[9.5px] font-black py-1 px-3 rounded uppercase border leading-none transition-all", post.isPinned ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-50 text-slate-400 border-slate-200")}>{post.isPinned ? '★ Sponsoring' : '☆ Sponsor'}</button>
+                                     <button onClick={() => { if(confirm(`Delete post?`)) fetch('/api/feed', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ id: post.id }) }).then(r => { if(r.ok) fetchFeedPosts(); }); }} className="text-red-600 font-bold text-[9.5px] uppercase border border-red-100 px-3 py-1 bg-red-50 rounded leading-none transition-all">Delete</button>
+                                  </div>
+                               </div>
+                             ))
+                           )}
+                         </div>
                        </div>
                     </div>
                   )}
@@ -6194,46 +6384,74 @@ export default function Bizsearch24Home() {
                   {adminActiveSubTab === 'moderation' && userRole === 'ADMIN' && (
                     <div className="space-y-6" id="admin-moderation-tab-panel">
                        <div className="bg-white border text-center border-slate-200 rounded-2xl p-6 sm:p-8 shadow-sm">
-                          <h1 className="text-2xl font-black text-slate-900 mb-2">Automated "Bad Actor" Watchtower</h1>
+                          <h1 className="text-2xl font-black text-slate-900 mb-2">Automated &quot;Bad Actor&quot; Watchtower</h1>
                           <p className="text-sm text-slate-500">Live logs of blocked submissions and suspected bot activity.</p>
                        </div>
 
-                       <div className="overflow-x-auto border rounded-2xl bg-white shadow-sm">
-                         <table className="w-full text-left border-collapse text-xs">
-                           <thead>
-                             <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
-                               <th className="p-3">Time</th>
-                               <th className="p-3">Type</th>
-                               <th className="p-3">Pattern / Content</th>
-                               <th className="p-3">Reason</th>
-                               <th className="p-3">Actor Info</th>
-                             </tr>
-                           </thead>
-                           <tbody className="divide-y divide-slate-100">
-                             {moderationLoading ? (
-                               <tr><td colSpan={5} className="p-8 text-center text-slate-400">Scanning logs...</td></tr>
-                             ) : moderationLogs.length === 0 ? (
-                               <tr><td colSpan={5} className="p-8 text-center text-slate-400">No security incidents detected. The wall stands.</td></tr>
-                             ) : (
-                               moderationLogs.map(log => (
-                                 <tr key={log.id} className="hover:bg-red-50/30 transition-colors">
-                                   <td className="p-3 text-slate-400 font-mono text-[10px]">{new Date(log.timestamp).toLocaleString()}</td>
-                                   <td className="p-3">
-                                      <span className="px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 font-bold uppercase text-[9px]">
+                       <div className="border rounded-2xl bg-white shadow-sm overflow-hidden" id="admin-moderation-table-container">
+                         <div className="hidden sm:block overflow-x-auto">
+                           <table className="w-full text-left border-collapse text-xs">
+                             <thead>
+                               <tr className="bg-slate-50 text-slate-600 border-b border-slate-150 font-mono text-[10px] uppercase">
+                                 <th className="p-3">Time</th>
+                                 <th className="p-3">Type</th>
+                                 <th className="p-3">Pattern / Content</th>
+                                 <th className="p-3">Reason</th>
+                                 <th className="p-3">Actor Info</th>
+                               </tr>
+                             </thead>
+                             <tbody className="divide-y divide-slate-100">
+                               {moderationLoading ? (
+                                 <tr><td colSpan={5} className="p-8 text-center text-slate-400">Scanning logs...</td></tr>
+                               ) : moderationLogs.length === 0 ? (
+                                 <tr><td colSpan={5} className="p-8 text-center text-slate-400">No security incidents detected. The wall stands.</td></tr>
+                               ) : (
+                                 moderationLogs.map(log => (
+                                   <tr key={log.id} className="hover:bg-red-50/30 transition-colors">
+                                     <td className="p-3 text-slate-400 font-mono text-[10px] whitespace-nowrap uppercase">{new Date(log.timestamp).toLocaleTimeString()}</td>
+                                     <td className="p-3">
+                                        <span className="px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 font-bold uppercase text-[9px]">
+                                          {log.type}
+                                        </span>
+                                     </td>
+                                     <td className="p-3 max-w-[200px] truncate font-mono text-slate-600" title={log.content}>{log.content}</td>
+                                     <td className="p-3 text-red-600 font-bold">{log.reason}</td>
+                                     <td className="p-3 leading-tight min-w-[120px]">
+                                        <div className="text-slate-900 font-bold">{log.ip}</div>
+                                        <div className="text-[10px] text-slate-400 truncate">User: {log.userId}</div>
+                                     </td>
+                                   </tr>
+                                 ))
+                               )}
+                             </tbody>
+                           </table>
+                         </div>
+
+                         {/* Mobile Card Layout for Logs */}
+                         <div className="sm:hidden divide-y divide-slate-100">
+                           {moderationLoading ? (
+                              <div className="p-8 text-center text-slate-400 text-xs">Scanning logs...</div>
+                           ) : moderationLogs.length === 0 ? (
+                              <div className="p-8 text-center text-slate-400 text-xs">No incidents.</div>
+                           ) : (
+                              moderationLogs.map(log => (
+                                <div key={log.id} className="p-4 space-y-2">
+                                   <div className="flex justify-between items-center">
+                                      <span className="text-[9px] font-mono text-slate-400 uppercase">{new Date(log.timestamp).toLocaleString()}</span>
+                                      <span className="px-1.5 py-0.5 rounded-md bg-red-100 text-red-700 font-bold uppercase text-[8px]">
                                         {log.type}
                                       </span>
-                                   </td>
-                                   <td className="p-3 max-w-xs truncate font-mono text-slate-600" title={log.content}>{log.content}</td>
-                                   <td className="p-3 text-red-600 font-bold">{log.reason}</td>
-                                   <td className="p-3 leading-tight">
-                                      <div className="text-slate-900 font-bold">{log.ip}</div>
-                                      <div className="text-[10px] text-slate-400">User: {log.userId}</div>
-                                   </td>
-                                 </tr>
-                               ))
-                             )}
-                           </tbody>
-                         </table>
+                                   </div>
+                                   <div className="text-xs font-bold text-red-600">{log.reason}</div>
+                                   <div className="text-[11px] font-mono bg-slate-50 p-2 rounded-lg text-slate-600 line-clamp-2">{log.content}</div>
+                                   <div className="flex items-center justify-between text-[10px] text-slate-400">
+                                      <span>IP: {log.ip}</span>
+                                      <span>ID: {log.userId}</span>
+                                   </div>
+                                </div>
+                              ))
+                           )}
+                         </div>
                        </div>
                     </div>
                   )}
