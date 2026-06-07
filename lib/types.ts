@@ -127,4 +127,5 @@ export interface NewsArticle {
   sourceUrl: string;   // Original source link from Google News
   imageUrl: string;    // Image URL for visual interest
   publishedAt: string; // Scraped/published timestamp
+  category?: string;   // Category of the news
 }

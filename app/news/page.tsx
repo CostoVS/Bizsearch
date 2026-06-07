@@ -25,6 +25,8 @@ export default function NewsPage() {
   const [loading, setLoading] = React.useState<boolean>(true);
   const [error, setError] = React.useState<string>('');
   const [searchQuery, setSearchQuery] = React.useState<string>('');
+  const [selectedCategory, setSelectedCategory] = React.useState<string>('All');
+  const [timeframe, setTimeframe] = React.useState<'24h'|'all'>('24h');
   const [selectedArticle, setSelectedArticle] = React.useState<NewsArticle | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = React.useState<string>('');
   
@@ -100,12 +102,35 @@ export default function NewsPage() {
   // Client-side search filters
   const filteredArticles = articles.filter(art => {
     const q = searchQuery.toLowerCase();
-    return (
+    const matchesSearch = q === '' || (
       art.title.toLowerCase().includes(q) ||
       art.summary.toLowerCase().includes(q) ||
       art.sourceName.toLowerCase().includes(q)
     );
+
+    if (!matchesSearch) return false;
+
+    if (selectedCategory !== 'All' && art.category !== selectedCategory) {
+      return false;
+    }
+
+    if (timeframe === '24h') {
+      const artTime = new Date(art.publishedAt).getTime();
+      const now = new Date().getTime();
+      if (now - artTime > 24 * 60 * 60 * 1000) {
+        return false;
+      }
+    }
+
+    return true;
   });
+
+  const availableCategories = ['All', ...Array.from(new Set(articles.map(a => a.category).filter(Boolean)))];
+
+  // Bucket ads by layout
+  const topAds = ads.filter(a => a.layoutRow === 'top');
+  const bottomAds = ads.filter(a => a.layoutRow === 'bottom');
+  const middleAds = ads.filter(a => a.layoutRow === 'middle' || !a.layoutRow);
 
   const handleShare = (article: NewsArticle, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -215,20 +240,60 @@ export default function NewsPage() {
         </div>
 
         {/* FEED SEARCH & CONTROLS */}
-        <div className="flex flex-col md:flex-row gap-4 items-center justify-between mb-8" id="search-filter-belt">
-          <div className="relative w-full md:max-w-md" id="search-bar-wrap">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" id="search-input-mag" />
-            <input
-              id="search-input-news"
-              type="text"
-              placeholder="Search news articles, topics or sources..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 outline-none transition-all shadow-xs"
-            />
+        <div className="flex flex-col gap-4 mb-4" id="search-filter-belt">
+          <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative w-full md:max-w-md" id="search-bar-wrap">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" id="search-input-mag" />
+              <input
+                id="search-input-news"
+                type="text"
+                placeholder="Search news articles, topics or sources..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15 outline-none transition-all shadow-xs"
+              />
+            </div>
+
+            <div className="flex items-center gap-2">
+              <div className="bg-white border border-slate-200 rounded-xl p-1 flex shadow-xs">
+                <button
+                  onClick={() => setTimeframe('24h')}
+                  className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", 
+                    timeframe === '24h' ? "bg-emerald-100 text-emerald-800" : "text-slate-500 hover:bg-slate-50")}
+                >
+                  Last 24 Hours
+                </button>
+                <button
+                  onClick={() => setTimeframe('all')}
+                  className={cn("px-4 py-1.5 rounded-lg text-xs font-bold transition-all", 
+                    timeframe === 'all' ? "bg-emerald-100 text-emerald-800" : "text-slate-500 hover:bg-slate-50")}
+                >
+                  All History
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div className="flex items-center space-x-2 text-slate-500 font-mono text-[11px]" id="current-article-counter">
+          {availableCategories.length > 1 && (
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {availableCategories.map(cat => (
+                <button
+                  key={cat as string}
+                  onClick={() => setSelectedCategory(cat as string)}
+                  className={cn(
+                    "px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all border",
+                    selectedCategory === cat 
+                      ? "bg-slate-800 text-white border-slate-800 shadow-md"
+                      : "bg-white text-slate-600 border-slate-200 hover:border-emerald-300 hover:bg-emerald-50"
+                  )}
+                >
+                  {cat as string}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="flex items-center space-x-2 text-slate-500 font-mono text-[11px] mb-4" id="current-article-counter">
             <TrendingUp className="w-3.5 h-3.5 text-emerald-600" />
             <span>Showing <strong className="text-slate-800">{filteredArticles.length}</strong> summarized stories</span>
           </div>
@@ -283,6 +348,54 @@ export default function NewsPage() {
             {/* ARTICLES FEED STREAM (LEFT) - 8 COLS */}
             <div className="lg:col-span-8 space-y-8" id="left-news-stream">
               
+              {/* TOP ADS */}
+              {topAds.length > 0 && (
+                <div className="space-y-4 mb-6">
+                  {topAds.map((ad, idx) => (
+                    <motion.div
+                      key={`top-ad-${idx}`}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-emerald-50/50 border-2 border-emerald-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start space-x-4 max-sm:flex-col max-sm:items-center max-sm:text-center">
+                        <img 
+                          src={ad.imageUrl} 
+                          alt={ad.title}
+                          className="w-24 h-24 rounded-xl object-cover border border-emerald-500/20 shadow-xs shrink-0 bg-white"
+                        />
+                        <div className="space-y-1.5 flex-1 min-w-0 pt-1">
+                          <div className="flex items-center space-x-1.5 flex-wrap justify-center sm:justify-start">
+                            <span className="bg-emerald-650/10 text-emerald-800 text-[8px] font-black font-mono uppercase tracking-widest px-2 py-0.5 rounded-md">
+                              {ad.badge && ad.badge !== 'standard' ? ad.badge.replace('-', ' ') : 'Sponsored Partner'}
+                            </span>
+                            {ad.alwaysOnTop && (
+                              <span className="bg-amber-100 text-amber-800 text-[7px] font-bold font-mono uppercase tracking-wider px-1.5 py-0.5 rounded">
+                                ALWAYS ON TOP
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-extrabold text-slate-800 text-sm sm:text-base leading-tight">{ad.title}</h3>
+                          <p className="text-[12px] text-slate-600 leading-relaxed max-w-md">
+                            {ad.description || 'Promoted top placement business listing.'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <a
+                        href={ad.targetUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/10 text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5"
+                      >
+                        <span>Visit Site</span>
+                        <ExternalLink className="w-4 h-4" />
+                      </a>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+
               {/* ITERATIVE MIXED INLINE NEWS AND IN-BETWEEN AD PLACEMENT */}
               {(() => {
                 const elements: React.ReactNode[] = [];
@@ -352,9 +465,9 @@ export default function NewsPage() {
                   // IN-BETWEEN AD PLACEMENT: Inject an active advertising banner after every 3 articles (index + 1 % 3 === 0)
                   if ((index + 1) % 3 === 0) {
                     let injectedAd: BizAd | null = null;
-                    if (ads.length > 0) {
-                      const adIndex = Math.floor(index / 3) % ads.length;
-                      injectedAd = ads[adIndex];
+                    if (middleAds.length > 0) {
+                      const adIndex = Math.floor(index / 3) % middleAds.length;
+                      injectedAd = middleAds[adIndex];
                     }
 
                     elements.push(
@@ -433,6 +546,45 @@ export default function NewsPage() {
 
                 return elements;
               })()}
+
+              {/* BOTTOM ADS */}
+              {bottomAds.length > 0 && (
+                <div className="space-y-4 mt-8 pt-8 border-t border-slate-200">
+                  <h4 className="text-[10px] font-bold text-slate-400 font-mono uppercase tracking-wider text-center mb-4">Sponsors</h4>
+                  {bottomAds.map((ad, idx) => (
+                    <motion.div
+                      key={`bottom-ad-${idx}`}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-center justify-between gap-4"
+                    >
+                      <div className="flex items-start space-x-4 max-sm:flex-col max-sm:items-center max-sm:text-center">
+                        <img 
+                          src={ad.imageUrl} 
+                          alt={ad.title}
+                          className="w-16 h-16 rounded-xl object-cover border border-slate-100 shadow-xs shrink-0"
+                        />
+                        <div className="space-y-1 flex-1 min-w-0">
+                          <h3 className="font-bold text-slate-800 text-sm leading-tight">{ad.title}</h3>
+                          <p className="text-[11px] text-slate-500 leading-relaxed">
+                            {ad.description || 'Promoted bottom placement business listing.'}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      <a
+                        href={ad.targetUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5"
+                      >
+                        <span>Learn More</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* SIDEBAR RIGHT CONTAINER (RIGHT) - 4 COLS */}

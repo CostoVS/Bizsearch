@@ -322,6 +322,7 @@ interface DatabaseSchema {
     articles: NewsArticle[];
     lastFetchedAt: string;
   };
+  newsHistory?: NewsArticle[];
 }
 
 // In-Memory Fallback to prevent file locks or read overheads

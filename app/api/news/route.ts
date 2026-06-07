@@ -7,6 +7,14 @@ import { generateOllama } from '@/lib/ollama';
 
 const parser = new Parser();
 
+const RSS_FEEDS = [
+  { url: 'https://www.sabcnews.com/sabcnews/feed/', category: 'General' },
+  { url: 'https://www.sabcnews.com/sabcnews/category/politics/feed/', category: 'Politics' },
+  { url: 'https://www.sabcnews.com/sabcnews/category/business/feed/', category: 'Business' },
+  { url: 'https://www.sabcnews.com/sabcnews/category/sport/feed/', category: 'Sport' },
+  { url: 'https://www.sabcnews.com/sabcnews/category/science-technology/feed/', category: 'Technology' },
+];
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
@@ -16,7 +24,16 @@ export async function GET(req: NextRequest) {
     const dbData = readDb();
     const now = new Date();
 
-    let cachedArticles = dbData.newsCache?.articles || [];
+    let allArticles = dbData.newsHistory || [];
+    if (!dbData.newsHistory && dbData.newsCache?.articles) {
+      allArticles = [...dbData.newsCache.articles];
+    }
+    
+    // Filter to last 24 hours only, but don't delete from history just don't return them? 
+    // Wait, the history from dbData.newsHistory should be maintained. The user said "show last 24 hours ... keep history of the news so I can always go back".
+    // We will return ALL history, but let the frontend filter by 24h by default, or just return all and let frontend decide. The user said "Make the news section show the last 24 hours... keep history so I can always go back". We'll handle 24h filter on frontend.
+    
+    let cachedArticles = allArticles;
     let lastFetchedAt = dbData.newsCache?.lastFetchedAt || '';
 
     let isExpiredByHour = true;
@@ -42,70 +59,86 @@ export async function GET(req: NextRequest) {
       console.log('[NEWS ENGINE] Article cache is stale or missing. Fetching RSS and summarizing with local Ollama...');
       
       try {
-        // Step 1: Fetch RSS feed (SABC News is reliable for SA)
-        const feed = await parser.parseURL('https://www.sabcnews.com/sabcnews/feed/');
-        
-        const topArticles = feed.items.slice(0, 5); // Process top 5 to keep it fast for local LLM
-        
         const summarizedArticles: NewsArticle[] = [];
 
-        for (let i = 0; i < topArticles.length; i++) {
-          const item = topArticles[i];
-          const title = item.title || 'South Africa News';
-          const contentSnippet = item.contentSnippet || item.content || '';
-          const sourceUrl = item.link || 'https://www.sabcnews.com';
-          const pubDate = item.pubDate ? new Date(item.pubDate).toISOString() : now.toISOString();
-
+        for (const feedObj of RSS_FEEDS) {
           try {
-            // Step 2: Use Ollama to summarize
-            const prompt = `Summarize this South African news article in 3 short, professional journalistic paragraphs. 
-            Do not use markdown formatting like bold stars.
+            const feed = await parser.parseURL(feedObj.url);
             
-            Title: ${title}
-            Content: ${contentSnippet}
+            const topArticles = feed.items.slice(0, 2); // Process top 2 per category
             
-            Return ONLY a valid JSON object in this format:
-            {
-              "summary": "your summary text here"
-            }`;
+            for (let i = 0; i < topArticles.length; i++) {
+              const item = topArticles[i];
+              const title = item.title || 'South Africa News';
+              const contentSnippet = item.contentSnippet || item.content || '';
+              const sourceUrl = item.link || 'https://www.sabcnews.com';
+              const pubDate = item.pubDate ? new Date(item.pubDate).toISOString() : now.toISOString();
 
-            const model = process.env.OLLAMA_MODEL || 'llama3';
-            const ollamaResponse = await generateOllama(prompt, model);
-            const parsed = JSON.parse(ollamaResponse);
-            
-            summarizedArticles.push({
-              id: `news_${Date.now()}_${i}`,
-              title,
-              summary: parsed.summary || contentSnippet,
-              sourceName: 'SABC News',
-              sourceUrl,
-              imageUrl: `https://picsum.photos/seed/sanews_${i + 1}/800/600`,
-              publishedAt: pubDate
-            });
-          } catch (ollamaErr) {
-            console.error(`[NEWS ENGINE] Ollama failed for article ${i}:`, ollamaErr);
-            // Fallback to snippet if LLM fails
-            summarizedArticles.push({
-              id: `news_${Date.now()}_${i}`,
-              title,
-              summary: contentSnippet.slice(0, 500) + '...',
-              sourceName: 'SABC News',
-              sourceUrl,
-              imageUrl: `https://picsum.photos/seed/sanews_${i + 1}/800/600`,
-              publishedAt: pubDate
-            });
+              if (cachedArticles.some(a => a.sourceUrl === sourceUrl || a.title === title) || 
+                  summarizedArticles.some(a => a.sourceUrl === sourceUrl || a.title === title)) {
+                  continue;
+              }
+
+              try {
+                // Step 2: Use Ollama to summarize
+                const prompt = `Summarize this South African ${feedObj.category} news article in 3 short, professional journalistic paragraphs. 
+                Do not use markdown formatting like bold stars.
+                
+                Title: ${title}
+                Content: ${contentSnippet}
+                
+                Return ONLY a valid JSON object in this format:
+                {
+                  "summary": "your summary text here"
+                }`;
+
+                const model = process.env.OLLAMA_MODEL || 'llama3';
+                const ollamaResponse = await generateOllama(prompt, model);
+                const parsed = JSON.parse(ollamaResponse);
+                
+                summarizedArticles.push({
+                  id: `news_${Date.now()}_${summarizedArticles.length}`,
+                  title,
+                  summary: parsed.summary || contentSnippet,
+                  sourceName: 'SABC News',
+                  sourceUrl,
+                  imageUrl: `https://picsum.photos/seed/sanews_${summarizedArticles.length + Date.now()}/800/600`,
+                  publishedAt: pubDate,
+                  category: feedObj.category
+                });
+              } catch (ollamaErr) {
+                console.error(`[NEWS ENGINE] Ollama failed for article:`, ollamaErr);
+                // Fallback to snippet if LLM fails
+                summarizedArticles.push({
+                  id: `news_${Date.now()}_${summarizedArticles.length}`,
+                  title,
+                  summary: contentSnippet.slice(0, 500) + '...',
+                  sourceName: 'SABC News',
+                  sourceUrl,
+                  imageUrl: `https://picsum.photos/seed/sanews_${summarizedArticles.length + Date.now()}/800/600`,
+                  publishedAt: pubDate,
+                  category: feedObj.category
+                });
+              }
+            }
+          } catch (feedErr) {
+             console.error(`Failed to fetch ${feedObj.category} feed via rss-parser`);
           }
         }
 
         if (summarizedArticles.length > 0) {
-          // Update database newsCache
+          cachedArticles = [...summarizedArticles, ...cachedArticles];
+          if (cachedArticles.length > 200) {
+              cachedArticles = cachedArticles.slice(0, 200);
+          }
+
+          dbData.newsHistory = cachedArticles;
           dbData.newsCache = {
-            articles: summarizedArticles,
+            articles: [], // deprecated
             lastFetchedAt: now.toISOString()
           };
           saveDb(dbData);
           
-          cachedArticles = summarizedArticles;
           lastFetchedAt = now.toISOString();
           console.log(`[NEWS ENGINE] Successfully fetched and summarized ${summarizedArticles.length} articles!`);
         }
@@ -114,8 +147,9 @@ export async function GET(req: NextRequest) {
         // Fail gracefully and use cache if we have one
         if (cachedArticles.length === 0) {
           cachedArticles = getLocalSeedNews();
+          dbData.newsHistory = cachedArticles;
           dbData.newsCache = {
-            articles: cachedArticles,
+            articles: [],
             lastFetchedAt: now.toISOString()
           };
           saveDb(dbData);
@@ -132,7 +166,7 @@ export async function GET(req: NextRequest) {
           return false;
         }
       }
-      return a.placementNews || a.placement === 'all';
+      return a.placementNews || a.targetPage === 'news' || a.targetPage === 'all' || !a.targetPage;
     });
 
     // Sort ads: alwaysOnTop first, then newest
@@ -142,6 +176,13 @@ export async function GET(req: NextRequest) {
       if (aTop !== bTop) {
         return bTop - aTop;
       }
+      
+      const aOrder = a.orderIndex !== undefined ? a.orderIndex : 0;
+      const bOrder = b.orderIndex !== undefined ? b.orderIndex : 0;
+      if (aOrder !== bOrder) {
+        return aOrder - bOrder;
+      }
+
       return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
     });
 
@@ -170,7 +211,8 @@ function getLocalSeedNews(): NewsArticle[] {
       sourceName: 'Daily Maverick',
       sourceUrl: 'https://www.dailymaverick.co.za',
       imageUrl: 'https://picsum.photos/seed/resbank/800/600',
-      publishedAt: stamp
+      publishedAt: stamp,
+      category: 'Business'
     },
     {
       id: 'seed_news_2',
@@ -179,7 +221,8 @@ function getLocalSeedNews(): NewsArticle[] {
       sourceName: 'News24',
       sourceUrl: 'https://www.news24.com',
       imageUrl: 'https://picsum.photos/seed/gautengsolar/800/600',
-      publishedAt: stamp
+      publishedAt: stamp,
+      category: 'Technology'
     },
     {
       id: 'seed_news_3',
@@ -188,7 +231,8 @@ function getLocalSeedNews(): NewsArticle[] {
       sourceName: 'TimesLIVE',
       sourceUrl: 'https://www.timeslive.co.za',
       imageUrl: 'https://picsum.photos/seed/capetour/800/600',
-      publishedAt: stamp
+      publishedAt: stamp,
+      category: 'General'
     },
     {
       id: 'seed_news_4',
@@ -197,7 +241,8 @@ function getLocalSeedNews(): NewsArticle[] {
       sourceName: 'BusinessTech',
       sourceUrl: 'https://www.businesstech.co.za',
       imageUrl: 'https://picsum.photos/seed/sa_tech/800/600',
-      publishedAt: stamp
+      publishedAt: stamp,
+      category: 'Business'
     }
   ];
 }
