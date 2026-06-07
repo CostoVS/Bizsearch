@@ -8,15 +8,15 @@ const ALT_DB_FILE = '/tmp/bizearch_db.json';
 
 const SEED_ADS: BizAd[] = [
   {
-    id: 'ad_1',
-    title: 'SuperSolar Gauteng Promo',
-    imageUrl: 'https://picsum.photos/seed/solarprime/1200/400',
-    targetUrl: '/explore?term=solar',
-    placement: 'province',
-    province: 'gauteng',
+    id: 'ad_brand_promo_suite',
+    title: 'BizSearch24 Advantage Bundle - .co.za Domain at R99/year + Complete Web Hosting & Unlimited Professional Emails at R199/month!',
+    imageUrl: 'https://picsum.photos/seed/bizsearch/1200/400',
+    targetUrl: 'https://wa.me/27751613007?text=Hi%20BizSearch24%20Support%2C%20I%20am%20interested%20in%20the%20Advantage%20Bundle%20(R199%2Fpm%20and%20R99%2Fyear%20domain).%20Please%20assist!',
+    placement: 'all',
     active: true,
     position: 'top-banner',
     size: 'banner',
+    description: 'Establish ultimate brand authority in South Africa. Includes premium checkmark Co-Verified status, unlimited professional emails with instant sync, zero-latency cloud static web hosting, and a custom .co.za address. WhatsApp support desk: 075 161 3007.',
     createdAt: new Date().toISOString()
   },
   {

@@ -2699,15 +2699,15 @@ export default function Bizsearch24Home() {
                     Premium Cloud <span className="text-emerald-400">& Web Services</span>
                   </h1>
                   <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
-                    Get fully customized static websites, high-performance static page hosting, professional custom email addresses (yourname@yourbrand.co.za) and premium co-verified status on South Africa&apos;s directory engine.
+                    Get fully customized static websites, high-performance static page hosting, professional custom email addresses (yourname@yourbrand.co.za), co.za domain registration and premium co-verified status on South Africa&apos;s directory engine.
                   </p>
                 </div>
               </div>
 
-              {/* THREE CORE OFFERINGS */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5" id="services-cards-grid">
+              {/* FOUR CORE OFFERINGS */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" id="services-cards-grid">
                 {/* HOSTING CARD */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="space-y-4">
                     <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
                       <Globe className="w-5 h-5" />
@@ -2717,7 +2717,7 @@ export default function Bizsearch24Home() {
                       <p className="text-slate-450 text-[10px] uppercase font-mono tracking-wider">Static Websites</p>
                     </div>
                     <p className="text-slate-600 text-xs leading-relaxed">
-                      Enterprise-grade global CDN delivery for your company&apos;s web assets. Ultra-fast page loads, automatic TLS/SSL keys, and zero configuration or resource throttling.
+                      Enterprise-grade global CDN delivery for your company&apos;s web assets. Ultra-fast page loads, automatic TLS/SSL keys, and zero configuration or throttling.
                     </p>
                   </div>
                   <div className="pt-4 border-t border-slate-100/60 mt-4">
@@ -2726,7 +2726,7 @@ export default function Bizsearch24Home() {
                 </div>
 
                 {/* EMAILS CARD */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="space-y-4">
                     <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
                       <Mail className="w-5 h-5" />
@@ -2736,7 +2736,7 @@ export default function Bizsearch24Home() {
                       <p className="text-slate-450 text-[10px] uppercase font-mono tracking-wider">Professional Domains</p>
                     </div>
                     <p className="text-slate-600 text-xs leading-relaxed">
-                      Establish true brand credibility. Setup mailboxes for sales, info, and individual employees at your custom co.za domain with active webmail, POP3, and IMAP support.
+                      Establish true brand credibility. Setup mailboxes for sales, info, and individual employees at your custom co.za domain with active webmail, POP3, and IMAP.
                     </p>
                   </div>
                   <div className="pt-4 border-t border-slate-100/60 mt-4">
@@ -2745,7 +2745,7 @@ export default function Bizsearch24Home() {
                 </div>
 
                 {/* BUILDING CARD */}
-                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
                   <div className="space-y-4">
                     <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
                       <Laptop className="w-5 h-5" />
@@ -2755,55 +2755,94 @@ export default function Bizsearch24Home() {
                       <p className="text-slate-450 text-[10px] uppercase font-mono tracking-wider">Optional Custom Code</p>
                     </div>
                     <p className="text-slate-600 text-xs leading-relaxed">
-                      Need custom templates or standard landing layouts? Our experts will custom-design your initial landing page for maximum conversion rate, SEO ranking, and mobile compliance.
+                      Need custom templates or standard landing layouts? Our experts will custom-design your initial landing page for maximum conversion rate and mobile compliance.
                     </p>
                   </div>
                   <div className="pt-4 border-t border-slate-100/60 mt-4">
                     <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">✨ Premium Assistance</span>
                   </div>
                 </div>
+
+                {/* DOMAIN CARD */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-5 flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="space-y-4">
+                    <div className="w-10 h-10 bg-teal-50 rounded-xl flex items-center justify-center text-teal-600">
+                      <Search className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-slate-900 text-sm">.co.za Domain</h3>
+                      <p className="text-slate-450 text-[10px] uppercase font-mono tracking-wider">Registry Administration</p>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed">
+                      Secure your own professional .co.za domain name to power your landing website and dedicated mailbox addresses legally. No setup markups or hidden fees.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100/60 mt-4">
+                    <span className="text-[10px] font-semibold text-teal-700 bg-teal-50 px-2 py-0.5 rounded">🌐 R99 / Year</span>
+                  </div>
+                </div>
               </div>
 
               {/* PRICING & CALL-TO-ACTION BILLING PREVIEW */}
-              <div className="bg-emerald-50/40 border border-emerald-150 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6" id="services-pricing-cta">
+              <div className="bg-emerald-50/40 border border-emerald-150 rounded-2xl p-6 sm:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" id="services-pricing-cta">
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs bg-emerald-600/10 text-emerald-800 font-extrabold px-2.5 py-1 rounded-md text-emerald-700">ALL-INCLUSIVE ADVANTAGE BUNDLE</span>
                   </div>
                   <h3 className="text-lg font-black text-slate-905">Total Digital Suite Package</h3>
                   <p className="text-slate-600 text-xs max-w-lg leading-relaxed">
-                    This all-inclusive package costs only <strong>R199 per month</strong> (month-to-month agreement, cancel anytime) and <strong>INCLUDES</strong> a Premium BizSearch24 Directory account, giving your brand the ultimate co-verified listing spotlight.
+                    This all-inclusive bundle costs only <strong>R199 per month</strong> (month-to-month, cancel anytime) and <strong>INCLUDES</strong> a Premium BizSearch24 Directory account, website building, hosting, and unlimited email mailboxes. Secure your <strong>custom .co.za domain name for just R99 once-per-year</strong>!
+                  </p>
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    💬 Got questions? Talk directly to our technical desk via WhatsApp: <strong>075 161 3007</strong>
                   </p>
                 </div>
                 
-                <div className="bg-white border border-emerald-250 p-5 rounded-2xl shadow-inner text-center shrink-0 w-full sm:w-auto" id="pricing-tag-box">
-                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">Exclusive Price</p>
-                  <p className="text-3xl font-black text-emerald-700 mt-1">R199 <span className="text-xs text-slate-500 font-normal">/pm</span></p>
-                  <p className="text-[10px] text-slate-450 mt-1">No Contract, Month-to-Month</p>
+                <div className="bg-white border border-emerald-250 p-5 rounded-2xl shadow-inner text-center shrink-0 w-full md:w-80" id="pricing-tag-box">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">Exclusive Pricing</p>
+                  <div className="my-2 space-y-1">
+                    <p className="text-2xl font-black text-emerald-700">R199 <span className="text-xs text-slate-500 font-normal">/pm</span></p>
+                    <p className="text-sm font-semibold text-teal-700">+ R99 <span className="text-xs text-slate-505 font-mono">/year domain</span></p>
+                  </div>
+                  <p className="text-[10px] text-slate-450 mt-1">No Contract, Cancel Anytime</p>
                   
-                  <button
-                    onClick={() => {
-                      const subject = encodeURIComponent("BizSearch24 Services Subscription Request");
-                      const bodyText = encodeURIComponent(
-                        "Hi BizSearch24 Team,\n\n" +
-                        "I am interested in subscribing to your BizSearch24 Web Services Package (R199/pm).\n\n" +
-                        "Please provide details on configuring my:\n" +
-                        "1. Unlimited static website hosting\n" +
-                        "2. Professional domain email accounts\n" +
-                        "3. Optional custom website building services\n\n" +
-                        "Please also upgrade my BizSearch24 account to Premium Verified Status.\n\n" +
-                        "My Registered Account Email (if any): " + (adminUsername || "[Email]") + "\n" +
-                        "Business Trading Name: \n" +
-                        "Contact Number: \n\n" +
-                        "Thank you!"
-                      );
-                      window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
-                    }}
-                    className="w-full mt-4 py-2.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center justify-center space-x-1 outline-none border-0 cursor-pointer"
-                  >
-                    <Mail className="w-3.5 h-3.5" />
-                    <span>Order Design Suite via Email</span>
-                  </button>
+                  <div className="mt-4 flex flex-col gap-2">
+                    <button
+                      onClick={() => {
+                        const whatsappMsg = `Hi BizSearch24 Support,\n\nI want to subscribe to your Premium Digital Suite (R199/pm) and get a .co.za domain name (R99/year).\n\nPlease contact me to finalize options!\n\nEmail: ${adminUsername || ""}`;
+                        window.open(`https://wa.me/27751613007?text=${encodeURIComponent(whatsappMsg)}`, '_blank');
+                      }}
+                      className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-sm flex items-center justify-center space-x-1 outline-none border-0 cursor-pointer"
+                    >
+                      <Phone className="w-3.5 h-3.5" />
+                      <span>Order via WhatsApp</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        const subject = encodeURIComponent("BizSearch24 Services Subscription Request");
+                        const bodyText = encodeURIComponent(
+                          "Hi BizSearch24 Team,\n\n" +
+                          "I am interested in subscribing to your BizSearch24 Web Services Package (R199/pm) + .co.za domain name (R99/year once-per-year).\n\n" +
+                          "Please provide details on configuring my:\n" +
+                          "1. Custom .co.za domain (or link existing)\n" +
+                          "2. Unlimited static website hosting\n" +
+                          "3. Professional domain email accounts\n" +
+                          "4. Optional custom website building services\n\n" +
+                          "Please also upgrade my BizSearch24 account to Premium Verified Status.\n\n" +
+                          "My Registered Account Email (if any): " + (adminUsername || "[Email]") + "\n" +
+                          "Business Trading Name: \n" +
+                          "Contact Number: \n\n" +
+                          "Thank you!"
+                        );
+                        window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
+                      }}
+                      className="w-full py-2 px-4 bg-slate-900 hover:bg-slate-950 text-white font-bold rounded-xl text-xs transition-all flex items-center justify-center space-x-1 outline-none border-0 cursor-pointer"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      <span>Order via Email</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </motion.div>
@@ -3847,16 +3886,29 @@ export default function Bizsearch24Home() {
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               <div className="space-y-1">
-                                <label className="text-xs font-bold text-slate-700 block">Target Placement Scope</label>
+                                <label className="text-xs font-bold text-slate-700 block">Target Placement Scope (Location)</label>
                                 <select
                                   value={adPlacement}
                                   onChange={(e: any) => setAdPlacement(e.target.value)}
                                   className="w-full bg-white border border-slate-205 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none cursor-pointer"
                                 >
-                                  <option value="all">Sponsor on ALL regional searches & pages (Ever Single Page)</option>
+                                  <option value="all">Sponsor everywhere (All pages & locations)</option>
                                   <option value="province">Specific Province Level targeting</option>
                                   <option value="city">Specific City / Town Level targeting</option>
                                   <option value="suburb">Specific Suburb Name targeting</option>
+                                </select>
+                              </div>
+
+                              <div className="space-y-1">
+                                <label className="text-xs font-bold text-slate-700 block">Ad Placement Position / Style</label>
+                                <select
+                                  value={adPosition}
+                                  onChange={(e: any) => setAdPosition(e.target.value)}
+                                  className="w-full bg-white border border-slate-205 rounded-xl px-3 py-2 text-xs focus:ring-1 focus:ring-emerald-500 outline-none cursor-pointer"
+                                >
+                                  <option value="top-banner">Always on Top - Sticky Header Ad Banner</option>
+                                  <option value="sidebar">Right Sidebar Spotlight Showcase</option>
+                                  <option value="inline-list">Inline Organic Search Sponsor Card</option>
                                 </select>
                               </div>
 
@@ -4074,13 +4126,16 @@ export default function Bizsearch24Home() {
                                         <p className="text-[10px] text-slate-404 font-mono">ID: {ad.id}</p>
                                       </div>
                                     </td>
-                                    <td>
-                                      <span className="font-mono bg-slate-100 px-2 py-0.5 rounded text-[10px] text-slate-650 font-bold">
+                                    <td className="space-y-1">
+                                      <div className="font-mono bg-slate-100 px-2 py-0.5 rounded text-[10px] text-slate-650 font-bold inline-block">
                                         Scope: {ad.placement.toUpperCase()} 
                                         {ad.province && ` (${ad.province})`}
                                         {ad.city && ` (${ad.city})`}
                                         {ad.suburb && ` (${ad.suburb})`}
-                                      </span>
+                                      </div>
+                                      <div className="text-[10px] font-semibold text-emerald-700 block">
+                                        Position: {ad.position || 'sidebar'}
+                                      </div>
                                     </td>
                                     <td>
                                       <p className="max-w-[140px] truncate text-slate-500 font-mono" title={ad.targetUrl}>{ad.targetUrl || 'None'}</p>
@@ -4386,7 +4441,7 @@ export default function Bizsearch24Home() {
                                   🔒 Increase Visibility & Build Customer Trust
                                 </h4>
                                 <p className="text-[11px] text-slate-600 leading-relaxed font-sans">
-                                  Standard free accounts trigger a red unverified banner to consumer clients. Upgrade to Premium Verified for <strong>R199 per month</strong> to lock-in premium rankings, visual gallery upload permissions, and customer assurance.
+                                  Standard free accounts trigger a red unverified banner to consumer clients. Upgrade to Premium Verified for <strong>R199 per month</strong> to lock-in premium rankings, visual gallery upload permissions, and customer assurance. You can also register/renew your professional custom <strong>.co.za domain</strong> name for only <strong>R99 once-per-year</strong>!
                                 </p>
                                 <button
                                   type="button"
