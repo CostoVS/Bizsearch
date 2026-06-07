@@ -3212,7 +3212,7 @@ export default function Bizsearch24Home() {
                       {isRegistering ? 'Sign up to submit business listings, manage your profile, and receive analytics.' : 'Access your dashboard, manage your listings, and view your traffic analytics.'}
                     </p>
                   </div>
-                  {authError && (
+                  {authError && !show2FA && (
                     <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-xs flex items-start space-x-2" id="login-error-card">
                       <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" id="login-error-card-ico" />
                       <p className="font-semibold text-[11px] leading-normal">{authError}</p>
@@ -3223,11 +3223,11 @@ export default function Bizsearch24Home() {
                     {show2FA ? (
                       <div className="space-y-4">
                         {requires2FASetup && qrCodeData && (
-                          <div className="flex flex-col items-center">
-                            <p className="text-xs text-slate-500 mb-2 font-semibold">Keep your account safe from hackers!</p>
+                          <div className="flex flex-col items-center text-center">
+                            <p className="text-xs text-slate-500 mb-2 font-bold text-slate-800">Keep your account safe from hackers!</p>
                             <p className="text-xs text-slate-500 mb-2">Scan this QR code with Google Authenticator:</p>
                             <img src={qrCodeData} alt="2FA QR Code" className="mb-2 border p-2 rounded-lg shadow-sm" />
-                            <p className="text-[10px] font-mono text-slate-400 bg-slate-50 p-2 rounded-md">Secret: {setupSecret}</p>
+                            <p className="text-[10px] font-mono text-slate-400 bg-slate-50 p-2 rounded-md mb-2">Secret: {setupSecret}</p>
                           </div>
                         )}
                         <div className="space-y-1">
@@ -3386,17 +3386,39 @@ export default function Bizsearch24Home() {
                     </button>
 
                     {show2FA && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setShow2FA(false);
-                          setRequires2FASetup(false);
-                          setMfaToken('');
-                        }}
-                        className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-semibold hover:underline mt-2 text-center block cursor-pointer"
-                      >
-                        Cancel Verification
-                      </button>
+                      <div className="space-y-4">
+                        {authError && (
+                          <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-xs flex items-start space-x-2">
+                            <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                            <p className="font-semibold text-[11px] leading-normal">{authError}</p>
+                          </div>
+                        )}
+                        
+                        {requires2FASetup && (
+                          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-[11px] text-slate-600 space-y-2.5">
+                            <p className="font-bold flex items-center gap-1.5 text-slate-700"><ShieldAlert className="w-3.5 h-3.5 text-blue-500" /> Need help setting up?</p>
+                            <ul className="list-decimal pl-4 space-y-1.5 text-slate-600 font-medium">
+                              <li>Download Google Authenticator from your app store.</li>
+                              <li>Open the app and tap the <strong>+ (plus) icon</strong>.</li>
+                              <li>Select <strong>Enter a setup key</strong> (or scan the QR code above).</li>
+                              <li>Paste the <strong>Secret Key</strong> shown above and save it.</li>
+                              <li>Enter the 6-digit code it generates above and click <strong>Verify 2FA</strong>.</li>
+                            </ul>
+                          </div>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShow2FA(false);
+                            setRequires2FASetup(false);
+                            setMfaToken('');
+                          }}
+                          className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-semibold hover:underline text-center block cursor-pointer"
+                        >
+                          Cancel Verification
+                        </button>
+                      </div>
                     )}
                   </form>
                   {!show2FA && (
