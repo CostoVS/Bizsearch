@@ -48,6 +48,8 @@ model User {
 
   showProfileDetails Boolean @default(false)
   profileColor     String    @default("slate") // Color theme name or hex
+  selectedTier     String    @default("FREE")  // "FREE" or "PREMIUM"
+  tier             String    @default("FREE")  // "FREE" or "PREMIUM"
 
   listings         Listing[] 
   maxListings      Int       @default(1)

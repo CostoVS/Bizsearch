@@ -66,7 +66,9 @@ export async function POST(req: NextRequest) {
       website,
       businessName,
       vatNumber,
-      maxListings
+      maxListings,
+      selectedTier,
+      tier
     } = body;
 
     if (!email || !password) {
@@ -97,7 +99,9 @@ export async function POST(req: NextRequest) {
         website: website || '',
         businessName: businessName || '',
         vatNumber: vatNumber || '',
-        maxListings: maxListings ? Number(maxListings) : 1
+        maxListings: maxListings ? Number(maxListings) : 1,
+        selectedTier: selectedTier || 'FREE',
+        tier: tier || 'FREE'
       }
     });
 
@@ -134,7 +138,9 @@ export async function PUT(req: NextRequest) {
       businessName,
       vatNumber,
       maxListings,
-      isBanned
+      isBanned,
+      selectedTier,
+      tier
     } = body;
 
     if (!id) {
@@ -160,6 +166,8 @@ export async function PUT(req: NextRequest) {
       website,
       businessName,
       vatNumber,
+      selectedTier,
+      tier,
       maxListings: maxListings ? Number(maxListings) : undefined,
       isBanned: isBanned !== undefined ? isBanned : undefined
     };

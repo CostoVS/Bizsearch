@@ -111,8 +111,8 @@ import { BusinessListing, DynamicPage, SlugMapping, BizAd, VisitorTrackingLog } 
 import { cn } from '@/lib/utils';
 
 export default function Bizsearch24Home() {
-  // Navigation tabs: 'explore' | 'submit' | 'pages' | 'admin'
-  const [activeTab, setActiveTab] = React.useState<'explore' | 'submit' | 'pages' | 'admin'>('explore');
+  // Navigation tabs: 'explore' | 'submit' | 'pages' | 'services' | 'admin'
+  const [activeTab, setActiveTab] = React.useState<'explore' | 'submit' | 'pages' | 'services' | 'admin'>('explore');
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState<boolean>(false);
 
   // States for general listings
@@ -163,6 +163,9 @@ export default function Bizsearch24Home() {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = React.useState<boolean>(false);
   const [userRole, setUserRole] = React.useState<string>('USER');
   const [isRegistering, setIsRegistering] = React.useState<boolean>(false);
+  const [regTier, setRegTier] = React.useState<'FREE' | 'PREMIUM'>('FREE');
+  const [userFormSelectedTier, setUserFormSelectedTier] = React.useState<'FREE' | 'PREMIUM'>('FREE');
+  const [userFormTier, setUserFormTier] = React.useState<'FREE' | 'PREMIUM'>('FREE');
   const [show2FA, setShow2FA] = React.useState<boolean>(false);
   const [mfaToken, setMfaToken] = React.useState<string>('');
   const [requires2FASetup, setRequires2FASetup] = React.useState<boolean>(false);
@@ -754,7 +757,9 @@ export default function Bizsearch24Home() {
 
     try {
       const endpoint = isRegistering ? '/api/auth/register' : '/api/auth/login';
-      const body = { email: adminUsername, password: adminPassword };
+      const body = isRegistering 
+        ? { email: adminUsername, password: adminPassword, selectedTier: regTier }
+        : { email: adminUsername, password: adminPassword };
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -1382,7 +1387,19 @@ export default function Bizsearch24Home() {
                   : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
               )}
             >
-              Submit Business
+              Create ad
+            </button>
+            <button 
+              id="nav-btn-services"
+              onClick={() => { setActiveTab('services'); setViewingPage(null); }}
+              className={cn(
+                "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
+                activeTab === 'services' 
+                  ? "bg-slate-100 text-emerald-750 shadow-inner" 
+                  : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+              )}
+            >
+              BizSearch24 Services
             </button>
             <button 
               id="nav-btn-pages"
@@ -1484,7 +1501,17 @@ export default function Bizsearch24Home() {
                     activeTab === 'submit' ? "bg-slate-100 text-emerald-700" : "text-slate-600"
                   )}
                 >
-                  Submit Your Business
+                  Create ad
+                </button>
+                <button
+                  id="mob-nav-services"
+                  onClick={() => { setActiveTab('services'); setViewingPage(null); setMobileMenuOpen(false); }}
+                  className={cn(
+                    "text-left px-4 py-3 rounded-lg text-base font-medium",
+                    activeTab === 'services' ? "bg-slate-100 text-emerald-700" : "text-slate-600"
+                  )}
+                >
+                  BizSearch24 Services
                 </button>
                 <button
                   id="mob-nav-pages"
@@ -1595,6 +1622,18 @@ export default function Bizsearch24Home() {
                     </div>
                   </div>
                 </div>
+              </div>
+
+              {/* CREATE AD BUTTON ABOVE SEARCH BAR */}
+              <div className="flex justify-start sm:justify-end" id="home-create-ad-row">
+                <button
+                  id="btn-create-ad-search-top"
+                  onClick={() => { setActiveTab('submit'); setViewingPage(null); window.scrollTo({ top: 300, behavior: 'smooth' }); }}
+                  className="bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white font-extrabold text-sm px-6 py-3 rounded-2xl transition-all duration-155 inline-flex items-center space-x-2 shadow-lg shadow-emerald-600/10 hover:shadow-emerald-650/20 cursor-pointer"
+                >
+                  <Plus className="w-4 h-4 text-emerald-100" />
+                  <span>Create ad</span>
+                </button>
               </div>
 
               {/* INTERACTIVE SOUTH AFRICA SEARCH CONSOLE */}
@@ -2636,6 +2675,140 @@ export default function Bizsearch24Home() {
             </motion.div>
           )}
 
+          {/* BIZSEARCH24 SERVICES VIEW */}
+          {activeTab === 'services' && (
+            <motion.div
+              key="services-tab"
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="max-w-4xl mx-auto space-y-6"
+              id="bizsearch24-services-view"
+            >
+              {/* HEADING ACCENT */}
+              <div className="bg-slate-900 border border-slate-850 rounded-2xl p-6 sm:p-8 text-white relative overflow-hidden" id="services-hero-banner">
+                <div className="absolute right-0 top-0 bottom-0 opacity-10 pointer-events-none scale-150 rotate-12">
+                  <Sparkles className="w-96 h-96" />
+                </div>
+                <div className="max-w-2xl space-y-3">
+                  <div className="inline-flex items-center space-x-1 bg-emerald-500/20 text-emerald-350 px-3 py-1 rounded-full text-xs font-semibold">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Exclusive Business Solutions</span>
+                  </div>
+                  <h1 className="text-2xl sm:text-4xl font-extrabold tracking-tight">
+                    Premium Cloud <span className="text-emerald-400">& Web Services</span>
+                  </h1>
+                  <p className="text-slate-300 text-xs sm:text-sm leading-relaxed font-normal">
+                    Get fully customized static websites, high-performance static page hosting, professional custom email addresses (yourname@yourbrand.co.za) and premium co-verified status on South Africa&apos;s directory engine.
+                  </p>
+                </div>
+              </div>
+
+              {/* THREE CORE OFFERINGS */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5" id="services-cards-grid">
+                {/* HOSTING CARD */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="space-y-4">
+                    <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center text-emerald-600">
+                      <Globe className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-slate-900 text-sm">Unlimited Hosting</h3>
+                      <p className="text-slate-450 text-[10px] uppercase font-mono tracking-wider">Static Websites</p>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed">
+                      Enterprise-grade global CDN delivery for your company&apos;s web assets. Ultra-fast page loads, automatic TLS/SSL keys, and zero configuration or resource throttling.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100/60 mt-4">
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">⚡ Zero Limits</span>
+                  </div>
+                </div>
+
+                {/* EMAILS CARD */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="space-y-4">
+                    <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-indigo-600">
+                      <Mail className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-slate-900 text-sm">Unlimited Emails</h3>
+                      <p className="text-slate-450 text-[10px] uppercase font-mono tracking-wider">Professional Domains</p>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed">
+                      Establish true brand credibility. Setup mailboxes for sales, info, and individual employees at your custom co.za domain with active webmail, POP3, and IMAP support.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100/60 mt-4">
+                    <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded">✉ Professional Brand</span>
+                  </div>
+                </div>
+
+                {/* BUILDING CARD */}
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col justify-between hover:shadow-md transition-all">
+                  <div className="space-y-4">
+                    <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-amber-600">
+                      <Laptop className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="font-bold text-slate-900 text-sm">Website Building</h3>
+                      <p className="text-slate-450 text-[10px] uppercase font-mono tracking-wider">Optional Custom Code</p>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed">
+                      Need custom templates or standard landing layouts? Our experts will custom-design your initial landing page for maximum conversion rate, SEO ranking, and mobile compliance.
+                    </p>
+                  </div>
+                  <div className="pt-4 border-t border-slate-100/60 mt-4">
+                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded">✨ Premium Assistance</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* PRICING & CALL-TO-ACTION BILLING PREVIEW */}
+              <div className="bg-emerald-50/40 border border-emerald-150 rounded-2xl p-6 sm:p-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6" id="services-pricing-cta">
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-xs bg-emerald-600/10 text-emerald-800 font-extrabold px-2.5 py-1 rounded-md text-emerald-700">ALL-INCLUSIVE ADVANTAGE BUNDLE</span>
+                  </div>
+                  <h3 className="text-lg font-black text-slate-905">Total Digital Suite Package</h3>
+                  <p className="text-slate-600 text-xs max-w-lg leading-relaxed">
+                    This all-inclusive package costs only <strong>R199 per month</strong> (month-to-month agreement, cancel anytime) and <strong>INCLUDES</strong> a Premium BizSearch24 Directory account, giving your brand the ultimate co-verified listing spotlight.
+                  </p>
+                </div>
+                
+                <div className="bg-white border border-emerald-250 p-5 rounded-2xl shadow-inner text-center shrink-0 w-full sm:w-auto" id="pricing-tag-box">
+                  <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest font-mono">Exclusive Price</p>
+                  <p className="text-3xl font-black text-emerald-700 mt-1">R199 <span className="text-xs text-slate-500 font-normal">/pm</span></p>
+                  <p className="text-[10px] text-slate-450 mt-1">No Contract, Month-to-Month</p>
+                  
+                  <button
+                    onClick={() => {
+                      const subject = encodeURIComponent("BizSearch24 Services Subscription Request");
+                      const bodyText = encodeURIComponent(
+                        "Hi BizSearch24 Team,\n\n" +
+                        "I am interested in subscribing to your BizSearch24 Web Services Package (R199/pm).\n\n" +
+                        "Please provide details on configuring my:\n" +
+                        "1. Unlimited static website hosting\n" +
+                        "2. Professional domain email accounts\n" +
+                        "3. Optional custom website building services\n\n" +
+                        "Please also upgrade my BizSearch24 account to Premium Verified Status.\n\n" +
+                        "My Registered Account Email (if any): " + (adminUsername || "[Email]") + "\n" +
+                        "Business Trading Name: \n" +
+                        "Contact Number: \n\n" +
+                        "Thank you!"
+                      );
+                      window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
+                    }}
+                    className="w-full mt-4 py-2.5 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm flex items-center justify-center space-x-1 outline-none border-0 cursor-pointer"
+                  >
+                    <Mail className="w-3.5 h-3.5" />
+                    <span>Order Design Suite via Email</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* ADMIN PORTAL PANEL */}
           {activeTab === 'admin' && (
             <motion.div
@@ -2715,6 +2888,103 @@ export default function Bizsearch24Home() {
                             className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
                           />
                         </div>
+
+                        {isRegistering && (
+                          <div className="space-y-3 pt-2" id="registration-tier-selection">
+                            <label className="text-xs font-bold text-slate-800 block">Choose Your Membership Tier</label>
+                            <div className="grid grid-cols-2 gap-2.5">
+                              <button
+                                type="button"
+                                onClick={() => setRegTier('FREE')}
+                                className={cn(
+                                  "p-3 rounded-lg border text-left flex flex-col justify-between transition-all",
+                                  regTier === 'FREE' ? "border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500" : "border-slate-200 hover:bg-slate-50"
+                                )}
+                              >
+                                <div>
+                                  <span className="block text-xs font-bold text-slate-700">Free Tier</span>
+                                  <span className="text-[10px] text-slate-500 block leading-tight mt-1">Standard directory listing and search index entry</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-slate-500 mt-2">FREE</span>
+                              </button>
+                              
+                              <button
+                                type="button"
+                                onClick={() => setRegTier('PREMIUM')}
+                                className={cn(
+                                  "p-3 rounded-lg border text-left flex flex-col justify-between transition-all",
+                                  regTier === 'PREMIUM' ? "border-emerald-500 bg-emerald-50/55 ring-1 ring-emerald-500" : "border-slate-200 hover:bg-slate-50"
+                                )}
+                              >
+                                <div>
+                                  <span className="block text-xs font-bold text-slate-750 flex items-center gap-1">
+                                    Premium Verified <Sparkles className="w-3 h-3 text-emerald-500 inline shrink-0" />
+                                  </span>
+                                  <span className="text-[10px] text-slate-500 block leading-tight mt-1">Get verified badge and unlock top rankings & images</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-emerald-600 mt-2">R199 / month</span>
+                              </button>
+                            </div>
+
+                            {regTier === 'PREMIUM' && (
+                              <div className="bg-emerald-50/30 border border-emerald-100 rounded-xl p-3.5 space-y-3 mt-2 text-xs text-slate-705" id="premium-documents-notice">
+                                <p className="font-semibold text-emerald-800 text-[11px] flex items-center shrink-0">
+                                  📂 Premium Verification Document Submission Form
+                                </p>
+                                <p className="text-[10.5px] leading-relaxed text-slate-600">
+                                  To unlock premium verified features, you must submit documents verifying your legal status. <strong>Admin approval is required.</strong> No user gets automatic premium.
+                                </p>
+                                <div className="space-y-1.5 text-[10px] text-slate-600 bg-white p-2.5 rounded-lg border border-slate-105 shadow-2xs font-mono">
+                                  <p className="font-bold text-slate-700">Required Documents:</p>
+                                  <p>✓ Identity Document (ID/Passport)</p>
+                                  <p>✓ CIPC Business Registration Document</p>
+                                  <p>✓ SARS Tax Clearance Document</p>
+                                  <p>✓ Business Bank Account Proof</p>
+                                  <span className="text-slate-400">✓ Optional signage, office, showroom pics</span>
+                                </div>
+                                
+                                <div className="flex items-start space-x-2 pt-1">
+                                  <input 
+                                    type="checkbox" 
+                                    id="agree-premium-debt" 
+                                    required 
+                                    className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5 cursor-pointer shadow-none" 
+                                  />
+                                  <label htmlFor="agree-premium-debt" className="text-[10px] leading-normal text-slate-650 cursor-pointer font-medium selection:bg-transparent">
+                                    I agree to the R199 per month debit agreement. This is a secure month-to-month, no contract arrangement.
+                                  </label>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const subject = encodeURIComponent("BizSearch24 Premium Verification Request - " + (adminUsername || "[Email]"));
+                                    const bodyText = encodeURIComponent(
+                                      "Hi BizSearch24 Support,\n\n" +
+                                      "I am registering for the Premium Verified Tier (R199/pm, month-to-month, no contracts).\n\n" +
+                                      "Please find attached my legal verification documents:\n" +
+                                      "1. Identity Document\n" +
+                                      "2. CIPC Business Registration Document\n" +
+                                      "3. SARS Document\n" +
+                                      "4. Business Bank Account Proof\n" +
+                                      "5. [Optional] Business signage or vehicle photos\n\n" +
+                                      "My Registered Account Email: " + (adminUsername || "") + "\n" +
+                                      "Business Trading Name: \n" +
+                                      "Contact Phone: \n\n" +
+                                      "I hereby agree to the R199 per month debit (month-to-month, cancel anytime).\n" +
+                                      "I understand my account will remain as a free-tier user until the administrators verify these files and switch on my Premium Verified Status in the dashboard.\n\n" +
+                                      "Thank you!"
+                                    );
+                                    window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
+                                  }}
+                                  className="w-full py-2 bg-slate-900 hover:bg-slate-950 text-white font-bold text-[10.5px] rounded-lg transition-all text-center block border-0 cursor-pointer"
+                                >
+                                  📧 Open Default Email Client to Submit Documents
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </>
                     )}
 
@@ -4040,6 +4310,116 @@ export default function Bizsearch24Home() {
                             </h3>
                             <p className="text-slate-500 text-xs mt-1">Manage your account details and directory presentation</p>
                           </div>
+
+                          {/* DYNAMIC SUBSCRIPTION TIER STATUS CARD */}
+                          <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4.5 space-y-3" id="profile-membership-card">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[10px] uppercase tracking-wider font-mono font-bold text-slate-500">Your Membership Tier</span>
+                              {userProfile?.tier === 'PREMIUM' ? (
+                                <span className="px-2.5 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300 flex items-center gap-1 animate-pulse">
+                                  💎 PREMIUM VERIFIED
+                                </span>
+                              ) : userProfile?.selectedTier === 'PREMIUM' ? (
+                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300 flex items-center gap-1">
+                                  ⌛ PENDING VERIFICATION
+                                </span>
+                              ) : (
+                                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-200 text-slate-700">
+                                  Standard Free Listing
+                                </span>
+                              )}
+                            </div>
+
+                            {userProfile?.tier === 'PREMIUM' ? (
+                              <div className="bg-emerald-500/10 border border-emerald-300/40 rounded-xl p-3.5 space-y-1.5" id="premium-activated-info">
+                                <h4 className="font-bold text-emerald-900 text-xs flex items-center gap-1">
+                                  🏆 Enterprise Trust Badge Active
+                                </h4>
+                                <p className="text-[11px] text-emerald-800 leading-relaxed">
+                                  Your business has been verified as legal and authentic by the BizSearch24 administrative board. Your listing is boosted and consumer caution flags have been removed.
+                                </p>
+                              </div>
+                            ) : userProfile?.selectedTier === 'PREMIUM' ? (
+                              <div className="bg-amber-500/10 border border-amber-300/40 rounded-xl p-3.5 space-y-3" id="premium-pending-info">
+                                <h4 className="font-bold text-amber-900 text-xs">
+                                  📂 Verification Document Review in Progress
+                                </h4>
+                                <p className="text-[11px] text-amber-805 leading-relaxed font-sans">
+                                  To complete verification and unlock the verified badge, email your company documents directly to our reviewers at <strong className="underline">mailbizsearch24@gmail.com</strong>.
+                                </p>
+                                <div className="bg-white/80 p-2.5 rounded-lg border border-amber-200 text-[10px] text-slate-650 font-mono space-y-1">
+                                  <p className="font-bold text-slate-800 block">Required verification files:</p>
+                                  <p>✓ Legal Identity Document (ID / Passport)</p>
+                                  <p>✓ CIPC Business Registry Certificate</p>
+                                  <p>✓ SARS Tax Clearance Letter</p>
+                                  <p>✓ Proof of active Business Bank Account</p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const subject = encodeURIComponent("BizSearch24 Verification Document Submission - " + (userProfile?.email || ""));
+                                    const bodyText = encodeURIComponent(
+                                      "Hi BizSearch24 Administration,\n\n" +
+                                      "Please find attached my legal verification documents to complete Premium verification for my account: " + (userProfile?.email || "") + "\n\n" +
+                                      "Required documents included:\n" +
+                                      "1. Identity Document\n" +
+                                      "2. CIPC Business Certificate\n" +
+                                      "3. SARS Tax clearance letter\n" +
+                                      "4. Business account confirmation proof\n\n" +
+                                      "I agree to the month-to-month R199 per month debit. No contracts.\n\n" +
+                                      "Trading Business Name: " + (userProfile?.businessName || "") + "\n" +
+                                      "Registration Number: " + (userProfile?.companyRegNumber || "") + "\n" +
+                                      "Contact Phone: " + (userProfile?.phone || "") + "\n\n" +
+                                      "Thank you!"
+                                    );
+                                    window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
+                                  }}
+                                  className="py-1.5 px-3.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[10.5px] rounded-lg transition-all flex items-center justify-center space-x-1 border-0 cursor-pointer w-fit"
+                                >
+                                  <Mail className="w-3 h-3 text-amber-100" />
+                                  <span>Submit Verification Documents Now</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="bg-slate-100 border border-slate-200 rounded-xl p-3.5 space-y-3" id="premium-upgrade-info">
+                                <h4 className="font-bold text-slate-800 text-xs">
+                                  🔒 Increase Visibility & Build Customer Trust
+                                </h4>
+                                <p className="text-[11px] text-slate-600 leading-relaxed font-sans">
+                                  Standard free accounts trigger a red unverified banner to consumer clients. Upgrade to Premium Verified for <strong>R199 per month</strong> to lock-in premium rankings, visual gallery upload permissions, and customer assurance.
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    try {
+                                      const subject = encodeURIComponent("BizSearch24 Upgrade Request to Premium Tier - " + (userProfile?.email || ""));
+                                      const bodyText = encodeURIComponent(
+                                        "Hi BizSearch24 Team,\n\n" +
+                                        "I would like to request upgrade to the Premium Verified Tier (R199/pm).\n\n" +
+                                        "Please find attached my company verification files:\n" +
+                                        "1. ID Copy\n" +
+                                        "2. CIPC Document\n" +
+                                        "3. SARS Document\n" +
+                                        "4. Business Account Proof\n\n" +
+                                        "Account Login Email: " + (userProfile?.email || "") + "\n" +
+                                        "Trading Business Name: " + (userProfile?.businessName || "") + "\n\n" +
+                                        "Thank you!"
+                                      );
+                                      window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
+
+                                      if (userProfile) {
+                                        setUserProfile({ ...userProfile, selectedTier: 'PREMIUM' });
+                                      }
+                                    } catch (err) {}
+                                  }}
+                                  className="py-1.5 px-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10.5px] rounded-lg transition-all flex items-center justify-center space-x-1 border-0 cursor-pointer w-fit"
+                                >
+                                  <Sparkles className="w-3 h-3 text-emerald-100" />
+                                  <span>Request Upgrade (Submit Documents)</span>
+                                </button>
+                              </div>
+                            )}
+                          </div>
                           
                           {profileSaveMsg && (
                             <div className="bg-indigo-50 text-indigo-700 px-4 py-2 border-l-4 border-indigo-600 text-xs">
@@ -4491,7 +4871,9 @@ export default function Bizsearch24Home() {
                                 businessName: userFormBusinessName,
                                 vatNumber: userFormVatNumber,
                                 maxListings: Number(userFormMaxListings),
-                                isBanned: userFormIsBanned
+                                isBanned: userFormIsBanned,
+                                selectedTier: userFormSelectedTier,
+                                tier: userFormTier
                               };
 
                               let res;
@@ -4617,6 +4999,29 @@ export default function Bizsearch24Home() {
                               </label>
                             </div>
 
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-slate-100 pt-3" id="admin-user-tier-controls">
+                              <label className="block">
+                                <span className="font-bold text-slate-800">User Requested Tier (Selected during Sign-up)</span>
+                                <select value={userFormSelectedTier} onChange={e => setUserFormSelectedTier(e.target.value as 'FREE' | 'PREMIUM')} className="mt-1 block w-full rounded-md border-slate-250 p-2 bg-white outline-none text-xs">
+                                  <option value="FREE">FREE (Standard)</option>
+                                  <option value="PREMIUM">PREMIUM (R199/pm request)</option>
+                                </select>
+                              </label>
+                              <label className="block">
+                                <span className="font-bold text-emerald-800 flex items-center">
+                                  <Sparkles className="w-3.5 h-3.5 mr-1 text-emerald-500 animate-pulse" />
+                                  Active Premium Level Status (Admin Authorized Override Only)
+                                </span>
+                                <select value={userFormTier} onChange={e => setUserFormTier(e.target.value as 'FREE' | 'PREMIUM')} className="mt-1 block w-full rounded-md border-slate-250 p-2 bg-white font-extrabold text-emerald-800 border-emerald-300 focus:border-emerald-500 focus:ring-emerald-500 outline-none text-xs">
+                                  <option value="FREE">FREE (Unverified Tier)</option>
+                                  <option value="PREMIUM">PREMIUM (Authorized Verified Upgrade)</option>
+                                </select>
+                                <p className="text-[10px] text-slate-450 mt-1">
+                                  As the Admin, set this to PREMIUM only after you have verified their uploaded CIPC, ID, SARS, and Proof of bank account documents sent to your mail server.
+                                </p>
+                              </label>
+                            </div>
+
                             <div className="bg-slate-55/60 p-4 rounded-xl space-y-4 border border-slate-200">
                               <h5 className="font-extrabold text-slate-800 uppercase tracking-wide text-[10px] font-mono">Governance & Privacy Overrides</h5>
                               <div className="flex flex-wrap gap-6 text-[11px]">
@@ -4696,6 +5101,19 @@ export default function Bizsearch24Home() {
                                               Active
                                             </span>
                                           )}
+                                          {user.tier === 'PREMIUM' ? (
+                                            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 uppercase block tracking-wider font-sans w-fit mt-1 flex items-center gap-0.5 animate-pulse">
+                                              💎 Premium
+                                            </span>
+                                          ) : user.selectedTier === 'PREMIUM' ? (
+                                            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold bg-amber-100 text-amber-800 border border-amber-300 uppercase block tracking-wider font-sans w-fit mt-1 flex items-center gap-0.5">
+                                              ⌛ Reviewing
+                                            </span>
+                                          ) : (
+                                            <span className="px-1.5 py-0.5 rounded text-[8.5px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 uppercase block w-fit mt-1 font-sans">
+                                              Free Tier
+                                            </span>
+                                          )}
                                         </td>
                                         <td className="p-2 font-mono leading-tight whitespace-normal break-all">
                                           <p className="font-extrabold text-slate-900">{user.email}</p>
@@ -4763,6 +5181,8 @@ export default function Bizsearch24Home() {
                                                 setUserFormVatNumber(user.vatNumber || '');
                                                 setUserFormMaxListings(user.maxListings || 1);
                                                 setUserFormIsBanned(user.isBanned || false);
+                                                setUserFormSelectedTier(user.selectedTier || 'FREE');
+                                                setUserFormTier(user.tier || 'FREE');
                                                 setAdminUserFormMsg('');
                                               }}
                                               className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-md font-bold text-[9px] block w-24 text-center cursor-pointer uppercase select-none transition-all"
@@ -5750,7 +6170,8 @@ export default function Bizsearch24Home() {
             <span className="text-white font-bold block" id="footer-links-lbl">Quick Links</span>
             <ul className="space-y-1.5 text-slate-450" id="footer-links-items">
               <li><button onClick={() => { setActiveTab('explore'); setViewingPage(null); setActivePageSlug(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">Explore Directory</button></li>
-              <li><button onClick={() => { setActiveTab('submit'); setViewingPage(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">Submit Your Business</button></li>
+              <li><button onClick={() => { setActiveTab('submit'); setViewingPage(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">Create ad</button></li>
+              <li><button onClick={() => { setActiveTab('services'); setViewingPage(null); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">BizSearch24 Services</button></li>
               <li><button onClick={() => { setActiveTab('pages'); if (seoPages.length > 0 && !viewingPage) handlePageSelect(seoPages[0].slug); else window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="text-left hover:text-white transition-colors cursor-pointer">SEO Local Guides</button></li>
               <li className="pt-0.5"><Link href="/news" className="text-left hover:text-emerald-400 text-emerald-500 font-bold block transition-colors">SA News Feed</Link></li>
               <li><Link href="/sitemap" className="text-left hover:text-white transition-colors block">Visual Sitemap</Link></li>

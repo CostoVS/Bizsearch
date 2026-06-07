@@ -4,7 +4,7 @@ import prisma from '@/lib/prisma';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, selectedTier } = await req.json();
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     const userAgent = req.headers.get('user-agent') || 'unknown';
 
@@ -29,6 +29,8 @@ export async function POST(req: NextRequest) {
         passwordHash,
         lastKnownIp: ip,
         userAgent,
+        selectedTier: selectedTier || 'FREE',
+        tier: 'FREE', // Always default actual active tier to FREE until Admin approves
         role: (isFirstUser || email === process.env.ADMIN_USERNAME || email === 'admin@bizsearch24.co.za') ? 'ADMIN' : 'USER'
       }
     });
