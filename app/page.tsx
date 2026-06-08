@@ -10,6 +10,7 @@ import {
   Mail, 
   Globe, 
   CheckCircle2, 
+  Check,
   ShieldAlert, 
   HeartPulse, 
   Briefcase, 
@@ -302,7 +303,7 @@ export default function Bizsearch24Home() {
   const [analyticsSearchFilter, setAnalyticsSearchFilter] = React.useState<string>('');
 
   // Admin section sub-tab switcher
-  const [adminActiveSubTab, setAdminActiveSubTab] = React.useState<'listings' | 'ads' | 'analytics' | 'users' | 'feed' | 'moderation'>('listings');
+  const [adminActiveSubTab, setAdminActiveSubTab] = React.useState<'listings' | 'ads' | 'analytics' | 'users' | 'feed' | 'moderation' | 'profile'>('listings');
 
   // Moderation state
   const [moderationLogs, setModerationLogs] = React.useState<any[]>([]);
@@ -352,7 +353,21 @@ export default function Bizsearch24Home() {
 
   // User Profile
   const [userProfile, setUserProfile] = React.useState<any>(null);
+  const [copiedPostId, setCopiedPostId] = React.useState<string | null>(null);
+  const [activeShareMenuId, setActiveShareMenuId] = React.useState<string | null>(null);
   const [profileSaveMsg, setProfileSaveMsg] = React.useState('');
+
+  const formatDisplayName = (name: string) => {
+    if (!name) return "BizSearch Member";
+    if (name.includes('@')) {
+      if (name.toLowerCase().startsWith('admin')) {
+        return "BizSearch24 Administrator";
+      }
+      const part = name.split('@')[0];
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    }
+    return name;
+  };
   const [newProfilePassword, setNewProfilePassword] = React.useState('');
   const [isConfiguringProfile2FA, setIsConfiguringProfile2FA] = React.useState<boolean>(false);
   const [profileMfaToken, setProfileMfaToken] = React.useState<string>('');
@@ -2260,11 +2275,11 @@ export default function Bizsearch24Home() {
                        <div className="p-5 flex items-center justify-between border-b border-slate-50">
                          <div className="flex items-center space-x-3">
                            <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-800 font-bold">
-                             {post.businessName.charAt(0)}
+                             {formatDisplayName(post.businessName).charAt(0)}
                            </div>
                            <div>
                              <h3 className="font-bold text-slate-900 leading-tight flex items-center gap-1.5">
-                               {post.businessName}
+                               {formatDisplayName(post.businessName)}
                                {post.tier === 'premium' && (
                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                                )}
@@ -2312,6 +2327,45 @@ export default function Bizsearch24Home() {
                            >
                              <Heart className="w-4 h-4 text-slate-400 group-hover:text-red-500 group-hover:fill-red-500 transition-colors" />
                              <span className="text-xs font-bold text-slate-600 group-hover:text-red-600">{post.likes || 0}</span>
+                           </button>
+
+                           <button
+                             onClick={async () => {
+                               const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/?post=${post.id}` : '';
+                               if (navigator.share) {
+                                 try {
+                                   await navigator.share({
+                                     title: 'Check out this post from ' + formatDisplayName(post.businessName),
+                                     text: post.caption,
+                                     url: shareUrl,
+                                   });
+                                 } catch (err) {
+                                   if (navigator.clipboard) {
+                                     await navigator.clipboard.writeText(shareUrl);
+                                     setCopiedPostId(post.id);
+                                     setTimeout(() => setCopiedPostId(null), 2000);
+                                   }
+                                 }
+                               } else if (navigator.clipboard) {
+                                 await navigator.clipboard.writeText(shareUrl);
+                                 setCopiedPostId(post.id);
+                                 setTimeout(() => setCopiedPostId(null), 2000);
+                               }
+                             }}
+                             className="group flex items-center space-x-1.5 bg-slate-50 hover:bg-indigo-50 px-3 py-1.5 rounded-full transition-all border border-slate-100 hover:border-indigo-100 cursor-pointer"
+                             title="Share this Post"
+                           >
+                             {copiedPostId === post.id ? (
+                               <>
+                                 <Check className="w-4 h-4 text-emerald-600" />
+                                 <span className="text-xs font-bold text-emerald-600">Copied!</span>
+                               </>
+                             ) : (
+                               <>
+                                 <Share2 className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition-colors" />
+                                 <span className="text-xs font-bold text-slate-600 group-hover:text-indigo-600">Share</span>
+                               </>
+                             )}
                            </button>
                          </div>
                        </div>
@@ -4046,42 +4100,53 @@ export default function Bizsearch24Home() {
                         >
                           Bad Actors
                         </button>
+                        <button
+                          type="button"
+                          id="admin-subtab-analytics"
+                          onClick={() => {
+                            setAdminActiveSubTab('analytics');
+                            fetchAnalyticsLogs();
+                          }}
+                          className={cn(
+                            "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            adminActiveSubTab === 'analytics' 
+                              ? "border-emerald-600 text-emerald-700 font-extrabold" 
+                              : "border-transparent text-slate-400 hover:text-slate-650"
+                          )}
+                        >
+                          Traffic Stats
+                        </button>
+                        <button
+                          type="button"
+                          id="admin-subtab-users"
+                          onClick={() => {
+                            setAdminActiveSubTab('users');
+                            fetchAdminUsers();
+                          }}
+                          className={cn(
+                            "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
+                            adminActiveSubTab === 'users' 
+                              ? "border-emerald-600 text-emerald-700 font-extrabold" 
+                              : "border-transparent text-slate-400 hover:text-slate-650"
+                          )}
+                        >
+                          Users Manager
+                        </button>
                       </>
                     )}
                     <button
                       type="button"
-                      id="admin-subtab-analytics"
-                      onClick={() => {
-                        setAdminActiveSubTab('analytics');
-                        if (userRole === 'ADMIN') fetchAnalyticsLogs();
-                      }}
+                      id="admin-subtab-profile"
+                      onClick={() => setAdminActiveSubTab('profile')}
                       className={cn(
                         "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
-                        adminActiveSubTab === 'analytics' 
+                        adminActiveSubTab === 'profile' 
                           ? "border-emerald-600 text-emerald-700 font-extrabold" 
                           : "border-transparent text-slate-400 hover:text-slate-650"
                       )}
                     >
-                      {userRole === 'ADMIN' ? 'Traffic Stats' : 'Analytics'}
+                      Profile & Settings
                     </button>
-                    {userRole === 'ADMIN' && (
-                      <button
-                        type="button"
-                        id="admin-subtab-users"
-                        onClick={() => {
-                          setAdminActiveSubTab('users');
-                          fetchAdminUsers();
-                        }}
-                        className={cn(
-                          "px-4 py-2.5 text-[10px] sm:text-xs font-black uppercase tracking-wider transition-all duration-200 border-b-2 cursor-pointer",
-                          adminActiveSubTab === 'users' 
-                            ? "border-emerald-600 text-emerald-700 font-extrabold" 
-                            : "border-transparent text-slate-400 hover:text-slate-650"
-                        )}
-                      >
-                        Users Manager
-                      </button>
-                    )}
                   </div>
 
                   {adminActiveSubTab === 'listings' && (
@@ -5166,10 +5231,9 @@ export default function Bizsearch24Home() {
                     </div>
                   )}
 
-                  {/* SUPREME VISITOR TELEMETRY TRAFFIC FEED DASHBOARD OR USER PROFILE */}
-                  {adminActiveSubTab === 'analytics' && (
+                  {/* SUPREME VISITOR TELEMETRY TRAFFIC FEED DASHBOARD */}
+                  {adminActiveSubTab === 'analytics' && userRole === 'ADMIN' && (
                     <div className="space-y-8" id="admin-analytics-profile-tab-panel">
-                      {userRole === 'ADMIN' ? (
                         <>
                           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                             {/* Sessions Count */}
@@ -5410,8 +5474,12 @@ export default function Bizsearch24Home() {
                             )}
                           </div>
                         </>
-                      ) : (
-                        <div className="bg-white border rounded-2xl p-6 shadow-xs max-w-2xl mx-auto space-y-6 text-sm">
+                    </div>
+                  )}
+
+                  {/* USER AND ADMIN PROFILE CONFIGURATION TAB PANEL */}
+                  {adminActiveSubTab === 'profile' && (
+                    <div className="bg-white border border-slate-205 rounded-2xl p-6 shadow-xs max-w-2xl mx-auto space-y-6 text-sm" id="admin-profile-config-tab-panel">
                           <div className="border-b pb-4">
                             <h3 className="text-xl font-bold flex items-center gap-2">
                               <Settings className="w-5 h-5 text-indigo-600" />
@@ -5574,6 +5642,7 @@ export default function Bizsearch24Home() {
                                  if (data.success) {
                                    setProfileSaveMsg('Profile saved securely.');
                                    setNewProfilePassword(''); // Clear password field on success
+                                   await fetchAdminData();
                                  } else {
                                    setProfileSaveMsg(data.message || 'Failed to save profile');
                                  }
@@ -5601,11 +5670,11 @@ export default function Bizsearch24Home() {
                              <div className="grid grid-cols-2 gap-4">
                                <label className="block">
                                  <span className="font-bold text-slate-700 text-xs">First Name</span>
-                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.firstName || ''} onChange={e => setUserProfile({...userProfile, firstName: e.target.value})} />
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.firstName || ''} onChange={e => setUserProfile({...userProfile, firstName: e.target.value})} />
                                </label>
                                <label className="block">
                                  <span className="font-bold text-slate-700 text-xs">Last Name</span>
-                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.lastName || ''} onChange={e => setUserProfile({...userProfile, lastName: e.target.value})} />
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.lastName || ''} onChange={e => setUserProfile({...userProfile, lastName: e.target.value})} />
                                </label>
                              </div>
 
@@ -5623,11 +5692,11 @@ export default function Bizsearch24Home() {
                              <div className="grid grid-cols-2 gap-4">
                                <label className="block">
                                  <span className="font-bold text-slate-700 text-xs">Identity Number / Passport</span>
-                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.idNumber || ''} onChange={e => setUserProfile({...userProfile, idNumber: e.target.value})} />
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.idNumber || ''} onChange={e => setUserProfile({...userProfile, idNumber: e.target.value})} />
                                </label>
                                <label className="block">
                                  <span className="font-bold text-slate-700 text-xs">Full Billing Address</span>
-                                 <input required type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.billingAddress || ''} onChange={e => setUserProfile({...userProfile, billingAddress: e.target.value})} />
+                                 <input type="text" className="mt-1 block w-full rounded-md border-slate-200 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 p-2 border outline-none text-xs" value={userProfile?.billingAddress || ''} onChange={e => setUserProfile({...userProfile, billingAddress: e.target.value})} />
                                </label>
                              </div>
 
@@ -5889,8 +5958,6 @@ export default function Bizsearch24Home() {
                             </div>
                           )}
                         </div>
-                      )}
-                    </div>
                   )}
 
                   {adminActiveSubTab === 'users' && (
@@ -6559,7 +6626,7 @@ export default function Bizsearch24Home() {
                                  feedPosts.map(post => (
                                    <tr key={post.id} className="hover:bg-slate-50 transition-colors">
                                      <td className="p-3">
-                                       <div className="font-bold text-slate-900">{post.businessName}</div>
+                                       <div className="font-bold text-slate-900">{formatDisplayName(post.businessName)}</div>
                                        <div className="text-[10px] text-slate-400 uppercase font-bold">{post.tier} Account</div>
                                      </td>
                                      <td className="p-3 max-w-xs truncate text-slate-600 font-medium">{post.caption}</td>
@@ -6601,7 +6668,7 @@ export default function Bizsearch24Home() {
                              feedPosts.map(post => (
                                <div key={post.id} className="p-4 space-y-2 bg-white">
                                   <div className="flex justify-between items-start">
-                                     <div className="font-bold text-slate-900 text-xs truncate max-w-[200px]">{post.businessName}</div>
+                                     <div className="font-bold text-slate-900 text-xs truncate max-w-[200px]">{formatDisplayName(post.businessName)}</div>
                                      <div className="text-[9px] text-slate-400 font-mono italic">{new Date(post.createdAt).toLocaleDateString()}</div>
                                   </div>
                                   <div className="text-xs text-slate-600 line-clamp-2 leading-relaxed bg-slate-50/50 p-2 rounded border border-slate-100 italic text-[11px]">&quot;{post.caption}&quot;</div>
