@@ -16,10 +16,26 @@ export default function AuthPage() {
   const [username, setUsername] = useState("unknown");
   const [tier, setTier] = useState<"free" | "premium">("premium");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setHasError(true);
-    setErrorMessage(isLogin ? "Invalid credentials." : "Email already in use.");
+    setHasError(false);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, username: email, password: password })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        setHasError(true);
+        setErrorMessage(data.message || "Invalid credentials.");
+      } else {
+        window.location.href = data.require2FA ? "/verify-2fa?userId=" + data.userId : "/dashboard";
+      }
+    } catch (err) {
+      setHasError(true);
+      setErrorMessage("Network error.");
+    }
   };
 
   return (
