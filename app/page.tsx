@@ -1127,6 +1127,30 @@ export default function Bizsearch24Home() {
     setEditListingError('');
   };
 
+  const handleDeleteListing = async (listing: BusinessListing) => {
+    if (!confirm(`Are you absolutely sure you want to permanently delete "${listing.name}" from the directory? This action is irreversible.`)) return;
+    try {
+      const res = await fetch('/api/listings/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${adminToken}`
+        },
+        body: JSON.stringify({ id: listing.id, action: 'delete' })
+      });
+      const data = await res.json();
+      if (data.success) {
+        fetchAdminData();
+        fetchListings();
+      } else {
+        alert(data.message || 'Error deleting business listing.');
+      }
+    } catch (err) {
+      console.error('Delete listing error:', err);
+      alert('Network failure attempting to delete listing.');
+    }
+  };
+
   const saveEditedListing = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingListing) return;
@@ -1307,11 +1331,30 @@ export default function Bizsearch24Home() {
   }, []);
 
   React.useEffect(() => {
-    if (isAdminLoggedIn) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      fetchSlugMappings();
-    }
-  }, [isAdminLoggedIn, fetchSlugMappings]);
+    const handleOpenAd = (e: any) => {
+      const ad = e.detail;
+      // Try to find a matching listing if targetUrl is an ID or slug
+      let matched = listings.find(l => l.id === ad.id || (ad.targetUrl && ad.targetUrl.includes(l.slug)));
+      if (!matched) {
+        // Create a dummy listing from ad data so the modal has something to show
+        matched = {
+          id: ad.id,
+          name: ad.title,
+          description: ad.description || 'Verified Sponsor Advertisement',
+          category: 'sponsored',
+          address: ad.city || 'National',
+          province: ad.province || 'South Africa',
+          city: ad.city || '',
+          suburb: ad.suburb || '',
+          phone: '', email: '', website: ad.targetUrl || '',
+          verified: true, image: ad.imageUrl, tags: ['sponsored'], views: 0, slug: ad.id, createdAt: ad.createdAt
+        };
+      }
+      setSelectedListing(matched);
+    };
+    window.addEventListener('open-ad-details', handleOpenAd);
+    return () => window.removeEventListener('open-ad-details', handleOpenAd);
+  }, [listings]);
 
   const handleSaveSlugMapping = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1936,8 +1979,24 @@ export default function Bizsearch24Home() {
               id="site-wide-premium-banner"
             >
               <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/5 rounded-full blur-2xl pointer-events-none" />
-              <div className="flex items-center space-x-3.5 z-10 w-full sm:w-auto">
-                <div className="w-14 h-10 relative bg-slate-50 rounded-lg overflow-hidden shrink-0 border border-amber-200/50 shadow-xs">
+              <div 
+                onClick={() => {
+                  setSelectedListing({
+                    id: activeTopBanner.id,
+                    name: activeTopBanner.title,
+                    description: activeTopBanner.description || 'Verified Sponsor Advertisement',
+                    category: 'sponsored',
+                    address: activeTopBanner.city || 'National',
+                    province: activeTopBanner.province || 'South Africa',
+                    city: activeTopBanner.city || '',
+                    suburb: activeTopBanner.suburb || '',
+                    phone: '', email: '', website: activeTopBanner.targetUrl || '',
+                    verified: true, image: activeTopBanner.imageUrl, tags: ['sponsored'], views: 0, slug: activeTopBanner.id, createdAt: activeTopBanner.createdAt
+                  });
+                }}
+                className="flex items-center space-x-3.5 z-10 w-full sm:w-auto cursor-pointer group/banner"
+              >
+                <div className="w-14 h-10 relative bg-slate-50 rounded-lg overflow-hidden shrink-0 border border-amber-200/50 shadow-xs group-hover/banner:scale-105 transition-transform animate-pulse-slow">
                   <img
                     src={activeTopBanner.imageUrl}
                     alt={activeTopBanner.title}
@@ -1961,7 +2020,7 @@ export default function Bizsearch24Home() {
                       </span>
                     )}
                   </div>
-                  <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 leading-snug mt-1">
+                  <h4 className="font-extrabold text-xs sm:text-sm text-slate-900 leading-snug mt-1 group-hover/banner:text-emerald-700 transition-colors">
                     {activeTopBanner.title}
                   </h4>
                   {activeTopBanner.description && (
@@ -1973,20 +2032,30 @@ export default function Bizsearch24Home() {
               </div>
 
               <div className="flex items-center space-x-3 w-full sm:w-auto justify-end z-10">
-                <a
-                  href={activeTopBanner.targetUrl || '#'}
-                  target={activeTopBanner.targetUrl && activeTopBanner.targetUrl.startsWith('http') ? '_blank' : '_self'}
-                  rel="noreferrer"
+                <button
+                  type="button"
                   onClick={() => {
                     trackVisitActivity('click', 'site-side-banner', {
                       adClick: { id: activeTopBanner.id, title: activeTopBanner.title }
+                    });
+                    setSelectedListing({
+                      id: activeTopBanner.id,
+                      name: activeTopBanner.title,
+                      description: activeTopBanner.description || 'Verified Sponsor Advertisement',
+                      category: 'sponsored',
+                      address: activeTopBanner.city || 'National',
+                      province: activeTopBanner.province || 'South Africa',
+                      city: activeTopBanner.city || '',
+                      suburb: activeTopBanner.suburb || '',
+                      phone: '', email: '', website: activeTopBanner.targetUrl || '',
+                      verified: true, image: activeTopBanner.imageUrl, tags: ['sponsored'], views: 0, slug: activeTopBanner.id, createdAt: activeTopBanner.createdAt
                     });
                   }}
                   className="py-1.5 px-4 bg-slate-950 hover:bg-slate-800 text-white text-xs font-bold rounded-lg transition-all shadow-xs shrink-0 flex items-center space-x-1 border-0 outline-none cursor-pointer"
                 >
                   <span>Call Promotion</span>
                   <ExternalLink className="w-3 h-3 ml-0.5" />
-                </a>
+                </button>
                 <button
                   onClick={() => setDismissedBannerId(activeTopBanner.id)}
                   className="p-1 hover:bg-slate-100 rounded-full text-slate-450 hover:text-slate-650 transition-colors shrink-0 cursor-pointer border-0 outline-none bg-transparent"
@@ -7221,20 +7290,84 @@ export default function Bizsearch24Home() {
 
                 {/* Admin Direct Power Action Edit Button */}
                 {isAdminLoggedIn && (
-                  <div className="border-t border-slate-100 pt-4 flex justify-end" id="det-admin-edit-action-container">
+                  <div className="border-t border-slate-100 pt-4 flex flex-wrap gap-2 justify-end" id="det-admin-edit-action-container">
+                    {/* Approve/Verify Toggle */}
                     <button
                       type="button"
-                      id="det-admin-edit-action-btn"
+                      onClick={() => handleVerifyBusiness(selectedListing.id, selectedListing.verified)}
+                      className={cn(
+                        "px-3 py-2 font-bold rounded-xl text-xs flex items-center space-x-1 border shadow-xs transition-all cursor-pointer",
+                        selectedListing.verified 
+                          ? "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-200" 
+                          : "bg-emerald-600 text-white border-transparent hover:bg-emerald-700"
+                      )}
+                    >
+                      <ShieldCheck className="w-4 h-4" />
+                      <span>{selectedListing.verified ? 'Revoke Verification' : 'Verify & Approve'}</span>
+                    </button>
+
+                    {/* Edit Option */}
+                    <button
+                      type="button"
                       onClick={() => {
                         const listingToEdit = { ...selectedListing };
                         setSelectedListing(null);
                         startEditListing(listingToEdit);
                       }}
-                      className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs flex items-center space-x-1.5 shadow-md transition-all cursor-pointer"
+                      className="px-3 py-2 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl text-xs flex items-center space-x-1 shadow-xs transition-all cursor-pointer border border-transparent"
                     >
                       <Edit3 className="w-4 h-4" />
-                      <span>Admin: Edit Listing Details</span>
+                      <span>Edit</span>
                     </button>
+
+                    {/* Delete Option */}
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (confirm(`Are you absolutely sure you want to permanently delete "${selectedListing.name}"?`)) {
+                          await handleDeleteBusiness(selectedListing.id);
+                          setSelectedListing(null);
+                        }
+                      }}
+                      className="px-3 py-2 bg-red-105 hover:bg-red-200 text-red-800 font-bold rounded-xl text-xs flex items-center space-x-1 shadow-xs transition-all cursor-pointer border border-red-200"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      <span>Delete Listing</span>
+                    </button>
+
+                    {/* Ban User Option */}
+                    {selectedListing.userId && selectedListing.userId !== 'admin_placeholder' && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          if (confirm(`Do you want to BAN the owner of this listing permanently? This will ban their account and restrict their access.`)) {
+                            try {
+                              const res = await fetch(`/api/user/admin`, {
+                                method: 'PUT',
+                                headers: {
+                                  'Content-Type': 'application/json',
+                                  'Authorization': `Bearer ${adminToken}`
+                                },
+                                body: JSON.stringify({ id: selectedListing.userId, isBanned: true })
+                              });
+                              const data = await res.json();
+                              if (data.success) {
+                                alert('User has been banned.');
+                                fetchAdminData();
+                              } else {
+                                alert(data.message || 'Error banning user account.');
+                              }
+                            } catch (e) {
+                              alert('Connectivity error banning user.');
+                            }
+                          }
+                        }}
+                        className="px-3 py-2 bg-slate-950 hover:bg-red-950 hover:text-red-350 text-white font-bold rounded-xl text-xs flex items-center space-x-1 shadow-xs transition-all cursor-pointer border border-slate-700"
+                      >
+                        <X className="w-4 h-4" />
+                        <span>Ban User</span>
+                      </button>
+                    )}
                   </div>
                 )}
 

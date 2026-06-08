@@ -2,12 +2,35 @@
 
 import * as React from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
-import { Sparkles, Mail, MessageSquare, Globe, ChevronDown, ChevronUp, Check, ShieldCheck } from 'lucide-react';
+import { Sparkles, Mail, MessageSquare, Globe, ChevronDown, ChevronUp, Check, ShieldCheck, X } from 'lucide-react';
 
 export default function StickyAdBanner() {
   const [ads, setAds] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [isMinimized, setIsMinimized] = React.useState<boolean>(false);
+  const [isDismissed, setIsDismissed] = React.useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('sticky_ad_dismissed') === 'true';
+    }
+    return false;
+  });
+
+  // Scroll listener to automatically minimize banner when user scrolls down
+  React.useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 120) {
+        setIsMinimized(true);
+      }
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const handleDismiss = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsDismissed(true);
+    sessionStorage.setItem('sticky_ad_dismissed', 'true');
+  };
 
   const pathname = usePathname() || '';
   const searchParams = useSearchParams();
@@ -96,8 +119,8 @@ export default function StickyAdBanner() {
     return matched[0].ad;
   }, [ads, pathname, searchParams]);
 
-  // If loading or no active ad matches the location criteria, display absolutely nothing
-  if (loading || !activeAd) {
+  // If loading or no active ad matches the location criteria, or if dismissed, display absolutely nothing
+  if (loading || !activeAd || isDismissed) {
     return null;
   }
 
@@ -110,100 +133,141 @@ export default function StickyAdBanner() {
     `Hi BizSearch24 Support,\n\nI want to buy or place premium advertisements on your platform directory in my area/location.\n\nPlease share options!\n\nInterested in space context ID: ${activeAd.id}`
   )}`;
 
+  const handleOpenDetails = () => {
+    const event = new CustomEvent('open-ad-details', { detail: activeAd });
+    window.dispatchEvent(event);
+  };
+
   if (isMinimized) {
     return (
       <div 
-        className="bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 border-b border-emerald-500/30 text-white text-[11px] py-1 px-4 flex items-center justify-between shadow-md transition-all sticky top-0 z-50 select-none animate-fade-in"
-        id="sticky-ad-banner-minimized"
+        className="bg-slate-950 border-b border-emerald-500/30 text-white cursor-pointer hover:bg-slate-900 transition-all sticky top-0 z-[100]"
+        onClick={() => setIsMinimized(false)}
+        id="sticky-ad-minimized"
       >
-        <div className="flex items-center space-x-2 truncate">
-          <span className="flex h-2 w-2 relative shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-405 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-550"></span>
-          </span>
-          <span className="font-extrabold uppercase tracking-widest text-emerald-400 font-mono text-[9.5px]">SPONSOR BANNER:</span>
-          <span className="font-medium text-slate-205 truncate">{activeAd.title}</span>
+        <div className="max-w-7xl mx-auto px-4 py-1.5 flex items-center justify-between">
+          <div className="flex items-center space-x-2 truncate">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shrink-0" />
+            <span className="text-[10px] sm:text-xs font-bold tracking-tight text-slate-300 truncate">
+              SPONSORED OFFER: {activeAd.title} - <span className="text-emerald-400 font-normal">Expand for info</span>
+            </span>
+          </div>
+          <div className="flex items-center space-x-2 shrink-0">
+            <button 
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsMinimized(false);
+              }}
+              className="px-2 py-0.5 text-[9px] font-black uppercase rounded bg-emerald-600 hover:bg-emerald-500 text-white transition-colors cursor-pointer select-none"
+            >
+              Expand
+            </button>
+            <button 
+              type="button"
+              onClick={handleDismiss} 
+              className="p-1 hover:text-red-400 text-slate-400 transition-colors cursor-pointer outline-none flex items-center justify-center rounded-lg hover:bg-white/10"
+              title="Close permanently"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
         </div>
-        <button 
-          onClick={() => setIsMinimized(false)}
-          className="text-xs font-bold text-emerald-400 hover:text-emerald-300 transition-colors uppercase font-mono px-2 py-0.5 border border-emerald-500/20 rounded-md bg-white/5 hover:bg-white/10 flex items-center gap-1 cursor-pointer outline-none shrink-0"
-        >
-          <span>Expand Offer</span>
-          <ChevronDown className="w-3.5 h-3.5" />
-        </button>
       </div>
     );
   }
 
   return (
     <div 
-      className="bg-slate-950 border-b-2 border-emerald-555 text-white shadow-xl transition-all sticky top-0 z-[100] animate-fade-in"
+      className="bg-slate-950 border-b-2 border-emerald-500 text-white shadow-xl transition-all sticky top-0 z-[100] animate-fade-in"
       id="sticky-ad-banner-expanded"
     >
-      <div className="max-w-7xl mx-auto p-3.5 sm:p-5 relative" id="sticky-ad-banner-inner">
-        {/* Minimize Button */}
-        <button 
-          onClick={() => setIsMinimized(true)}
-          className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/5 focus:outline-none"
-          title="Minimize advertisement"
-          aria-label="Minimize"
-        >
-          <ChevronUp className="w-4 h-4" />
-        </button>
+      <div className="max-w-7xl mx-auto p-2 sm:p-3 relative" id="sticky-ad-banner-inner">
+        {/* Toggle & Close Controls */}
+        <div className="absolute right-2 top-2 flex items-center space-x-1.5 z-20" id="sticky-controls">
+          <button 
+            type="button"
+            onClick={() => setIsMinimized(true)}
+            className="p-1.5 bg-white/10 hover:bg-white/15 text-slate-300 hover:text-white rounded-lg transition-colors cursor-pointer outline-none flex items-center justify-center shrink-0"
+            title="Minimize banner"
+          >
+            <ChevronUp className="w-4 h-4" />
+          </button>
+          <button 
+            type="button"
+            onClick={handleDismiss}
+            className="p-1.5 bg-red-500/20 hover:bg-red-500/35 text-red-350 hover:text-red-100 rounded-lg transition-colors cursor-pointer outline-none flex items-center justify-center shrink-0"
+            title="Close permanently"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
 
-        {/* Banner Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center pr-8">
+        {/* Banner Content Grid - Compact Flex layout */}
+        <div className="flex flex-col md:flex-row items-center justify-between gap-4 pr-8 pt-1.5 pb-1 md:py-0" id="banner-content-flex">
           
-          {/* Main Info Box */}
-          <div className="lg:col-span-8 space-y-2">
-            <div className="flex items-center gap-2 flex-wrap" id="banner-badges-wrapper">
-              <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider border border-emerald-500/30">
-                <Sparkles className="w-3 h-3 animate-pulse" />
-                {activeAd.badge ? `${activeAd.badge.replace('-', ' ').toUpperCase()} SPONSOR` : 'SPECIAL PARTNER AD'}
-              </span>
-              <span className="inline-flex bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold">
-                📍 Location Scope: {activeAd.placement.toUpperCase()} {activeAd.province && `(${activeAd.province.toUpperCase()})` || ''}
-              </span>
-            </div>
-
-            <h2 className="text-sm sm:text-base font-black tracking-tight text-white leading-tight">
-              {activeAd.title}
-            </h2>
-
-            {activeAd.description && (
-              <p className="text-slate-305 text-xs font-normal leading-relaxed max-w-full">
-                {activeAd.description}
-              </p>
+          {/* Main Info Box - Click to open details */}
+          <div 
+            onClick={handleOpenDetails}
+            className="flex items-center space-x-3.5 flex-1 cursor-pointer group/info w-full"
+          >
+            {activeAd.imageUrl && (
+              <div className="w-14 h-10 relative bg-slate-800 rounded-lg overflow-hidden shrink-0 border border-emerald-500/15 shadow-xs group-hover/info:scale-105 transition-transform">
+                <img 
+                  src={activeAd.imageUrl} 
+                  alt={activeAd.title} 
+                  referrerPolicy="no-referrer"
+                  className="w-full h-full object-cover" 
+                />
+              </div>
             )}
+            <div className="space-y-0.5 flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap" id="banner-badges-wrapper">
+                <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-400 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider border border-emerald-500/20">
+                  <Sparkles className="w-2.5 h-2.5 animate-pulse" />
+                  {activeAd.badge ? `${activeAd.badge.replace('-', ' ').toUpperCase()} SPONSOR` : 'SPECIAL PARTNER AD'}
+                </span>
+                <span className="inline-flex bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-full text-[9px] font-mono font-semibold">
+                  Scope: {activeAd.placement.toUpperCase()} {activeAd.province && `(${activeAd.province.toUpperCase()})` || ''}
+                </span>
+              </div>
+              <h2 className="text-xs sm:text-sm font-black tracking-tight text-white leading-tight group-hover/info:text-emerald-400 transition-colors truncate">
+                {activeAd.title}
+              </h2>
+              {activeAd.description && (
+                <p className="text-slate-400 text-[11px] font-normal leading-normal max-w-full truncate md:line-clamp-2 md:whitespace-normal line-clamp-1">
+                  {activeAd.description}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Action CTAs */}
-          <div className="lg:col-span-4 flex flex-col sm:flex-row gap-2.5 w-full justify-end" id="banner-action-ctas">
-            <a 
-              href={activeTargetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-700/20 hover:scale-[1.01] hover:shadow-emerald-700/30 outline-none border-0 group cursor-pointer text-center"
+          <div className="flex flex-row gap-2 w-full md:w-auto shrink-0 justify-end" id="banner-action-ctas">
+            <button 
+              type="button"
+              onClick={handleOpenDetails}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs py-2 px-3 sm:px-4 rounded-lg transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-700/10 active:scale-[0.99] outline-none border-0 cursor-pointer flex-1 md:flex-initial"
             >
-              <Sparkles className="w-4 h-4 text-emerald-100 group-hover:scale-110 transition-transform" />
+              <Sparkles className="w-3.5 h-3.5 text-emerald-100" />
               <span>Claim Promo Offer</span>
-            </a>
+            </button>
 
             <a 
               href={advertiseContactUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/30 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition-all flex items-center justify-center space-x-1.5 hover:scale-[1.01] outline-none text-center"
+              className="bg-white/10 hover:bg-white/15 border border-white/20 hover:border-white/30 text-white font-extrabold text-xs py-2 px-3 sm:px-4 rounded-lg transition-all flex items-center justify-center space-x-1.5 hover:scale-[1.01] outline-none text-center flex-1 md:flex-initial"
             >
               <MessageSquare className="w-3.5 h-3.5 text-slate-300" />
-              <span>Advertise Here</span>
+              <span>Advertise</span>
             </a>
           </div>
 
         </div>
 
         {/* Dynamic Ad Footer */}
-        <div className="mt-3 pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center sm:justify-between text-[11px] text-slate-400 gap-2 font-mono" id="banner-footer-panel">
+        <div className="mt-2.5 pt-2.5 border-t border-slate-800/80 hidden md:flex flex-col sm:flex-row sm:items-center sm:justify-between text-[10.5px] text-slate-400 gap-2 font-mono" id="banner-footer-panel">
           <div className="flex items-center space-x-1.5 flex-wrap">
             <span className="font-extrabold text-slate-200">✨ Targeted Listing Spot:</span>
             <span className="text-emerald-400">Secure regional placements in minutes. Reach prime local consumer buyers.</span>

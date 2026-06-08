@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
         userAgent,
         selectedTier: selectedTier || 'FREE',
         tier: 'FREE', // Always default actual active tier to FREE until Admin approves
-        role: (isFirstUser || email === process.env.ADMIN_USERNAME || email === 'admin@bizsearch24.co.za') ? 'ADMIN' : 'USER'
+        role: (isFirstUser || email === process.env.ADMIN_USERNAME || email === 'admin@bizsearch24.co.za' || email.toLowerCase() === 'nicholauscostochetty@gmail.com') ? 'ADMIN' : 'USER'
       }
     });
 

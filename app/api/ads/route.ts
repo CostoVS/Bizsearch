@@ -184,7 +184,17 @@ export async function DELETE(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    let id = searchParams.get('id');
+
+    // Robust check for ID in body if not in query (for mobile/certain fetch patterns)
+    if (!id) {
+      try {
+        const body = await req.json();
+        id = body?.id;
+      } catch (e) {
+        // Body might not be JSON or empty
+      }
+    }
 
     if (!id) {
       return NextResponse.json({ success: false, message: 'Missing advertisement ID.' }, { status: 400 });
