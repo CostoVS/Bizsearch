@@ -26,6 +26,7 @@ import {
   Trash2, 
   Edit3, 
   Eye, 
+  EyeOff,
   FileText, 
   ChevronRight, 
   Menu, 
@@ -163,6 +164,7 @@ export default function Bizsearch24Home() {
   // Admin authentication states
   const [adminUsername, setAdminUsername] = React.useState<string>('');
   const [adminPassword, setAdminPassword] = React.useState<string>('');
+  const [showLoginPassword, setShowLoginPassword] = React.useState<boolean>(false);
   const [regUsername, setRegUsername] = React.useState<string>('');
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState<boolean>(false);
   const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState<string>('');
@@ -3846,15 +3848,30 @@ export default function Bizsearch24Home() {
                                   </button>
                                 )}
                               </label>
-                              <input
-                                id="input-login-password"
-                                type="password"
-                                required
-                                placeholder="••••••••"
-                                value={adminPassword}
-                                onChange={(e) => setAdminPassword(e.target.value)}
-                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
-                              />
+                              <div className="relative">
+                                <input
+                                  id="input-login-password"
+                                  type={showLoginPassword ? "text" : "password"}
+                                  required
+                                  placeholder="••••••••"
+                                  value={adminPassword}
+                                  onChange={(e) => setAdminPassword(e.target.value)}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => setShowLoginPassword(!showLoginPassword)}
+                                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none"
+                                  id="toggle-login-password-visibility"
+                                  aria-label="Toggle password visibility"
+                                >
+                                  {showLoginPassword ? (
+                                    <EyeOff className="w-4 h-4 text-slate-400" />
+                                  ) : (
+                                    <Eye className="w-4 h-4 text-slate-400" />
+                                  )}
+                                </button>
+                              </div>
                             </div>
 
                             {isRegistering && (
