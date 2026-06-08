@@ -298,6 +298,8 @@ export default function Bizsearch24Home() {
   // Visitor traffic logs and tracking states
   const [visitorLogs, setVisitorLogs] = React.useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = React.useState<boolean>(false);
+  const [analyticsTimeFilter, setAnalyticsTimeFilter] = React.useState<'all' | 'today' | 'yesterday' | 'week' | 'month' | 'year'>('all');
+  const [analyticsSearchFilter, setAnalyticsSearchFilter] = React.useState<string>('');
 
   // Admin section sub-tab switcher
   const [adminActiveSubTab, setAdminActiveSubTab] = React.useState<'listings' | 'ads' | 'analytics' | 'users' | 'feed' | 'moderation'>('listings');
@@ -531,6 +533,103 @@ export default function Bizsearch24Home() {
       setAnalyticsLoading(false);
     }
   }, [adminToken]);
+
+  // Full History Analytics CSV exporter
+  const downloadAnalyticsCSV = React.useCallback(async () => {
+    if (!adminToken) return;
+    setAnalyticsLoading(true);
+    try {
+      const res = await fetch('/api/analytics?limit=all', {
+        headers: { 'Authorization': `Bearer ${adminToken}` }
+      });
+      const data = await res.json();
+      if (!data.success || !data.logs || data.logs.length === 0) {
+        alert('No logger entries available to download.');
+        return;
+      }
+      
+      const headers = ['Session ID', 'Timestamp', 'Date', 'Time', 'Visitor IP', 'Device', 'Referrer Source', 'Landing Path/Page', 'Search Queries', 'Clicks & Activities'];
+      const rows = data.logs.map((l: any) => [
+        l.id,
+        l.timestamp,
+        new Date(l.timestamp).toLocaleDateString('en-ZA'),
+        new Date(l.timestamp).toLocaleTimeString('en-ZA'),
+        l.ip,
+        l.deviceType || 'Desktop',
+        l.referrer || 'Direct Land',
+        l.path || '/',
+        l.searches && l.searches.length > 0 ? l.searches.join('; ') : 'None',
+        l.clicks && l.clicks.length > 0 ? l.clicks.map((c: any) => c.elementText).join('; ') : 'None'
+      ]);
+
+      const csvContent = [
+        headers.map(h => `"${h.replace(/"/g, '""')}"`).join(','),
+        ...rows.map((r: string[]) => r.map(v => `"${(v || '').replace(/"/g, '""')}"`).join(','))
+      ].join('\n');
+      
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.setAttribute("href", url);
+      link.setAttribute("download", `BizSearch24_Visitor_Logs_${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error('Error compiling csv download:', err);
+      alert('Could not export CSV data.');
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, [adminToken]);
+
+  // Client-side analytics logs filters
+  const filteredLogs = React.useMemo(() => {
+    return visitorLogs.filter(log => {
+      // 1. Time interval filtering
+      const logDate = new Date(log.timestamp);
+      const now = new Date();
+      
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const yesterdayStart = new Date(todayStart);
+      yesterdayStart.setDate(yesterdayStart.getDate() - 1);
+      
+      const oneWeekAgo = new Date(now);
+      oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+      
+      const oneMonthAgo = new Date(now);
+      oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+      
+      const oneYearAgo = new Date(now);
+      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+      
+      if (analyticsTimeFilter === 'today') {
+        if (logDate < todayStart) return false;
+      } else if (analyticsTimeFilter === 'yesterday') {
+        if (logDate < yesterdayStart || logDate >= todayStart) return false;
+      } else if (analyticsTimeFilter === 'week') {
+        if (logDate < oneWeekAgo) return false;
+      } else if (analyticsTimeFilter === 'month') {
+        if (logDate < oneMonthAgo) return false;
+      } else if (analyticsTimeFilter === 'year') {
+        if (logDate < oneYearAgo) return false;
+      }
+
+      // 2. Text free query filtering (Visitor IP, Path, Referrer, searches and click events text)
+      if (analyticsSearchFilter) {
+        const query = analyticsSearchFilter.toLowerCase().trim();
+        const ipMatch = log.ip?.toLowerCase().includes(query);
+        const pathMatch = (log.path || '').toLowerCase().includes(query);
+        const referrerMatch = (log.referrer || '').toLowerCase().includes(query);
+        const searchQueryMatch = log.searches && log.searches.some((s: string) => s.toLowerCase().includes(query));
+        const clicksMatch = log.clicks && log.clicks.some((c: any) => c.elementText?.toLowerCase().includes(query));
+        
+        return ipMatch || pathMatch || referrerMatch || searchQueryMatch || clicksMatch;
+      }
+      
+      return true;
+    });
+  }, [visitorLogs, analyticsTimeFilter, analyticsSearchFilter]);
 
   // Administrative users load helper
   const fetchAdminUsers = React.useCallback(async () => {
@@ -1556,31 +1655,31 @@ export default function Bizsearch24Home() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
           {adsArray.map(ad => (
-            <a
+            <button
               id={`sponsored-ad-card-${ad.id}`}
-              href={ad.targetUrl || '#'}
-              target={ad.targetUrl && ad.targetUrl.startsWith('http') ? '_blank' : '_self'}
-              rel="noreferrer"
               key={ad.id}
-              onClick={() => {
+              onClick={(e) => {
+                e.preventDefault();
+                const event = new CustomEvent('open-ad-details', { detail: ad });
+                window.dispatchEvent(event);
                 trackVisitActivity('click', '/explore', {
                   adClick: { id: ad.id, title: ad.title }
                 });
               }}
-              className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-xs hover:shadow-md hover:border-amber-300 transition-all flex h-28 group relative"
+              className="bg-white border border-slate-100 rounded-xl overflow-hidden shadow-xs hover:shadow-md hover:border-amber-300 transition-all flex h-28 group relative text-left w-full cursor-pointer"
             >
               <div className="w-1/3 relative bg-slate-50 shrink-0">
                 <img
                   src={ad.imageUrl}
                   alt={ad.title}
                   referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300"
+                  className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-300 pointer-events-none"
                 />
                 <div className="absolute bottom-1 right-1 bg-black/75 px-1 py-0.5 rounded text-[8px] font-bold uppercase text-white font-mono tracking-wider">
                   SPONSOR
                 </div>
               </div>
-              <div className="p-3.5 flex flex-col justify-between w-2/3">
+              <div className="p-3.5 flex flex-col justify-between w-2/3 pointer-events-none">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between gap-1.5">
                     <h4 className="font-extrabold text-sm text-slate-900 line-clamp-1 group-hover:text-amber-800 transition-colors">
@@ -1602,7 +1701,7 @@ export default function Bizsearch24Home() {
                   </p>
                 </div>
               </div>
-            </a>
+            </button>
           ))}
         </div>
       </div>
@@ -5043,7 +5142,19 @@ export default function Bizsearch24Home() {
                                      <span className="font-bold text-emerald-700">{ad.position || 'sidebar'}</span>
                                   </div>
                                   <div className="flex justify-between items-center text-[10px] font-bold">
-                                     <button onClick={() => { if(confirm('Delete ad?')) fetch('/api/ads', { method: 'DELETE', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${adminToken}` }, body: JSON.stringify({ id: ad.id }) }).then(r => { if(r.ok) fetchAdminData(); }) }} className="text-red-600">Delete</button>
+                                     <button onClick={async () => {
+                                       if(confirm('Delete ad campaign permanently?')) {
+                                         const res = await fetch(`/api/ads?id=${ad.id}`, {
+                                           method: 'DELETE',
+                                           headers: { 'Authorization': `Bearer ${adminToken}` }
+                                         });
+                                         const data = await res.json();
+                                         if (data.success) {
+                                           fetchAdminAds();
+                                           fetchAdsList();
+                                         }
+                                       }
+                                     }} className="text-red-600 font-bold uppercase tracking-wide text-[10px] cursor-pointer">Delete</button>
                                      <div className={cn("w-2 h-2 rounded-full", ad.active ? "bg-emerald-500 animate-pulse" : "bg-slate-300")} />
                                   </div>
                                </div>
@@ -5125,19 +5236,83 @@ export default function Bizsearch24Home() {
 
                           {/* Live Stream Traffic Table logs */}
                           <div className="bg-white border border-slate-200 rounded-2xl p-5 md:p-6 shadow-xs space-y-4 font-sans text-xs">
-                            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                              <h3 className="font-extrabold text-slate-900 text-sm">Real-time Visitor Tracker Audit Feed</h3>
-                              <button
-                                onClick={fetchAnalyticsLogs}
-                                className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-705 px-2.5 py-1 rounded-md cursor-pointer"
-                              >
-                                Refresh Feed
-                              </button>
+                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                              <div>
+                                <h3 className="font-extrabold text-slate-900 text-sm">Real-time Visitor Logs & Audits</h3>
+                                <p className="text-[11px] text-slate-500 mt-0.5">Showing {filteredLogs.length} of {visitorLogs.length} tracking sessions</p>
+                              </div>
+                              <div className="flex items-center space-x-2 w-full sm:w-auto self-stretch sm:self-auto shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={fetchAnalyticsLogs}
+                                  className="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-2 rounded-xl cursor-pointer font-semibold transition-colors flex items-center space-x-1 shrink-0"
+                                >
+                                  <span>🔄 Refresh Logs</span>
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={downloadAnalyticsCSV}
+                                  className="text-[11px] bg-emerald-600 hover:bg-emerald-750 text-white px-3 py-2 rounded-xl cursor-pointer font-extrabold transition-colors flex items-center space-x-1.5 shrink-0"
+                                >
+                                  <span>📥 Download History (CSV)</span>
+                                </button>
+                              </div>
                             </div>
+
+                            {/* Filters row bar */}
+                            <div className="grid grid-cols-1 md:grid-cols-12 gap-3" id="analytics-filter-bar">
+                              <div className="md:col-span-4 shrink-0 relative">
+                                <input
+                                  type="text"
+                                  value={analyticsSearchFilter}
+                                  onChange={(e) => setAnalyticsSearchFilter(e.target.value)}
+                                  placeholder="Filter by IP, Page, Search keyword..."
+                                  className="w-full text-xs px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-emerald-500 bg-slate-50"
+                                />
+                                {analyticsSearchFilter && (
+                                  <button
+                                    type="button"
+                                    onClick={() => setAnalyticsSearchFilter('')}
+                                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 font-bold font-mono text-[10px]"
+                                  >
+                                    ✕
+                                  </button>
+                                )}
+                              </div>
+                              
+                              <div className="md:col-span-8 flex flex-wrap items-center gap-1.5 overflow-x-auto select-none" id="analytics-timescale-filter-list">
+                                <span className="text-[10px] font-mono text-slate-400 font-bold uppercase mr-1.5">Intervals:</span>
+                                {([
+                                  { value: 'all', label: 'All History' },
+                                  { value: 'today', label: 'Today' },
+                                  { value: 'yesterday', label: 'Yesterday' },
+                                  { value: 'week', label: 'Past Week' },
+                                  { value: 'month', label: 'Past Month' },
+                                  { value: 'year', label: 'Past Year' }
+                                ] as const).map((opt) => (
+                                  <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setAnalyticsTimeFilter(opt.value)}
+                                    className={cn(
+                                      "px-3 py-1.5 rounded-xl text-[10px] font-mono transition-all font-semibold cursor-pointer border",
+                                      analyticsTimeFilter === opt.value
+                                        ? "bg-slate-900 text-white border-slate-900"
+                                        : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                                    )}
+                                  >
+                                    {opt.label}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
                             {analyticsLoading ? (
                               <p className="text-xs text-slate-500 font-mono">Connecting to streaming server...</p>
-                            ) : visitorLogs.length === 0 ? (
-                              <p className="text-xs text-slate-400 font-mono italic text-center py-6">No traffic recorded yet or server-level telemetry disabled.</p>
+                            ) : filteredLogs.length === 0 ? (
+                              <p className="text-xs text-slate-400 font-mono italic text-center py-10 bg-slate-50 rounded-xl" id="analytics-empty-log-state">
+                                No logs match the selected timescale interval or search term filter.
+                              </p>
                             ) : (
                               <div className="border border-slate-100 rounded-xl overflow-hidden" id="analytics-logs-container">
                                 <div className="hidden lg:block overflow-x-auto">
@@ -5154,7 +5329,7 @@ export default function Bizsearch24Home() {
                                     </tr>
                                   </thead>
                                   <tbody>
-                                    {visitorLogs.map(log => (
+                                    {filteredLogs.map(log => (
                                       <tr key={log.id} className="border-b border-slate-50 hover:bg-slate-50/40">
                                         <td className="p-2 text-slate-400 font-mono leading-tight whitespace-nowrap">
                                           {new Date(log.timestamp).toLocaleTimeString()}<br/>
@@ -5208,7 +5383,7 @@ export default function Bizsearch24Home() {
                               </div>
                                 {/* Mobile Traffic Analytics Cards */}
                                 <div className="lg:hidden divide-y divide-slate-100">
-                                   {visitorLogs.map(log => (
+                                   {filteredLogs.map(log => (
                                       <div key={log.id} className="p-4 space-y-2 bg-white">
                                          <div className="flex justify-between items-start">
                                             <div className="text-[10px] font-mono text-slate-400 uppercase leading-tight font-extrabold">

@@ -3,6 +3,7 @@ import speakeasy from 'speakeasy';
 import QRCode from 'qrcode';
 import prisma from '@/lib/prisma';
 import { SignJWT } from 'jose';
+import { restoreMfa, backupMfa } from '@/lib/mfaBackup';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_for_dev_only';
 
@@ -10,21 +11,31 @@ export async function POST(req: NextRequest) {
   try {
     const { userId, action, token: mfaToken } = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!dbUser) {
       return NextResponse.json({ success: false, message: 'Invalid User.' }, { status: 403 });
     }
 
-    if (action === 'generate') {
-      const secret = speakeasy.generateSecret({ name: 'Bizsearch24 (' + user.email + ')' });
-      const qrCode = await QRCode.toDataURL(secret.otpauth_url || '');
-      
-      await prisma.user.update({
-        where: { id: userId },
-        data: { twoFactorSecret: secret.base32 }
-      });
+    const user = await restoreMfa(dbUser);
 
-      return NextResponse.json({ success: true, qrCode, secret: secret.base32 });
+    if (action === 'generate') {
+      let secretBase32 = user.twoFactorSecret;
+      let otpauthUrl = '';
+      if (!secretBase32) {
+        const secret = speakeasy.generateSecret({ name: 'Bizsearch24 (' + user.email + ')' });
+        secretBase32 = secret.base32;
+        otpauthUrl = secret.otpauth_url || '';
+        await prisma.user.update({
+          where: { id: userId },
+          data: { twoFactorSecret: secretBase32 }
+        });
+        backupMfa(user.email, secretBase32, false);
+      } else {
+        otpauthUrl = `otpauth://totp/Bizsearch24%20(${encodeURIComponent(user.email)})?secret=${secretBase32}&issuer=Bizsearch24`;
+      }
+      
+      const qrCode = await QRCode.toDataURL(otpauthUrl);
+      return NextResponse.json({ success: true, qrCode, secret: secretBase32 });
     }
 
     if (action === 'verifyAndEnable') {
@@ -42,6 +53,8 @@ export async function POST(req: NextRequest) {
         where: { id: userId },
         data: { twoFactorEnabled: true }
       });
+
+      backupMfa(user.email, user.twoFactorSecret, true);
 
       const token = await new SignJWT({ id: user.id, email: user.email, role: user.role })
         .setProtectedHeader({ alg: 'HS256' })

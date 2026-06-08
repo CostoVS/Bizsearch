@@ -28,7 +28,27 @@ export default function NewsPage() {
   const [selectedCategory, setSelectedCategory] = React.useState<string>('All');
   const [timeframe, setTimeframe] = React.useState<'24h'|'all'>('24h');
   const [selectedArticle, setSelectedArticle] = React.useState<NewsArticle | null>(null);
+  const [selectedAd, setSelectedAd] = React.useState<BizAd | null>(null);
   const [lastFetchedAt, setLastFetchedAt] = React.useState<string>('');
+
+  // Client activities event logger helper
+  const trackVisitActivity = React.useCallback(async (act: string, pth: string, ext: any = {}) => {
+    try {
+      await fetch('/api/analytics', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: act,
+          path: pth,
+          referrer: typeof document !== 'undefined' ? document.referrer : '',
+          search: ext.search || '',
+          clickPayload: ext.clickPayload || null
+        })
+      });
+    } catch (e) {
+      // Fail silently for non-intrusive logging
+    }
+  }, []);
   
   // Administrative states
   const [isAdmin, setIsAdmin] = React.useState<boolean>(() => {
@@ -93,6 +113,30 @@ export default function NewsPage() {
     }, 0);
     return () => clearTimeout(timer);
   }, [fetchNewsFeed]);
+
+  // View, Search and Open-Ad listeners
+  React.useEffect(() => {
+    // Track page views on News page initialization
+    trackVisitActivity('view', '/news');
+
+    // Subscribe to click-throughs from global widgets (e.g. StickyAdBanner)
+    const handleOpenAd = (e: any) => {
+      if (e?.detail) {
+        setSelectedAd(e.detail);
+      }
+    };
+    window.addEventListener('open-ad-details', handleOpenAd);
+    return () => window.removeEventListener('open-ad-details', handleOpenAd);
+  }, [trackVisitActivity]);
+
+  // Debounced search term logging
+  React.useEffect(() => {
+    if (!searchQuery) return;
+    const delayDebounceFn = setTimeout(() => {
+      trackVisitActivity('search', '/news', { search: searchQuery });
+    }, 1200);
+    return () => clearTimeout(delayDebounceFn);
+  }, [searchQuery, trackVisitActivity]);
 
   const handleForceNewsFetch = () => {
     setRefreshing(true);
@@ -279,7 +323,10 @@ export default function NewsPage() {
               {availableCategories.map(cat => (
                 <button
                   key={cat as string}
-                  onClick={() => setSelectedCategory(cat as string)}
+                  onClick={() => {
+                    setSelectedCategory(cat as string);
+                    trackVisitActivity('filter', '/news', { clickPayload: { text: `Filtered by category: "${cat}"` } });
+                  }}
                   className={cn(
                     "px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all border",
                     selectedCategory === cat 
@@ -382,15 +429,17 @@ export default function NewsPage() {
                         </div>
                       </div>
                       
-                      <a
-                        href={ad.targetUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/10 text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5"
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAd(ad);
+                          trackVisitActivity('click', '/news', { clickPayload: { text: `Clicked top ad: "${ad.title}"` } });
+                        }}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-6 py-3 rounded-xl transition-all shadow-md shadow-emerald-600/10 text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5 cursor-pointer"
                       >
-                        <span>Visit Site</span>
+                        <span>Visit Site / details</span>
                         <ExternalLink className="w-4 h-4" />
-                      </a>
+                      </button>
                     </motion.div>
                   ))}
                 </div>
@@ -506,16 +555,20 @@ export default function NewsPage() {
                               </div>
                             </div>
                             
-                            <a
+                            <button
                               id={`partner-ad-anchor-${index}`}
-                              href={injectedAd.targetUrl}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-emerald-600/10 text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (injectedAd) {
+                                  setSelectedAd(injectedAd);
+                                  trackVisitActivity('click', '/news', { clickPayload: { text: `Clicked middle ad: "${injectedAd.title}"` } });
+                                }
+                              }}
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition-all shadow-md shadow-emerald-600/10 text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5 cursor-pointer"
                             >
                               <span>Explore Business</span>
                               <ExternalLink className="w-3 h-3" />
-                            </a>
+                            </button>
                           </>
                         ) : (
                           // Default gorgeous community directory ad hook if no sponsor campaigns are registered yet
@@ -572,15 +625,17 @@ export default function NewsPage() {
                         </div>
                       </div>
                       
-                      <a
-                        href={ad.targetUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5"
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAd(ad);
+                          trackVisitActivity('click', '/news', { clickPayload: { text: `Clicked bottom ad: "${ad.title}"` } });
+                        }}
+                        className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all text-center shrink-0 max-sm:w-full flex items-center justify-center space-x-1.5 cursor-pointer"
                       >
                         <span>Learn More</span>
                         <ExternalLink className="w-3.5 h-3.5" />
-                      </a>
+                      </button>
                     </motion.div>
                   ))}
                 </div>
@@ -647,15 +702,17 @@ export default function NewsPage() {
                         </p>
                       </div>
 
-                      <a 
+                      <button 
                         id={`sidebar-ad-action-btn-${ad.id}`}
-                        href={ad.targetUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="block w-full bg-slate-900 text-white text-center py-2.5 rounded-xl font-semibold text-xs hover:bg-slate-800 transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedAd(ad);
+                          trackVisitActivity('click', '/news', { clickPayload: { text: `Clicked sidebar ad: "${ad.title}"` } });
+                        }}
+                        className="block w-full bg-slate-900 text-white text-center py-2.5 rounded-xl font-semibold text-xs hover:bg-slate-800 transition-colors cursor-pointer"
                       >
                         Visit Partner Portal
-                      </a>
+                      </button>
                     </div>
                   ))
                 ) : (
@@ -783,16 +840,20 @@ export default function NewsPage() {
                                   <h4 className="font-extrabold text-slate-800 text-xs sm:text-sm leading-tight pt-1" id="modal-sponsored-title">{innerAd.title}</h4>
                                   <p className="text-[10px] text-slate-500" id="modal-sponsored-caption">Click to consult our verified business deals in your locality.</p>
                                 </div>
-                                <a
+                                <button
                                   id="modal-ad-click-lnk"
-                                  href={innerAd.targetUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="bg-emerald-600 hover:bg-emerald-750 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shadow-emerald-600/10 shrink-0 text-center max-sm:w-full flex items-center justify-center space-x-1.5"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (innerAd) {
+                                      setSelectedAd(innerAd);
+                                      trackVisitActivity('click', '/news', { clickPayload: { text: `Clicked in-article ad: "${innerAd.title}"` } });
+                                    }
+                                  }}
+                                  className="bg-emerald-600 hover:bg-emerald-750 text-white text-xs font-bold px-4 py-2 rounded-xl transition-all shadow-md shadow-emerald-600/10 shrink-0 text-center max-sm:w-full flex items-center justify-center space-x-1.5 cursor-pointer"
                                 >
                                   <span>Verify Details</span>
                                   <ExternalLink className="w-3 h-3" />
-                                </a>
+                                </button>
                               </>
                             ) : (
                               // Default inside-article call to action
@@ -851,10 +912,111 @@ export default function NewsPage() {
               </motion.div>
             </div>
           </div>
-        )}
-      </AnimatePresence>
-
-      {/* FOOTER */}
+                )}
+              </AnimatePresence>
+        
+              {/* NEW INTERACTIVE SPONSOR DETAILS POPUP */}
+              <AnimatePresence>
+                {selectedAd && (
+                  <div className="fixed inset-0 z-55 overflow-y-auto flex items-center justify-center p-4 sm:p-6" id="ad-glass-modal-panel">
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 0.5 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setSelectedAd(null)}
+                      className="fixed inset-0 bg-black/60 backdrop-blur-xs"
+                      id="backdrop-overlay-ad"
+                    />
+                    
+                    <motion.div 
+                      id="modal-ad-container"
+                      initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: 30 }}
+                      transition={{ type: 'spring', damping: 25, stiffness: 350 }}
+                      className="relative w-full max-w-lg bg-white rounded-3xl overflow-hidden shadow-2xl border border-slate-200 z-10"
+                    >
+                      
+                      {/* Close Button Cross */}
+                      <button
+                        id="modal-ad-close-btn"
+                        onClick={() => setSelectedAd(null)}
+                        className="absolute top-4 right-4 z-20 bg-slate-900/60 hover:bg-slate-900/80 text-white p-2 rounded-full backdrop-blur-md transition-all shadow cursor-pointer opacity-90 hover:opacity-100"
+                      >
+                        <span className="text-sm font-bold block px-1.5 py-0.5">✕</span>
+                      </button>
+        
+                      {/* Cover Banner Photo */}
+                      <div className="h-48 sm:h-56 w-full relative bg-slate-100" id="modal-ad-img-box">
+                        <img 
+                          src={selectedAd.imageUrl} 
+                          alt={selectedAd.title}
+                          className="w-full h-full object-cover"
+                          id="modal-ad-cover-photo"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4 text-white space-y-1" id="modal-ad-title-overlay">
+                          <span className="bg-emerald-600 text-white text-[8px] font-black font-mono uppercase tracking-widest px-2 py-0.5 rounded" id="modal-ad-source-lbl">
+                            {selectedAd.badge && selectedAd.badge !== 'standard' ? selectedAd.badge.replace('-', ' ') : 'PREMIUM VERIFIED AD'}
+                          </span>
+                          <h3 className="text-sm sm:text-base font-extrabold leading-tight text-white m-0" id="modal-ad-title-val">{selectedAd.title}</h3>
+                        </div>
+                      </div>
+        
+                      {/* Detailed Content Details */}
+                      <div className="p-5 sm:p-6 space-y-4" id="modal-ad-details-flow">
+                        <div className="space-y-2">
+                          <span className="text-[10px] font-extrabold font-mono text-emerald-600 uppercase tracking-wider block">Campaign Offer Details</span>
+                          <p className="text-xs sm:text-sm text-slate-650 leading-relaxed text-justify">
+                            {selectedAd.description || 'Verified local South African sponsor promotion on Bizsearch24 SA.'}
+                          </p>
+                        </div>
+        
+                        {/* Geo Targeted Details */}
+                        {(selectedAd.province || selectedAd.city || selectedAd.suburb) && (
+                          <div className="bg-slate-50 rounded-xl p-3 border border-slate-100 text-[11px] text-slate-500 font-mono space-y-1">
+                            <span className="font-bold text-slate-700 uppercase text-[9px] tracking-wider block">Target Matching Area:</span>
+                            <div>Province: {selectedAd.province ? selectedAd.province.replace('-', ' ') : 'National'}</div>
+                            {selectedAd.city && <div>City: {selectedAd.city ? selectedAd.city.replace('-', ' ') : 'All'}</div>}
+                            {selectedAd.suburb && <div>Suburb: {selectedAd.suburb}</div>}
+                          </div>
+                        )}
+        
+                        {/* Metrics */}
+                        <div className="flex justify-between items-center text-[10px] text-slate-400 font-mono border-t border-slate-100 pt-3">
+                          <span>Ad ID: {selectedAd.id}</span>
+                          {selectedAd.createdAt && (
+                            <span>Published: {new Date(selectedAd.createdAt).toLocaleDateString('en-ZA')}</span>
+                          )}
+                        </div>
+        
+                        {/* Main Action Call to Action */}
+                        <div className="pt-2">
+                          <a
+                            id="modal-ad-engage-btn"
+                            href={selectedAd.targetUrl || '#'}
+                            target="_blank"
+                            rel="noreferrer"
+                            onClick={() => {
+                              // Track ad action engagement
+                              trackVisitActivity('click', '/news', {
+                                clickPayload: { text: `Engaged Ad from News Detail Popup: ${selectedAd.title}` }
+                              });
+                              setSelectedAd(null);
+                            }}
+                            className="w-full bg-emerald-600 hover:bg-emerald-750 text-white text-xs font-bold py-3 px-4 rounded-xl transition-all shadow-md shadow-emerald-600/20 text-center flex items-center justify-center space-x-2"
+                          >
+                            <span>Visit Partner Portal / Website</span>
+                            <ExternalLink className="w-4 h-4" />
+                          </a>
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                )}
+              </AnimatePresence>
+        
+              {/* FOOTER */}
       <footer className="bg-slate-900 border-t border-slate-850 py-12 text-slate-400 mt-16 text-xs sm:text-sm" id="news-footer">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8" id="news-footer-layout">
           <div className="space-y-4 md:col-span-2" id="news-footer-brand-col">

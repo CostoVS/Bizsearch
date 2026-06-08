@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import speakeasy from 'speakeasy';
 import prisma from '@/lib/prisma';
 import { SignJWT } from 'jose';
+import { restoreMfa } from '@/lib/mfaBackup';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_for_dev_only';
 
@@ -13,10 +14,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Missing parameters.' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
+    const dbUser = await prisma.user.findUnique({ where: { id: userId } });
+    if (!dbUser) {
       return NextResponse.json({ success: false, message: 'Invalid admin.' }, { status: 403 });
     }
+
+    // Restore 2FA details if wiped
+    const user = await restoreMfa(dbUser);
 
     if (!user.twoFactorEnabled || !user.twoFactorSecret) {
       return NextResponse.json({ success: false, message: '2FA not setup.' }, { status: 400 });

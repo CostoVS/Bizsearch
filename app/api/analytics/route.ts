@@ -22,9 +22,14 @@ export async function GET(req: NextRequest) {
     if (!authorized) {
       return NextResponse.json({ success: false, message: 'Administrative access required.' }, { status: 401 });
     }
+
+    const { searchParams } = new URL(req.url);
+    const limitParam = searchParams.get('limit');
+    const limit = limitParam === 'all' ? undefined : (limitParam ? parseInt(limitParam, 10) : 5000);
+
     const logs = await prisma.visitorLog.findMany({
       orderBy: { visitedAt: 'desc' },
-      take: 1000
+      ...(limit ? { take: limit } : {})
     });
 
     const mappedLogs = logs.map(log => {
