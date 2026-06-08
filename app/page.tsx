@@ -163,6 +163,11 @@ export default function Bizsearch24Home() {
   // Admin authentication states
   const [adminUsername, setAdminUsername] = React.useState<string>('');
   const [adminPassword, setAdminPassword] = React.useState<string>('');
+  const [regUsername, setRegUsername] = React.useState<string>('');
+  const [isForgotPasswordOpen, setIsForgotPasswordOpen] = React.useState<boolean>(false);
+  const [forgotPasswordEmail, setForgotPasswordEmail] = React.useState<string>('');
+  const [forgotPasswordMsg, setForgotPasswordMsg] = React.useState<string>('');
+  const [forgotPasswordLoading, setForgotPasswordLoading] = React.useState<boolean>(false);
   const [adminToken, setAdminToken] = React.useState<string>('');
   const [authError, setAuthError] = React.useState<string>('');
   const [isAuthenticating, setIsAuthenticating] = React.useState<boolean>(false);
@@ -1020,7 +1025,7 @@ export default function Bizsearch24Home() {
     try {
       const endpoint = isRegistering ? '/api/auth/register' : '/api/auth/login';
       const body = isRegistering 
-        ? { email: adminUsername, password: adminPassword, selectedTier: regTier }
+        ? { email: adminUsername, username: regUsername, password: adminPassword, selectedTier: regTier }
         : { email: adminUsername, password: adminPassword };
 
       const res = await fetch(endpoint, {
@@ -3679,226 +3684,339 @@ export default function Bizsearch24Home() {
                     <div className="w-12 h-12 bg-emerald-50 rounded-full flex items-center justify-center mx-auto" id="login-head-icon">
                       <LogIn className="w-6 h-6 text-emerald-600" id="login-set-ico" />
                     </div>
-                    <h1 className="text-xl font-extrabold tracking-tight text-slate-900" id="login-prompt-title">{isRegistering ? 'Create Your Account' : 'Log In to Bizsearch24'}</h1>
+                    <h1 className="text-xl font-extrabold tracking-tight text-slate-900" id="login-prompt-title">
+                      {isForgotPasswordOpen ? 'Reset Password' : (isRegistering ? 'Create Your Account' : 'Log In to Bizsearch24')}
+                    </h1>
                     <p className="text-slate-500 text-xs leading-relaxed" id="login-prompt-desc">
-                      {isRegistering ? 'Sign up to submit business listings, manage your profile, and receive analytics.' : 'Access your dashboard, manage your listings, and view your traffic analytics.'}
+                      {isForgotPasswordOpen 
+                        ? 'Request a secure new temporary password for your account instantly.'
+                        : (isRegistering ? 'Sign up to submit business listings, manage your profile, and receive analytics.' : 'Access your dashboard, manage your listings, and view your traffic analytics.')}
                     </p>
                   </div>
-                  {authError && !show2FA && (
-                    <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-xs flex items-start space-x-2" id="login-error-card">
-                      <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" id="login-error-card-ico" />
-                      <p className="font-semibold text-[11px] leading-normal">{authError}</p>
-                    </div>
-                  )}
-
-                  <form onSubmit={show2FA ? handle2FASubmit : handleAdminLogin} className="space-y-4" id="login-auth-form">
-                    {show2FA ? (
-                      <div className="space-y-4">
-                        {requires2FASetup && qrCodeData && (
-                          <div className="flex flex-col items-center text-center">
-                            <p className="text-xs text-slate-500 mb-2 font-bold text-slate-800">Keep your account safe from hackers!</p>
-                            <p className="text-xs text-slate-500 mb-2">Scan this QR code with Google Authenticator:</p>
-                            <img src={qrCodeData} alt="2FA QR Code" className="mb-2 border p-2 rounded-lg shadow-sm" />
-                            <p className="text-[10px] font-mono text-slate-400 bg-slate-50 p-2 rounded-md mb-2">Secret: {setupSecret}</p>
-                          </div>
-                        )}
-                        <div className="space-y-1">
-                          <label className="text-xs font-bold text-slate-700">Enter Google Authenticator Code</label>
-                          <input
-                            type="text"
-                            value={mfaToken}
-                            onChange={(e) => setMfaToken(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono tracking-widest text-center"
-                            placeholder="000000"
-                            required
-                          />
-                        </div>
+                  
+                  {isForgotPasswordOpen ? (
+                    /* Inline Password Reset Dashboard */
+                    <div className="space-y-4" id="forgot-password-panel">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700">Email Address or Username</label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="nicholauscostochetty@gmail.com or username"
+                          value={forgotPasswordEmail}
+                          onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                          className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                        />
+                        <span className="text-[10px] text-slate-450 leading-relaxed block mt-1">
+                          After submitting, your active password will be replaced by a newly generated temporary password delivered to your registered email inbox.
+                        </span>
                       </div>
-                    ) : (
-                      <>
-                        <div className="space-y-1" id="login-user-f">
-                          <label id="lbl-login-user" className="text-xs font-bold text-slate-700">Email Address</label>
-                          <input
-                            id="input-login-username"
-                            type="email"
-                            required
-                            placeholder="your@email.com"
-                            value={adminUsername}
-                            onChange={(e) => setAdminUsername(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
-                          />
+
+                      {forgotPasswordMsg && (
+                        <div className={cn(
+                          "p-3 rounded-lg text-xs leading-normal font-semibold",
+                          forgotPasswordMsg.toLowerCase().includes('error') || forgotPasswordMsg.toLowerCase().includes('fail')
+                            ? "bg-red-50 text-red-800 border border-red-200"
+                            : "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                        )} id="reset-msg-display-box">
+                          {forgotPasswordMsg}
                         </div>
-
-                        <div className="space-y-1" id="login-pass-f">
-                          <label id="lbl-login-pass" className="text-xs font-bold text-slate-700">Password</label>
-                          <input
-                            id="input-login-password"
-                            type="password"
-                            required
-                            placeholder="••••••••"
-                            value={adminPassword}
-                            onChange={(e) => setAdminPassword(e.target.value)}
-                            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
-                          />
-                        </div>
-
-                        {isRegistering && (
-                          <div className="space-y-3 pt-2" id="registration-tier-selection">
-                            <label className="text-xs font-bold text-slate-800 block">Choose Your Membership Tier</label>
-                            <div className="grid grid-cols-2 gap-2.5">
-                              <button
-                                type="button"
-                                onClick={() => setRegTier('FREE')}
-                                className={cn(
-                                  "p-3 rounded-lg border text-left flex flex-col justify-between transition-all",
-                                  regTier === 'FREE' ? "border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500" : "border-slate-200 hover:bg-slate-50"
-                                )}
-                              >
-                                <div>
-                                  <span className="block text-xs font-bold text-slate-700">Free Tier</span>
-                                  <span className="text-[10px] text-slate-500 block leading-tight mt-1">Standard directory listing and search index entry</span>
-                                </div>
-                                <span className="text-[10px] font-bold text-slate-500 mt-2">FREE</span>
-                              </button>
-                              
-                              <button
-                                type="button"
-                                onClick={() => setRegTier('PREMIUM')}
-                                className={cn(
-                                  "p-3 rounded-lg border text-left flex flex-col justify-between transition-all",
-                                  regTier === 'PREMIUM' ? "border-emerald-500 bg-emerald-50/55 ring-1 ring-emerald-500" : "border-slate-200 hover:bg-slate-50"
-                                )}
-                              >
-                                <div>
-                                  <span className="block text-xs font-bold text-slate-750 flex items-center gap-1">
-                                    Premium Verified <Sparkles className="w-3 h-3 text-emerald-500 inline shrink-0" />
-                                  </span>
-                                  <span className="text-[10px] text-slate-500 block leading-tight mt-1">Get verified badge and unlock top rankings & images</span>
-                                </div>
-                                <span className="text-[10px] font-bold text-emerald-600 mt-2">R199 / month</span>
-                              </button>
-                            </div>
-
-                            {regTier === 'PREMIUM' && (
-                              <div className="bg-emerald-50/30 border border-emerald-100 rounded-xl p-3.5 space-y-3 mt-2 text-xs text-slate-705" id="premium-documents-notice">
-                                <p className="font-semibold text-emerald-800 text-[11px] flex items-center shrink-0">
-                                  📂 Premium Verification Document Submission Form
-                                </p>
-                                <p className="text-[10.5px] leading-relaxed text-slate-600">
-                                  To unlock premium verified features, you must submit documents verifying your legal status. <strong>Admin approval is required.</strong> No user gets automatic premium.
-                                </p>
-                                <div className="space-y-1.5 text-[10px] text-slate-600 bg-white p-2.5 rounded-lg border border-slate-105 shadow-2xs font-mono">
-                                  <p className="font-bold text-slate-700">Required Documents:</p>
-                                  <p>✓ Identity Document (ID/Passport)</p>
-                                  <p>✓ CIPC Business Registration Document</p>
-                                  <p>✓ SARS Tax Clearance Document</p>
-                                  <p>✓ Business Bank Account Proof</p>
-                                  <span className="text-slate-400">✓ Optional signage, office, showroom pics</span>
-                                </div>
-                                
-                                <div className="flex items-start space-x-2 pt-1">
-                                  <input 
-                                    type="checkbox" 
-                                    id="agree-premium-debt" 
-                                    required 
-                                    className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5 cursor-pointer shadow-none" 
-                                  />
-                                  <label htmlFor="agree-premium-debt" className="text-[10px] leading-normal text-slate-650 cursor-pointer font-medium selection:bg-transparent">
-                                    I agree to the R199 per month debit agreement. This is a secure month-to-month, no contract arrangement.
-                                  </label>
-                                </div>
-
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    const subject = encodeURIComponent("BizSearch24 Premium Verification Request - " + (adminUsername || "[Email]"));
-                                    const bodyText = encodeURIComponent(
-                                      "Hi BizSearch24 Support,\n\n" +
-                                      "I am registering for the Premium Verified Tier (R199/pm, month-to-month, no contracts).\n\n" +
-                                      "Please find attached my legal verification documents:\n" +
-                                      "1. Identity Document\n" +
-                                      "2. CIPC Business Registration Document\n" +
-                                      "3. SARS Document\n" +
-                                      "4. Business Bank Account Proof\n" +
-                                      "5. [Optional] Business signage or vehicle photos\n\n" +
-                                      "My Registered Account Email: " + (adminUsername || "") + "\n" +
-                                      "Business Trading Name: \n" +
-                                      "Contact Phone: \n\n" +
-                                      "I hereby agree to the R199 per month debit (month-to-month, cancel anytime).\n" +
-                                      "I understand my account will remain as a free-tier user until the administrators verify these files and switch on my Premium Verified Status in the dashboard.\n\n" +
-                                      "Thank you!"
-                                    );
-                                    window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
-                                  }}
-                                  className="w-full py-2 bg-slate-900 hover:bg-slate-950 text-white font-bold text-[10.5px] rounded-lg transition-all text-center block border-0 cursor-pointer"
-                                >
-                                  📧 Open Default Email Client to Submit Documents
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    <button
-                      id="login-submit-action-btn"
-                      type="submit"
-                      disabled={isAuthenticating}
-                      className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/10 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer"
-                    >
-                      {isAuthenticating ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin text-white" id="login-spin" />
-                          <span>Processing...</span>
-                        </>
-                      ) : (
-                        <span>{show2FA ? 'Verify 2FA' : (isRegistering ? 'Create Account' : 'Sign In')}</span>
                       )}
-                    </button>
 
-                    {show2FA && (
-                      <div className="space-y-4">
-                        {authError && (
-                          <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-xs flex items-start space-x-2">
-                            <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                            <p className="font-semibold text-[11px] leading-normal">{authError}</p>
-                          </div>
-                        )}
-                        
-                        {requires2FASetup && (
-                          <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-[11px] text-slate-600 space-y-2.5">
-                            <p className="font-bold flex items-center gap-1.5 text-slate-700"><ShieldAlert className="w-3.5 h-3.5 text-blue-500" /> Need help setting up?</p>
-                            <ul className="list-decimal pl-4 space-y-1.5 text-slate-600 font-medium">
-                              <li>Download Google Authenticator from your app store.</li>
-                              <li>Open the app and tap the <strong>+ (plus) icon</strong>.</li>
-                              <li>Select <strong>Enter a setup key</strong> (or scan the QR code above).</li>
-                              <li>Paste the <strong>Secret Key</strong> shown above and save it.</li>
-                              <li>Enter the 6-digit code it generates above and click <strong>Verify 2FA</strong>.</li>
-                            </ul>
-                          </div>
-                        )}
-
+                      <div className="flex gap-2 pt-2">
+                        <button
+                          type="button"
+                          disabled={forgotPasswordLoading}
+                          onClick={async () => {
+                            if (!forgotPasswordEmail.trim()) {
+                              setForgotPasswordMsg('Please enter your email address or username first.');
+                              return;
+                            }
+                            setForgotPasswordLoading(true);
+                            setForgotPasswordMsg('');
+                            try {
+                              const res = await fetch('/api/auth/forgot-password', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ identifier: forgotPasswordEmail })
+                              });
+                              const data = await res.json();
+                              setForgotPasswordMsg(data.message || 'Check your email provider/project local sandbox log for instructions.');
+                            } catch (e) {
+                              setForgotPasswordMsg('Error communicating with authentication server.');
+                            } finally {
+                              setForgotPasswordLoading(false);
+                            }
+                          }}
+                          className="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl transition-all cursor-pointer disabled:opacity-50 text-center"
+                        >
+                          {forgotPasswordLoading ? 'Generating Temporary Password...' : 'Send Temporary Password'}
+                        </button>
                         <button
                           type="button"
                           onClick={() => {
-                            setShow2FA(false);
-                            setRequires2FASetup(false);
-                            setMfaToken('');
+                            setIsForgotPasswordOpen(false);
+                            setForgotPasswordMsg('');
                           }}
-                          className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-semibold hover:underline text-center block cursor-pointer"
+                          className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer"
                         >
-                          Cancel Verification
+                          Back
                         </button>
                       </div>
-                    )}
-                  </form>
-                  {!show2FA && (
-                    <div className="mt-4 text-center">
-                      <button type="button" onClick={() => setIsRegistering(!isRegistering)} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
-                        {isRegistering ? 'Already have an account? Sign In' : 'Need an account? Register Now'}
-                      </button>
                     </div>
+                  ) : (
+                    <>
+                      {authError && !show2FA && (
+                        <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-xs flex items-start space-x-2" id="login-error-card">
+                          <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" id="login-error-card-ico" />
+                          <p className="font-semibold text-[11px] leading-normal">{authError}</p>
+                        </div>
+                      )}
+
+                      <form onSubmit={show2FA ? handle2FASubmit : handleAdminLogin} className="space-y-4" id="login-auth-form">
+                        {show2FA ? (
+                          <div className="space-y-4">
+                            {requires2FASetup && qrCodeData && (
+                              <div className="flex flex-col items-center text-center">
+                                <p className="text-xs text-slate-500 mb-2 font-bold text-slate-800">Keep your account safe from hackers!</p>
+                                <p className="text-xs text-slate-500 mb-2">Scan this QR code with Google Authenticator:</p>
+                                <img src={qrCodeData} alt="2FA QR Code" className="mb-2 border p-2 rounded-lg shadow-sm" />
+                                <p className="text-[10px] font-mono text-slate-400 bg-slate-50 p-2 rounded-md mb-2">Secret: {setupSecret}</p>
+                              </div>
+                            )}
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold text-slate-700">Enter Google Authenticator Code</label>
+                              <input
+                                type="text"
+                                value={mfaToken}
+                                onChange={(e) => setMfaToken(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:ring-1 focus:ring-emerald-500 transition-all font-mono tracking-widest text-center"
+                                placeholder="000000"
+                                required
+                              />
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="space-y-1" id="login-user-f">
+                              <label id="lbl-login-user" className="text-xs font-bold text-slate-700">
+                                {isRegistering ? 'Email Address' : 'Email Address or Username'}
+                              </label>
+                              <input
+                                id="input-login-username"
+                                type={isRegistering ? 'email' : 'text'}
+                                required
+                                placeholder={isRegistering ? 'your@email.com' : 'your@email.com or username'}
+                                value={adminUsername}
+                                onChange={(e) => setAdminUsername(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                              />
+                            </div>
+
+                            {isRegistering && (
+                              <div className="space-y-1" id="login-username-custom-f">
+                                <label className="text-xs font-bold text-slate-700 flex justify-between">
+                                  <span>Choose Username (Optional)</span>
+                                  <span className="text-[10px] text-slate-400">Default is email username</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  placeholder="e.g. sweet_bakery_24"
+                                  value={regUsername}
+                                  onChange={(e) => setRegUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ''))}
+                                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                                />
+                              </div>
+                            )}
+
+                            <div className="space-y-1" id="login-pass-f">
+                              <label id="lbl-login-pass" className="text-xs font-bold text-slate-700 flex justify-between items-center w-full">
+                                <span>Password</span>
+                                {!isRegistering && (
+                                  <button 
+                                    type="button" 
+                                    onClick={() => {
+                                      setIsForgotPasswordOpen(true);
+                                      setForgotPasswordMsg('');
+                                      setForgotPasswordEmail(adminUsername); // Auto-populate with whatever was typed
+                                    }}
+                                    className="text-[10px] text-emerald-650 hover:text-emerald-700 hover:underline font-bold border-0 bg-transparent cursor-pointer"
+                                  >
+                                    Forgot Password?
+                                  </button>
+                                )}
+                              </label>
+                              <input
+                                id="input-login-password"
+                                type="password"
+                                required
+                                placeholder="••••••••"
+                                value={adminPassword}
+                                onChange={(e) => setAdminPassword(e.target.value)}
+                                className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 text-xs focus:bg-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all placeholder:text-slate-400"
+                              />
+                            </div>
+
+                            {isRegistering && (
+                              <div className="space-y-3 pt-2" id="registration-tier-selection">
+                                <label className="text-xs font-bold text-slate-800 block">Choose Your Membership Tier</label>
+                                <div className="grid grid-cols-2 gap-2.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => setRegTier('FREE')}
+                                    className={cn(
+                                      "p-3 rounded-lg border text-left flex flex-col justify-between transition-all",
+                                      regTier === 'FREE' ? "border-emerald-500 bg-emerald-50/50 ring-1 ring-emerald-500" : "border-slate-200 hover:bg-slate-50"
+                                    )}
+                                  >
+                                    <div>
+                                      <span className="block text-xs font-bold text-slate-700">Free Tier</span>
+                                      <span className="text-[10px] text-slate-500 block leading-tight mt-1">Standard directory listing and search index entry</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-slate-500 mt-2">FREE</span>
+                                  </button>
+                                  
+                                  <button
+                                    type="button"
+                                    onClick={() => setRegTier('PREMIUM')}
+                                    className={cn(
+                                      "p-3 rounded-lg border text-left flex flex-col justify-between transition-all",
+                                      regTier === 'PREMIUM' ? "border-emerald-500 bg-emerald-50/55 ring-1 ring-emerald-500" : "border-slate-200 hover:bg-slate-50"
+                                    )}
+                                  >
+                                    <div>
+                                      <span className="block text-xs font-bold text-slate-755 flex items-center gap-1">
+                                        Premium Verified <Sparkles className="w-3 h-3 text-emerald-500 inline shrink-0" />
+                                      </span>
+                                      <span className="text-[10px] text-slate-500 block leading-tight mt-1">Get verified badge and unlock top rankings & images</span>
+                                    </div>
+                                    <span className="text-[10px] font-bold text-emerald-600 mt-2">R199 / month</span>
+                                  </button>
+                                </div>
+
+                                {regTier === 'PREMIUM' && (
+                                  <div className="bg-emerald-50/30 border border-emerald-100 rounded-xl p-3.5 space-y-3 mt-2 text-xs text-slate-705" id="premium-documents-notice">
+                                    <p className="font-semibold text-emerald-800 text-[11px] flex items-center shrink-0">
+                                      📂 Premium Verification Document Submission Form
+                                    </p>
+                                    <p className="text-[10.5px] leading-relaxed text-slate-600">
+                                      To unlock premium verified features, you must submit documents verifying your legal status. <strong>Admin approval is required.</strong> No user gets automatic premium.
+                                    </p>
+                                    <div className="space-y-1.5 text-[10px] text-slate-600 bg-white p-2.5 rounded-lg border border-slate-105 shadow-2xs font-mono">
+                                      <p className="font-bold text-slate-700">Required Documents:</p>
+                                      <p>✓ Identity Document (ID/Passport)</p>
+                                      <p>✓ CIPC Business Registration Document</p>
+                                      <p>✓ SARS Tax Clearance Document</p>
+                                      <p>✓ Business Bank Account Proof</p>
+                                      <span className="text-slate-400">✓ Optional signage, office, showroom pics</span>
+                                    </div>
+                                    
+                                    <div className="flex items-start space-x-2 pt-1">
+                                      <input 
+                                        type="checkbox" 
+                                        id="agree-premium-debt" 
+                                        required 
+                                        className="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 h-3.5 w-3.5 cursor-pointer shadow-none" 
+                                      />
+                                      <label htmlFor="agree-premium-debt" className="text-[10px] leading-normal text-slate-655 cursor-pointer font-medium selection:bg-transparent">
+                                        I agree to the R199 per month debit agreement. This is a secure month-to-month, no contract arrangement.
+                                      </label>
+                                    </div>
+
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        const subject = encodeURIComponent("BizSearch24 Premium Verification Request - " + (adminUsername || "[Email]"));
+                                        const bodyText = encodeURIComponent(
+                                          "Hi BizSearch24 Support,\n\n" +
+                                          "I am registering for the Premium Verified Tier (R199/pm, month-to-month, no contracts).\n\n" +
+                                          "Please find attached my legal verification documents:\n" +
+                                          "1. Identity Document\n" +
+                                          "2. CIPC Business Registration Document\n" +
+                                          "3. SARS Document\n" +
+                                          "4. Business Bank Account Proof\n" +
+                                          "5. [Optional] Business signage or vehicle photos\n\n" +
+                                          "My Registered Account Email: " + (adminUsername || "") + "\n" +
+                                          "Business Trading Name: \n" +
+                                          "Contact Phone: \n\n" +
+                                          "I hereby agree to the R199 per month debit (month-to-month, cancel anytime).\n" +
+                                          "I understand my account will remain as a free-tier user until the administrators verify these files and switch on my Premium Verified Status in the dashboard.\n\n" +
+                                          "Thank you!"
+                                        );
+                                        window.open(`mailto:mailbizsearch24@gmail.com?subject=${subject}&body=${bodyText}`, '_self');
+                                      }}
+                                      className="w-full py-2 bg-slate-900 hover:bg-slate-955 text-white font-bold text-[10.5px] rounded-lg transition-all text-center block border-0 cursor-pointer"
+                                    >
+                                      📧 Open Default Email Client to Submit Documents
+                                    </button>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        )}
+
+                        <button
+                          id="login-submit-action-btn"
+                          type="submit"
+                          disabled={isAuthenticating}
+                          className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 active:scale-99 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/10 disabled:opacity-50 flex items-center justify-center space-x-2 cursor-pointer"
+                        >
+                          {isAuthenticating ? (
+                            <>
+                              <RefreshCw className="w-4 h-4 animate-spin text-white" id="login-spin" />
+                              <span>Processing...</span>
+                            </>
+                          ) : (
+                            <span>{show2FA ? 'Verify 2FA' : (isRegistering ? 'Create Account' : 'Sign In')}</span>
+                          )}
+                        </button>
+
+                        {show2FA && (
+                          <div className="space-y-4">
+                            {authError && (
+                              <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl text-xs flex items-start space-x-2">
+                                <ShieldAlert className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                                <p className="font-semibold text-[11px] leading-normal">{authError}</p>
+                              </div>
+                            )}
+                            
+                            {requires2FASetup && (
+                              <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4 text-[11px] text-slate-600 space-y-2.5">
+                                <p className="font-bold flex items-center gap-1.5 text-slate-700"><ShieldAlert className="w-3.5 h-3.5 text-blue-500" /> Need help setting up?</p>
+                                <ul className="list-decimal pl-4 space-y-1.5 text-slate-600 font-medium">
+                                  <li>Download Google Authenticator from your app store.</li>
+                                  <li>Open the app and tap the <strong>+ (plus) icon</strong>.</li>
+                                  <li>Select <strong>Enter a setup key</strong> (or scan the QR code above).</li>
+                                  <li>Paste the <strong>Secret Key</strong> shown above and save it.</li>
+                                  <li>Enter the 6-digit code it generates above and click <strong>Verify 2FA</strong>.</li>
+                                </ul>
+                              </div>
+                            )}
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShow2FA(false);
+                                setRequires2FASetup(false);
+                                setMfaToken('');
+                              }}
+                              className="w-full py-2 text-xs text-slate-500 hover:text-slate-700 font-semibold hover:underline text-center block cursor-pointer"
+                            >
+                              Cancel Verification
+                            </button>
+                          </div>
+                        )}
+                      </form>
+                      
+                      {!show2FA && (
+                        <div className="mt-4 text-center">
+                          <button type="button" onClick={() => setIsRegistering(!isRegistering)} className="text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline">
+                            {isRegistering ? 'Already have an account? Sign In' : 'Need an account? Register Now'}
+                          </button>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               ) : (

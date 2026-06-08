@@ -8,19 +8,27 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_for_dev_only';
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
+    const { email, username, password } = await req.json();
+    const loginIdentifier = (email || username || '').toLowerCase().trim();
     const ip = req.headers.get('x-forwarded-for') || '127.0.0.1';
     
-    if (!email || !password) {
+    if (!loginIdentifier || !password) {
       return NextResponse.json({ success: false, message: 'Missing credentials.' }, { status: 400 });
     }
 
-    let user = await prisma.user.findUnique({ where: { email } });
+    let user = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: loginIdentifier },
+          { username: loginIdentifier }
+        ]
+      }
+    });
     
     // Restore 2FA details from backup memory if missing
     user = await restoreMfa(user);
     
-    if (user && email.toLowerCase() === 'nicholauscostochetty@gmail.com' && user.role !== 'ADMIN') {
+    if (user && user.email.toLowerCase() === 'nicholauscostochetty@gmail.com' && user.role !== 'ADMIN') {
       user = await prisma.user.update({
         where: { id: user.id },
         data: { role: 'ADMIN' }

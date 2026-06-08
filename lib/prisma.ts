@@ -26,6 +26,7 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
       {
         id: '1f88c6f3-d53e-4e38-a04d-f1df427b4acc', // Match the seeded admin user ID
         email: 'admin@bizsearch24.co.za',
+        username: 'admin',
         passwordHash: '$2a$10$U7v02bO4tWpTqA9N4XoXeuq12s0PeeYnIasT6V.zQveXnU90yid4S', // adminpassword24 hashed
         role: 'ADMIN',
         twoFactorEnabled: false,
@@ -47,6 +48,48 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
     ];
   }
 
+  // Ensure nicholauscostochetty@gmail.com is always seeded as an ADMIN in mock database
+  const hasNicholaus = dbData.users.find((u: any) => u.email?.toLowerCase() === 'nicholauscostochetty@gmail.com');
+  if (!hasNicholaus) {
+    dbData.users.push({
+      id: 'nicholaus-admin-user-id-uuid',
+      email: 'nicholauscostochetty@gmail.com',
+      username: 'nicholauscostochetty',
+      passwordHash: '$2a$10$U7v02bO4tWpTqA9N4XoXeuq12s0PeeYnIasT6V.zQveXnU90yid4S', // adminpassword24
+      role: 'ADMIN',
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+      isBanned: false,
+      lastKnownIp: null,
+      userAgent: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      firstName: 'Nicholaus',
+      lastName: 'Costo Chetty',
+      fullName: 'Nicholaus Costo Chetty',
+      idNumber: null,
+      companyRegNumber: null,
+      billingAddress: null,
+      showProfileDetails: true,
+      profileColor: 'emerald',
+      maxListings: 100
+    });
+    saveDb(dbData);
+  } else {
+    let changed = false;
+    if (hasNicholaus.role !== 'ADMIN') {
+      hasNicholaus.role = 'ADMIN';
+      changed = true;
+    }
+    if (!hasNicholaus.username) {
+      hasNicholaus.username = 'nicholauscostochetty';
+      changed = true;
+    }
+    if (changed) {
+      saveDb(dbData);
+    }
+  }
+
   const modelLower = modelName.toLowerCase();
   
   if (modelLower === 'user') {
@@ -54,7 +97,8 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
       const where = args[0]?.where || {};
       const found = dbData.users.find((u: any) => {
         if (where.id && u.id === where.id) return true;
-        if (where.email && u.email === where.email) return true;
+        if (where.email && u.email?.toLowerCase() === where.email.toLowerCase()) return true;
+        if (where.username && u.username?.toLowerCase() === where.username.toLowerCase()) return true;
         return false;
       });
       return found || null;
@@ -63,6 +107,14 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
       const where = args[0]?.where || {};
       const found = dbData.users.find((u: any) => {
         if (where.role && u.role === where.role) return true;
+        if (where.resetToken && u.resetToken === where.resetToken) return true;
+        if (where.OR) {
+          return where.OR.some((orClause: any) => {
+            if (orClause.email && u.email?.toLowerCase() === orClause.email.toLowerCase()) return true;
+            if (orClause.username && u.username?.toLowerCase() === orClause.username.toLowerCase()) return true;
+            return false;
+          });
+        }
         return false;
       });
       return found || null;
@@ -75,6 +127,7 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
       const newUser = {
         id: data.id || `u_${Date.now()}`,
         email: data.email,
+        username: data.username || null,
         passwordHash: data.passwordHash,
         role: data.role || 'USER',
         twoFactorEnabled: data.twoFactorEnabled || false,
@@ -102,7 +155,9 @@ async function handleMockFallback(modelName: string, prop: string, args: any[]):
         vatNumber: data.vatNumber || '',
         showProfileDetails: data.showProfileDetails || false,
         profileColor: data.profileColor || 'slate',
-        maxListings: data.maxListings || 1
+        maxListings: data.maxListings || 1,
+        resetToken: data.resetToken || null,
+        resetTokenExp: data.resetTokenExp || null
       };
       dbData.users.push(newUser);
       saveDb(dbData);
